@@ -1,0 +1,13 @@
+# Constitutional documents — not committed to public git
+CLAUDE.md
+AGENTS.md
+
+# Nested component repositories — each has its own git history
+ont-runner/
+ont-security/
+ont-platform/
+ont-infra/
+
+# OS
+.DS_Store
+Thumbs.db
