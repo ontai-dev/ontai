@@ -2,9 +2,9 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status      |
 |---|---|---|---|
-| ontai        | session/1-governor-init | d54ac90     | initialized |
+| ontai        | session/1-governor-init | (pending)   | tracking update in progress |
 | ont-runner   | session/1-governor-init | 56e1582     | active      |
-| ont-security | session/1-governor-init | 194934c     | initialized |
+| ont-security | session/1-governor-init | c205ea5     | active      |
 | ont-platform | session/1-governor-init | a38188f     | initialized |
 | ont-infra    | session/1-governor-init | 86807d4     | initialized |
 
@@ -23,3 +23,4 @@ No pushes to remote until Platform Governor authorizes.
 | ontai        | d476d02 | session/1: tracking files updated with final commit hashes                     |
 | ontai        | d54ac90 | session/1: GIT_TRACKING.md final hash correction                               |
 | ont-runner   | 56e1582 | session/2: pkg/runnerlib — shared library types, constants, generators, builder, unit tests |
+| ont-security | c205ea5 | session/3: RBACPolicy CRD types, validation logic, reconciler, manager skeleton, unit and integration tests |
