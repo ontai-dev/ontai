@@ -29,6 +29,6 @@ Commit hashes:
 - ont-security: 194934c
 - ont-platform: a38188f
 - ont-infra:    86807d4
-- ontai:        (see GIT_TRACKING.md — committed after this file)
+- ontai:        d476d02
 
 Ready for Session 2.
