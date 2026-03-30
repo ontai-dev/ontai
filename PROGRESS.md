@@ -6,6 +6,7 @@ Session 5 opened. Role: Controller Engineer. EPG impact trace documented. Object
 Session 6 opened. Role: Controller Engineer. Redesign acknowledged. Pre-session Governor findings documented (6-A through 6-D). Scope: reconcileDrift wiring, PermissionSnapshotReceipt watch, delivery loop closure. Admission webhook deferred to Session 7. No capability constant implementation this session.
 Session 7 opened. Role: Controller Engineer. Objective: admission webhook skeleton — decision.go (pure, no server imports), rbac_handler.go, server.go, webhook config, main.go wiring. 13 unit tests + 7 integration tests. Bootstrap window is TODO(session-8). CS-INV-001 and CS-INV-004 closed on management cluster.
 Session 7 closed. All gates complete. 92 unit tests + 26 integration tests green. go vet clean. go build clean. Root cause fixed: ValidatingWebhookConfiguration YAML had webhooks under wrong `spec.` prefix. Metrics port conflict fixed across all integration test suites. Commit 8324c0b.
+Governor session: CAPI adoption cross-document alignment complete. Seven documents amended. Path B ruling recorded as authoritative resolution for management cluster lifecycle under CAPI adoption. Six capability constants confirmed retained and not orphaned. INV-013 amended with named reconciler exceptions. ont-security AGENTS.md intake scope expanded to include CAPI providers. Orphaned-constant open finding closed. INV-013 amendment open finding closed.
 
 # ONT Platform Progress
 ## Platform State
@@ -136,6 +137,17 @@ before any EPG implementation begins):
 - **Delivery:** Deferred to Session 6. Status.Drift=true is the correct initial state for a
   freshly generated snapshot. Status.LastAckedVersion is owned exclusively by the runner agent
   in agent mode. The EPGReconciler never writes LastAckedVersion.
+
+## Completed Gates (CAPI Governor Amendment Session — 2026-03-30)
+- ont-platform-schema.md Section 6 retitled "CRDs Delegated to CAPI for Target Clusters." Dual-path semantics applied to all six lifecycle CRDs. Named runner capability references restored. Amendment record appended.
+- ont-platform/ont-platform-design.md Section 2.1 OperationalJobReconciler expanded from seven to thirteen CRDs. CAPIDelegated routing rule added. TalosClusterReset clarified as base extension. Amendment record appended.
+- Root CLAUDE.md INV-013 amended to name ONTInfrastructureClusterReconciler and ONTInfrastructureMachineReconciler as the sole talos goclient exceptions. Amendment record appended.
+- BACKLOG.md ont-platform section reclassified: six lifecycle CRDs now carry dual-path note. Six new CAPI backlog items added (TalosClusterReconciler CAPI path, ONTInfrastructureClusterReconciler, ONTInfrastructureMachineReconciler, Cilium deployment trigger, TalosNoMaintenanceReconciler, TalosClusterResetReconciler).
+- ont-runner-schema.md capability table updated with Triggering CRD column. Six lifecycle capability constants confirmed retained. Orphaned-constant finding closed. Amendment record appended.
+- ont-security/AGENTS.md Controller Engineer third-party RBAC intake scope expanded to include CAPI core (installOrder 5) and CABPT (installOrder 6). Amendment record appended.
+- ont-platform/AGENTS.md Capability Confirmation Gate replaced with three-category routing: CAPI-managed (no gate), operational runner Job CRDs (full gate), tenant coordination (no gate). Amendment record appended.
+- Path B ruling: six lifecycle CRDs retained as direct runner Jobs for capi.enabled=false (management cluster). CAPI-delegated for capi.enabled=true (target clusters). This is the authoritative resolution.
+- Files touched: ont-platform-schema.md, ont-platform/ont-platform-design.md, CLAUDE.md, BACKLOG.md, ont-runner-schema.md, ont-security/AGENTS.md, ont-platform/AGENTS.md, PROGRESS.md, GIT_TRACKING.md.
 
 ## Completed Gates (Session 7)
 - [Session 7] internal/webhook/decision.go — EvaluateAdmission pure function, AnnotationRBACOwner/Value constants, InterceptedKinds, AdmissionRequest/Decision types
@@ -316,6 +328,8 @@ before any EPG implementation begins):
 - [Session 6, Finding 6-D] CapabilityRBACProvision semantics: executor-mode Kueue Job (Governor decision). REQUIRES Runner Engineer session.
 - [Session 7] Bootstrap RBAC window (TODO(session-8)) — CS-INV-004, INV-020. Window is permanently closed until Session 8. Must be implemented before production deployment.
 - [Session 6] PermissionSet reconciler absent — ProfileReferenceCount has no owner. Add to backlog.
+- [CAPI Governor] Six capability constants (talos-upgrade, kube-upgrade, stack-upgrade, node-scale-up, node-decommission, node-reboot): CLOSED. Confirmed retained. Not orphaned. Active when TalosCluster spec.capi.enabled=false only. ont-runner-schema.md Triggering CRD column updated.
+- [CAPI Governor] INV-013 amendment: CLOSED. Named reconciler exceptions (ONTInfrastructureClusterReconciler, ONTInfrastructureMachineReconciler) added to root CLAUDE.md INV-013 inline text and amendment record.
 
 ## Session 1 Exit State
 All five repositories initialized. Constitutional documents in ontai root committed

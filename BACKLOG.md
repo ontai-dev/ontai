@@ -40,15 +40,27 @@
 - [ ] controller-gen wiring (replaces handwritten CRD YAML and zz_generated.deepcopy.go)
 
 ### ont-platform
-- [ ] TalosCluster reconciler (bootstrap and import modes)
-- [ ] RunnerConfig generation from TalosCluster spec
-- [ ] All operational CRD reconcilers (one per CRD)
+- [ ] TalosCluster reconciler (bootstrap and import modes — management cluster direct path)
+- [ ] TalosCluster reconciler — CAPI object creation path (capi.enabled=true)
+- [ ] ONTInfrastructureClusterReconciler — CAPI InfrastructureCluster contract
+- [ ] ONTInfrastructureMachineReconciler — machineconfig delivery via talos goclient on port 50000 with providerID and ready status
+- [ ] Cilium deployment trigger — ClusterAssignment bootstrapFlag PackExecution wiring on CAPI Cluster phase=Running
+- [ ] TalosNoMaintenanceReconciler — CAPI pause annotation integration
+- [ ] TalosClusterResetReconciler — CAPI Cluster deletion sequence before runner Job
+- [ ] RunnerConfig generation from TalosCluster spec (operational Job CRDs only; not CAPI lifecycle)
+- [ ] All operational CRD reconcilers (one per CRD, thirteen total via OperationalJobReconciler base)
 - [ ] TalosClusterReset human gate
 - [ ] Tenant namespace lifecycle management
 - [ ] PlatformTenant reconciler
 - [ ] ClusterAssignment reconciler with all gate conditions
 - [ ] QueueProfile reconciler
 - [ ] LicenseKey reconciler
+- [ ] TalosUpgrade reconciler — CAPI-delegated for capi.enabled=true clusters. Retained as direct runner Job (talos-upgrade) for capi.enabled=false. Reconciler scope governed by OperationalJobReconciler routing rule.
+- [ ] TalosKubeUpgrade reconciler — CAPI-delegated for capi.enabled=true clusters. Retained as direct runner Job (kube-upgrade) for capi.enabled=false. Reconciler scope governed by OperationalJobReconciler routing rule.
+- [ ] TalosStackUpgrade reconciler — CAPI-delegated for capi.enabled=true clusters. Retained as direct runner Job (stack-upgrade) for capi.enabled=false. Reconciler scope governed by OperationalJobReconciler routing rule.
+- [ ] TalosNodeScaleUp reconciler — CAPI-delegated for capi.enabled=true clusters. Retained as direct runner Job (node-scale-up) for capi.enabled=false. Reconciler scope governed by OperationalJobReconciler routing rule.
+- [ ] TalosNodeDecommission reconciler — CAPI-delegated for capi.enabled=true clusters. Retained as direct runner Job (node-decommission) for capi.enabled=false. Reconciler scope governed by OperationalJobReconciler routing rule.
+- [ ] TalosReboot reconciler — CAPI-delegated for capi.enabled=true clusters. Retained as direct runner Job (node-reboot) for capi.enabled=false. Reconciler scope governed by OperationalJobReconciler routing rule.
 
 ### ont-infra
 - [ ] PackBuild reconciler
