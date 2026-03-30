@@ -21,8 +21,11 @@
 - [x] RBACPolicy reconciler (Session 3)
 - [x] RBACProfile reconciler with provisioned gate (Session 4, CS-INV-005)
 - [x] EPG computation engine — stub only (Session 4); full computation deferred to Session 5
-- [ ] EPG computation engine — full implementation (Session 5)
-- [ ] PermissionSnapshot generation and delivery (Session 5/6)
+- [x] EPG computation engine — full implementation (Session 5)
+- [x] PermissionSnapshot generation (Session 5); delivery to target cluster agents deferred to Session 6
+- [ ] PermissionSnapshot push delivery to target cluster agents (Session 6)
+- [ ] PermissionSnapshotReceipt watch and LastAckedVersion propagation (Session 6)
+- [ ] reconcileDrift wiring in EPGReconciler — TODO(session-6) marker present
 - [ ] Admission webhook server — TODO in main.go (Session 5 or later)
 - [ ] PermissionService gRPC server (4 operations)
 - [ ] CNPG two-phase boot sequence (CS-INV-003)

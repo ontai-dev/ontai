@@ -2,13 +2,79 @@ Session 2 opened. Role: Runner Engineer. Objective: build pkg/runnerlib shared l
 Session 3 opened. Role: Controller Engineer. Objective: RBACPolicy CRD types, validation logic, RBACPolicyReconciler, controller-runtime manager skeleton.
 Session 3 closed. All 13 steps complete. 12 unit tests + 5 integration tests green. go vet clean. go build clean. Commit c205ea5.
 Session 4 opened. Role: Controller Engineer. Objectives: remaining CRD types (RBACProfile, IdentityBinding, PermissionSet, PermissionSnapshot, PermissionSnapshotReceipt), RBACProfileReconciler with provisioned gate (CS-INV-005), IdentityBindingReconciler validation, EPGReconciler and IdentityBindingReconciler stubs, deferred PermissionSet existence check in RBACPolicyReconciler. All carry-forward findings acknowledged.
+Session 5 opened. Role: Controller Engineer. EPG impact trace documented. Objective: EPGReconciler.Reconcile full implementation with ceiling intersection, PermissionSnapshot generation, Drift detection. Delivery deferred to Session 6.
 
 # ONT Platform Progress
 ## Platform State
-Status: Foundation in progress. Shared library complete. ont-security CRD surface complete. RBACPolicyReconciler and RBACProfileReconciler operational. Provisioned gate enforced. EPGReconciler and IdentityBindingReconciler stubbed.
+Status: Foundation in progress. Shared library complete. ont-security CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Delivery to target cluster agents not yet implemented.
 Current Phase: Phase 1 — Development
-Last Session: Session 4 — Controller Engineer, ont-security remaining CRDs and RBACProfile reconciler
-Next Session: Session 5 — Controller Engineer, ont-security EPG computation engine and PermissionSnapshot generation
+Last Session: Session 5 — Controller Engineer, EPG computation engine and PermissionSnapshot generation
+Next Session: Session 6 — Controller Engineer, PermissionSnapshot delivery mechanism, PermissionSnapshotReceipt watch, admission webhook server skeleton
+
+## Session 5 EPG Impact Trace
+
+EPG computation impact on PermissionSnapshot generation (documented per CLAUDE.md Step 4b
+before any EPG implementation begins):
+
+- **Inputs:** All RBACProfiles with status.Provisioned=true, their governing RBACPolicies,
+  all referenced PermissionSets (both declaration-side and ceiling-side), all valid IdentityBindings.
+- **Ceiling intersection:** For each provisioned profile, the effective permission set is the
+  intersection of the governing policy's MaximumPermissionSetRef PermissionSet (ceiling) and the
+  declared PermissionDeclarations. Permissions declared in the profile that are not within the
+  ceiling are trimmed from the effective output. This is the policy enforcement mechanism — a
+  profile cannot grant more than its governing policy allows. The ceiling is enforced at
+  computation time in internal/epg/intersection.go: IntersectWithCeiling.
+- **Output:** One PermissionSnapshot CR per target cluster, written to security-system namespace.
+  Version is RFC3339 UTC of computation time. GeneratedAt is the same timestamp.
+- **Drift detection:** PermissionSnapshotStatus.Drift=true when ExpectedVersion differs from
+  the agent's LastAckedVersion in PermissionSnapshotReceipt. Newly generated snapshots always
+  have Drift=true because delivery has not yet occurred.
+- **Delivery:** Deferred to Session 6. Status.Drift=true is the correct initial state for a
+  freshly generated snapshot. Status.LastAckedVersion is owned exclusively by the runner agent
+  in agent mode. The EPGReconciler never writes LastAckedVersion.
+
+## Completed Gates (Session 5)
+- [Session 5] EPG impact trace documented before implementation (CLAUDE.md Step 4b compliance)
+- [Session 5] internal/epg/types.go — PrincipalPermissions, EffectiveRule, EPGComputationResult
+- [Session 5] internal/epg/intersection.go — IntersectWithCeiling with full ceiling semantics including wildcards and ResourceNames
+- [Session 5] internal/epg/compute.go — ComputeEPG, 4-phase algorithm, ceiling enforced at computation time
+- [Session 5] internal/epg/snapshot.go — BuildPermissionSnapshot, per-cluster scoping, TypeMeta set for SSA
+- [Session 5] EPGReconciler fully implemented — annotation clearing before computation, fixed reconcile key, server-side apply upsert, Status.Drift=true initial state, Status.LastAckedVersion never written
+- [Session 5] reconcileDrift method present with TODO(session-6) wiring note; computeDrift pure function extracted for testability
+- [Session 5] RBACProfileReconciler: explicit status commit before EPG annotation signal (race condition fix)
+- [Session 5] 18 new unit tests passing — compute_test.go (10 tests) + intersection_test.go (8 tests)
+- [Session 5] 1 integration test passing in test/integration/epg/ (full EPG cycle)
+- [Session 5] All 67 unit tests passing; all 13 integration tests passing
+- [Session 5] go vet clean, import constraint verified for internal/epg/ (no client imports)
+
+## Session 5 Exit State
+
+**Commit:** 38056c9 (ont-security, branch session/1-governor-init)
+**Message:** session/5: EPG computation with ceiling intersection, PermissionSnapshot generation, EPGReconciler, unit and integration tests
+
+**New files created:**
+- internal/epg/types.go — PrincipalPermissions, EffectiveRule, EPGComputationResult (no k8s/client imports)
+- internal/epg/intersection.go — IntersectWithCeiling with wildcard, ResourceNames, deduplication
+- internal/epg/compute.go — ComputeEPG 4-phase algorithm, ceiling enforced at computation time
+- internal/epg/snapshot.go — BuildPermissionSnapshot, per-cluster scoping, TypeMeta set for SSA
+- test/unit/epg/compute_test.go — 10 unit tests for ComputeEPG
+- test/unit/epg/intersection_test.go — 8 unit tests for IntersectWithCeiling
+- test/integration/epg/epg_reconciler_test.go — 1 integration test, full EPG cycle with envtest
+
+**Modified files:**
+- internal/controller/epg_controller.go — full replacement of stub; fixed reconcile key, annotation clearing, SSA upsert, Drift=true, LastAckedVersion never written
+- internal/controller/rbacprofile_controller.go — explicit status commit before EPG annotation signal (race condition fix)
+- test/integration/controller/rbacpolicy_controller_test.go — security-system namespace creation for EPGReconciler
+
+**Test counts:** 67 unit tests passing, 13 integration tests passing (12 controller + 1 EPG)
+
+**Import constraint result:** internal/epg/ imports verified clean — no controller-runtime client, no k8s client-go
+
+**TODO items remaining in code:**
+- reconcileDrift wiring (Session 6) — TODO(session-6) marker in epg_controller.go
+- Admission webhook server — TODO in main.go (Session 6 or later)
+- PermissionSnapshot push delivery to target cluster agents (Session 6)
+- PermissionSnapshotReceipt watch and LastAckedVersion propagation (Session 6)
 
 ## Completed Gates
 - [Session 1] Constitutional documents committed to ontai root
@@ -85,9 +151,6 @@ Next Session: Session 5 — Controller Engineer, ont-security EPG computation en
 - PermissionSnapshot push delivery to target cluster agents (Session 6)
 
 ## Open Findings
-- [Session 1] Lab directory is named `ont-lab/` in the filesystem but `ontai-lab/` in
-  CLAUDE.md Section 9. Naming inconsistency. No action taken — constitutional
-  amendment required from Platform Governor before renaming.
 - [Session 1] Operator repositories (`ont-runner/`, `ont-security/`, `ont-platform/`,
   `ont-infra/`) reside inside `ontai/` as subdirectories, not as peer repositories
   alongside `ontai/`. Proceeding with current layout.
