@@ -2,7 +2,7 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status      |
 |---|---|---|---|
-| ontai        | session/1-governor-init | e1db7b9     | active      |
+| ontai        | session/1-governor-init | d92ff78     | active      |
 | ont-runner   | session/1-governor-init | 56e1582     | active      |
 | ont-security | session/1-governor-init | 38056c9     | active      |
 | ont-platform | session/1-governor-init | a38188f     | initialized |
@@ -28,3 +28,4 @@ No pushes to remote until Platform Governor authorizes.
 | ont-security | 64ac2e8 | session/4: remaining CRD types, RBACProfileReconciler (CS-INV-005), IdentityBinding stub, EPGReconciler stub, PermissionSnapshot types, unit and integration tests |
 | ontai        | e1db7b9 | session/4: tracking files updated with exit state and ont-security commit hash |
 | ont-security | 38056c9 | session/5: EPG computation with ceiling intersection, PermissionSnapshot generation, EPGReconciler, unit and integration tests |
+| ontai        | d92ff78 | session/5: tracking files updated with exit state and ont-security commit hash |
