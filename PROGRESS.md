@@ -1,13 +1,14 @@
 Session 2 opened. Role: Runner Engineer. Objective: build pkg/runnerlib shared library. All constitutional documents absorbed.
-Session 3 opened. Role: Controller Engineer. Objective: RBACPolicy CRD types, validation logic, RBACPolicyReconciler, controller-runtime manager skeleton. Open finding on community tier limit acknowledged — non-blocking this session.
+Session 3 opened. Role: Controller Engineer. Objective: RBACPolicy CRD types, validation logic, RBACPolicyReconciler, controller-runtime manager skeleton.
 Session 3 closed. All 13 steps complete. 12 unit tests + 5 integration tests green. go vet clean. go build clean. Commit c205ea5.
+Session 4 opened. Role: Controller Engineer. Objectives: remaining CRD types (RBACProfile, IdentityBinding, PermissionSet, PermissionSnapshot, PermissionSnapshotReceipt), RBACProfileReconciler with provisioned gate (CS-INV-005), IdentityBindingReconciler validation, EPGReconciler and IdentityBindingReconciler stubs, deferred PermissionSet existence check in RBACPolicyReconciler. All carry-forward findings acknowledged.
 
 # ONT Platform Progress
 ## Platform State
-Status: Foundation in progress. Shared library complete. ont-security RBACPolicy reconciler complete.
+Status: Foundation in progress. Shared library complete. ont-security CRD surface complete. RBACPolicyReconciler and RBACProfileReconciler operational. Provisioned gate enforced. EPGReconciler and IdentityBindingReconciler stubbed.
 Current Phase: Phase 1 — Development
-Last Session: Session 3 — Controller Engineer, ont-security RBACPolicy
-Next Session: Session 4 — Controller Engineer, ont-security RBACProfile types, EPG reconciler skeleton, IdentityBinding types
+Last Session: Session 4 — Controller Engineer, ont-security remaining CRDs and RBACProfile reconciler
+Next Session: Session 5 — Controller Engineer, ont-security EPG computation engine and PermissionSnapshot generation
 
 ## Completed Gates
 - [Session 1] Constitutional documents committed to ontai root
@@ -29,6 +30,60 @@ Next Session: Session 4 — Controller Engineer, ont-security RBACProfile types,
 - [Session 3] 5 integration tests passing via envtest (test/integration/controller/rbacpolicy_controller_test.go)
 - [Session 3] go vet clean, go build clean
 
+## Completed Gates
+- [Session 4] PermissionSet CRD types (PermissionSetSpec, PermissionRule, PermissionSetStatus) and ValidatePermissionSetSpec (4 checks)
+- [Session 4] RBACPolicy PermissionSet existence check implemented — deferred TODO(session-4) from Session 3 resolved
+- [Session 4] RBACProfile CRD types — Provisioned field, all condition/reason constants (CS-INV-005)
+- [Session 4] ValidateRBACProfileSpec (6 checks) and CheckProfilePolicyCompliance (3 rules including audit semantics)
+- [Session 4] RBACProfileReconciler — CS-INV-005 enforced; provisioned=true reachable only through Step I
+- [Session 4] IdentityBinding CRD types, ValidateIdentityBindingSpec (token TTL hard constraint 900s), stub reconciler
+- [Session 4] PermissionSnapshot and PermissionSnapshotReceipt CRD types
+- [Session 4] EPGReconciler stub — annotation-triggered, annotation-clearing, no EPG computation yet
+- [Session 4] All reconcilers registered in main.go
+- [Session 4] 49 unit tests passing (test/unit/controller/)
+- [Session 4] 12 integration tests passing including 6 from Session 3 carried forward
+- [Session 4] go vet clean, go build clean, go build ./cmd/ont-security/ clean
+
+## Session 4 Exit State
+
+**Commit:** 64ac2e8 (ont-security, branch session/1-governor-init)
+
+**New files created:**
+- api/v1alpha1/permissionset_types.go
+- api/v1alpha1/rbacprofile_types.go
+- api/v1alpha1/identitybinding_types.go
+- api/v1alpha1/permissionsnapshot_types.go
+- api/v1alpha1/permissionsnapshotreceipt_types.go
+- internal/controller/permissionset_validation.go
+- internal/controller/rbacprofile_validation.go
+- internal/controller/rbacprofile_compliance.go
+- internal/controller/rbacprofile_controller.go
+- internal/controller/identitybinding_validation.go
+- internal/controller/identitybinding_controller.go
+- internal/controller/epg_controller.go
+- config/crd/security.ontai.dev_permissionsets.yaml
+- config/crd/security.ontai.dev_rbacprofiles.yaml
+- config/crd/security.ontai.dev_identitybindings.yaml
+- config/crd/security.ontai.dev_permissionsnapshots.yaml
+- config/crd/security.ontai.dev_permissionsnapshotreceipts.yaml
+- test/unit/controller/permissionset_validation_test.go
+- test/unit/controller/rbacprofile_validation_test.go
+- test/unit/controller/rbacprofile_compliance_test.go
+- test/unit/controller/identitybinding_validation_test.go
+- test/integration/controller/rbacprofile_controller_test.go
+
+**Modified files:**
+- api/v1alpha1/zz_generated.deepcopy.go (DeepCopy for all new types)
+- cmd/ont-security/main.go (all 4 reconcilers registered)
+- internal/controller/rbacpolicy_controller.go (PermissionSet existence check)
+- test/integration/controller/rbacpolicy_controller_test.go (Test 6 + updated Session 3 tests for PermissionSet existence)
+
+**TODO items remaining in code:**
+- EPG computation engine (Session 5) — EPGReconciler is a stub
+- Admission webhook server (Session 5 or later) — TODO in main.go
+- controller-gen wiring for CRD YAML and DeepCopy generation (future session)
+- PermissionSnapshot push delivery to target cluster agents (Session 6)
+
 ## Open Findings
 - [Session 1] Lab directory is named `ont-lab/` in the filesystem but `ontai-lab/` in
   CLAUDE.md Section 9. Naming inconsistency. No action taken — constitutional
@@ -40,10 +95,6 @@ Next Session: Session 4 — Controller Engineer, ont-security RBACProfile types,
   ont-runner-schema.md §11 and ont-runner-design.md §7.5 say max 5 clusters.
   Relevant to internal/license implementation (Session 5+).
   Requires Platform Governor resolution before that session begins.
-- [Session 3] ont-security/CLAUDE.md contains errors: domain listed as "platform.ontai.dev"
-  (should be "security.ontai.dev"), operator name misspelled as "ont-secuirty". All
-  code correctly uses "security.ontai.dev". Constitutional amendment from Platform
-  Governor required to correct the CLAUDE.md.
 - [Session 3] CRD YAML is handwritten. controller-gen is not yet wired. When controller-gen
   is wired in a future session, the handwritten CRD must be replaced with the generated
   output and the two must be verified equivalent.

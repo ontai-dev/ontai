@@ -4,7 +4,7 @@
 |---|---|---|---|
 | ontai        | session/1-governor-init | 5abfded     | active      |
 | ont-runner   | session/1-governor-init | 56e1582     | active      |
-| ont-security | session/1-governor-init | c205ea5     | active      |
+| ont-security | session/1-governor-init | 64ac2e8     | active      |
 | ont-platform | session/1-governor-init | a38188f     | initialized |
 | ont-infra    | session/1-governor-init | 86807d4     | initialized |
 
@@ -25,3 +25,4 @@ No pushes to remote until Platform Governor authorizes.
 | ont-runner   | 56e1582 | session/2: pkg/runnerlib — shared library types, constants, generators, builder, unit tests |
 | ont-security | c205ea5 | session/3: RBACPolicy CRD types, validation logic, reconciler, manager skeleton, unit and integration tests |
 | ontai        | 5abfded | session/3: tracking files updated with exit state and ont-security commit hash |
+| ont-security | 64ac2e8 | session/4: remaining CRD types, RBACProfileReconciler (CS-INV-005), IdentityBinding stub, EPGReconciler stub, PermissionSnapshot types, unit and integration tests |
