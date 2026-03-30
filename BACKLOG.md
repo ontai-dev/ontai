@@ -18,16 +18,19 @@
 - [ ] Compile mode: PackBuild compilation pipeline
 
 ### ont-security
-- [ ] RBACPolicy reconciler
-- [ ] RBACProfile reconciler with provisioned gate
-- [ ] EPG computation engine
-- [ ] PermissionSnapshot generation and delivery
-- [ ] Admission webhook server
+- [x] RBACPolicy reconciler (Session 3)
+- [x] RBACProfile reconciler with provisioned gate (Session 4, CS-INV-005)
+- [x] EPG computation engine — stub only (Session 4); full computation deferred to Session 5
+- [ ] EPG computation engine — full implementation (Session 5)
+- [ ] PermissionSnapshot generation and delivery (Session 5/6)
+- [ ] Admission webhook server — TODO in main.go (Session 5 or later)
 - [ ] PermissionService gRPC server (4 operations)
-- [ ] CNPG two-phase boot sequence
-- [ ] IdentityBinding reconciler
-- [ ] PermissionSet reconciler
+- [ ] CNPG two-phase boot sequence (CS-INV-003)
+- [x] IdentityBinding reconciler — stub only (Session 4); full EPG trigger wiring deferred to Session 5
+- [x] PermissionSet types and validation (Session 4)
+- [ ] PermissionSet reconciler (owns ProfileReferenceCount maintenance)
 - [ ] Third-party RBAC intake process
+- [ ] controller-gen wiring (replaces handwritten CRD YAML and zz_generated.deepcopy.go)
 
 ### ont-platform
 - [ ] TalosCluster reconciler (bootstrap and import modes)
@@ -49,7 +52,6 @@
 
 ## Phase 2 — Platform Engineer
 - [ ] Dockerfiles for all four components
-- [ ] Helm charts for all four components
 - [ ] GitHub Actions CI workflows
 - [ ] OCI push pipeline configuration
 
