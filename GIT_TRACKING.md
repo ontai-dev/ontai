@@ -2,10 +2,10 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status      |
 |---|---|---|---|
-| ontai        | session/1-governor-init | d92ff78     | active      |
+| ontai        | session/1-governor-init | dd2ce1f     | active      |
 | ont-runner   | session/1-governor-init | 56e1582     | active      |
 | ont-security | session/1-governor-init | 8324c0b     | active      |
-| ont-platform | session/1-governor-init | a38188f     | initialized |
+| ont-platform | session/1-governor-init | 7237416     | active      |
 | ont-infra    | session/1-governor-init | 86807d4     | initialized |
 
 ## Branch Convention
