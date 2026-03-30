@@ -4,13 +4,43 @@ Session 3 closed. All 13 steps complete. 12 unit tests + 5 integration tests gre
 Session 4 opened. Role: Controller Engineer. Objectives: remaining CRD types (RBACProfile, IdentityBinding, PermissionSet, PermissionSnapshot, PermissionSnapshotReceipt), RBACProfileReconciler with provisioned gate (CS-INV-005), IdentityBindingReconciler validation, EPGReconciler and IdentityBindingReconciler stubs, deferred PermissionSet existence check in RBACPolicyReconciler. All carry-forward findings acknowledged.
 Session 5 opened. Role: Controller Engineer. EPG impact trace documented. Objective: EPGReconciler.Reconcile full implementation with ceiling intersection, PermissionSnapshot generation, Drift detection. Delivery deferred to Session 6.
 Session 6 opened. Role: Controller Engineer. Redesign acknowledged. Pre-session Governor findings documented (6-A through 6-D). Scope: reconcileDrift wiring, PermissionSnapshotReceipt watch, delivery loop closure. Admission webhook deferred to Session 7. No capability constant implementation this session.
+Session 7 opened. Role: Controller Engineer. Objective: admission webhook skeleton — decision.go (pure, no server imports), rbac_handler.go, server.go, webhook config, main.go wiring. 13 unit tests + 7 integration tests. Bootstrap window is TODO(session-8). CS-INV-001 and CS-INV-004 closed on management cluster.
+Session 7 closed. All gates complete. 92 unit tests + 26 integration tests green. go vet clean. go build clean. Root cause fixed: ValidatingWebhookConfiguration YAML had webhooks under wrong `spec.` prefix. Metrics port conflict fixed across all integration test suites. Commit 8324c0b.
 
 # ONT Platform Progress
 ## Platform State
-Status: Foundation in progress. Shared library complete. ont-security CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed — delivery acknowledgement from target cluster agents correctly transitions Status.Drift. Admission webhook not yet implemented (policy without enforcement).
+Status: Foundation in progress. Shared library complete. ont-security CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed. Admission webhook operational — CS-INV-001 and CS-INV-004 enforced on management cluster. Bootstrap window is TODO(session-8).
 Current Phase: Phase 1 — Development
-Last Session: Session 6 — Controller Engineer, delivery loop, drift detection
-Next Session: Session 7 — Controller Engineer, admission webhook server skeleton
+Last Session: Session 7 — Controller Engineer, admission webhook skeleton, 118 tests total
+Next Session: Session 8 — Bootstrap RBAC window implementation (INV-020, CS-INV-004)
+
+## Session 7 Exit State
+
+**Commit:** 8324c0b (ont-security, branch session/1-governor-init)
+**Message:** session/7: admission webhook — decision.go, rbac_handler.go, server.go, webhook config, main.go wiring, 13 unit + 7 integration tests
+
+**New files created:**
+- internal/webhook/decision.go — EvaluateAdmission pure function, annotation constants, InterceptedKinds, AdmissionRequest/Decision types. TODO(session-8) bootstrap window stub present. No controller-runtime imports (safe for ont-agent reuse).
+- internal/webhook/rbac_handler.go — RBACAdmissionHandler (admission.Handler), raw JSON unmarshal for annotation extraction
+- internal/webhook/server.go — AdmissionWebhookServer, WebhookPath constant, Register() method
+- config/webhook/validating-webhook-configuration.yaml — ValidatingWebhookConfiguration (top-level webhooks, not spec.webhooks)
+- test/unit/webhook/decision_test.go — 13 unit tests for EvaluateAdmission
+- test/integration/webhook/rbac_webhook_test.go — 7 integration tests via envtest
+
+**Modified files:**
+- cmd/ont-security/main.go — --webhook-port flag, webhook server registered before manager.Start
+- test/integration/controller/rbacpolicy_controller_test.go — metrics disabled (port conflict fix)
+- test/integration/epg/epg_reconciler_test.go — metrics disabled (port conflict fix)
+
+**Bug fixed:** ValidatingWebhookConfiguration YAML used `spec.webhooks` (wrong). The type has `webhooks` at the top level. envtest parsed successfully but the webhooks array was empty. Fixed by removing the `spec:` wrapper.
+
+**Test counts:** 92 unit tests passing, 26 integration tests passing (18 controller + 1 EPG + 7 webhook)
+
+**TODO items remaining in code:**
+- Bootstrap RBAC window (TODO(session-8)) — CS-INV-004, INV-020
+- CNPG two-phase boot sequence (future session)
+- PermissionSet reconciler (ProfileReferenceCount maintenance)
+- PermissionService gRPC server
 
 ## Session 6 Redesign Acknowledgement
 
@@ -106,6 +136,20 @@ before any EPG implementation begins):
 - **Delivery:** Deferred to Session 6. Status.Drift=true is the correct initial state for a
   freshly generated snapshot. Status.LastAckedVersion is owned exclusively by the runner agent
   in agent mode. The EPGReconciler never writes LastAckedVersion.
+
+## Completed Gates (Session 7)
+- [Session 7] internal/webhook/decision.go — EvaluateAdmission pure function, AnnotationRBACOwner/Value constants, InterceptedKinds, AdmissionRequest/Decision types
+- [Session 7] internal/webhook/rbac_handler.go — RBACAdmissionHandler implementing admission.Handler, raw JSON extraction of annotations, delegates to EvaluateAdmission
+- [Session 7] internal/webhook/server.go — AdmissionWebhookServer, Register() wires handler at /validate-rbac
+- [Session 7] config/webhook/validating-webhook-configuration.yaml — ValidatingWebhookConfiguration for RBAC+ServiceAccount, kube-system excluded, failurePolicy: Fail
+- [Session 7] cmd/ont-security/main.go — webhook server registered (--webhook-port flag, port 9443 default)
+- [Session 7] 13 unit tests passing (test/unit/webhook/decision_test.go) — all EvaluateAdmission branches covered
+- [Session 7] 7 integration tests passing (test/integration/webhook/rbac_webhook_test.go) — envtest webhook server live
+- [Session 7] Root cause fix: ValidatingWebhookConfiguration YAML had `spec.webhooks` instead of top-level `webhooks` — envtest parsed correctly but webhook array was empty
+- [Session 7] Metrics port conflict fixed: all integration test managers now use `Metrics: metricsserver.Options{BindAddress: "0"}` to prevent port 8080 conflicts when tests run in parallel
+- [Session 7] All 118 tests passing (92 unit + 26 integration): go vet clean, go build clean
+- [Session 7] CS-INV-001 enforced: management cluster admission webhook operational
+- [Session 7] CS-INV-004 acknowledged: bootstrap window is TODO(session-8) stub in decision.go
 
 ## Completed Gates (Session 6)
 - [Session 6] Architectural redesign (2026-03-30) fully absorbed and acknowledged in PROGRESS.md
@@ -270,7 +314,7 @@ before any EPG implementation begins):
 - [Session 6, Finding 6-B] Community tier cluster limit: CLOSED. Resolved by 2026-03-30 redesign. INV-025: 5 target clusters, management cluster excluded.
 - [Session 6, Finding 6-C] controller-gen not wired: REQUIRES GOVERNOR SCHEDULING before next domain begins.
 - [Session 6, Finding 6-D] CapabilityRBACProvision semantics: executor-mode Kueue Job (Governor decision). REQUIRES Runner Engineer session.
-- [Session 6] Admission webhook deferred to Session 7. CS-INV-001 and CS-INV-004 unmet. Policy is declarative only — no enforcement on any cluster.
+- [Session 7] Bootstrap RBAC window (TODO(session-8)) — CS-INV-004, INV-020. Window is permanently closed until Session 8. Must be implemented before production deployment.
 - [Session 6] PermissionSet reconciler absent — ProfileReferenceCount has no owner. Add to backlog.
 
 ## Session 1 Exit State

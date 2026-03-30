@@ -4,7 +4,7 @@
 |---|---|---|---|
 | ontai        | session/1-governor-init | d92ff78     | active      |
 | ont-runner   | session/1-governor-init | 56e1582     | active      |
-| ont-security | session/1-governor-init | 230e48c     | active      |
+| ont-security | session/1-governor-init | 8324c0b     | active      |
 | ont-platform | session/1-governor-init | a38188f     | initialized |
 | ont-infra    | session/1-governor-init | 86807d4     | initialized |
 
@@ -30,3 +30,4 @@ No pushes to remote until Platform Governor authorizes.
 | ont-security | 38056c9 | session/5: EPG computation with ceiling intersection, PermissionSnapshot generation, EPGReconciler, unit and integration tests |
 | ontai        | d92ff78 | session/5: tracking files updated with exit state and ont-security commit hash |
 | ont-security | 230e48c | session/6: delivery loop — reconcileDrift, PermissionSnapshotReceipt watch, drift dispatch, unit and integration tests |
+| ont-security | 8324c0b | session/7: admission webhook — decision.go, rbac_handler.go, server.go, webhook config, main.go wiring, 13 unit + 7 integration tests |
