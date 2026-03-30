@@ -22,11 +22,15 @@
 - [x] RBACProfile reconciler with provisioned gate (Session 4, CS-INV-005)
 - [x] EPG computation engine — stub only (Session 4); full computation deferred to Session 5
 - [x] EPG computation engine — full implementation (Session 5)
-- [x] PermissionSnapshot generation (Session 5); delivery to target cluster agents deferred to Session 6
-- [ ] PermissionSnapshot push delivery to target cluster agents (Session 6)
-- [ ] PermissionSnapshotReceipt watch and LastAckedVersion propagation (Session 6)
-- [ ] reconcileDrift wiring in EPGReconciler — TODO(session-6) marker present
-- [ ] Admission webhook server — TODO in main.go (Session 5 or later)
+- [x] PermissionSnapshot generation (Session 5)
+- [x] PermissionSnapshotReceipt watch and drift-check dispatch (Session 6)
+- [x] reconcileDrift implemented with transition events (Session 6)
+- [ ] Admission webhook server — Session 7 (CS-INV-001, CS-INV-004)
+- [ ] Session 7: admission webhook server skeleton in ont-security
+- [ ] Schema Engineer session: wire controller-gen, validate CRD YAML equivalence (REQUIRES GOVERNOR SCHEDULING)
+- [ ] Governor resolution: CapabilityPackCompile — annotate constant with Option B semantics (Finding 6-A)
+- [ ] Governor clarification: CapabilityRBACProvision — executor-mode capability (Finding 6-D, Governor decided)
+- [ ] PermissionSet reconciler: ProfileReferenceCount maintenance (no owner currently)
 - [ ] PermissionService gRPC server (4 operations)
 - [ ] CNPG two-phase boot sequence (CS-INV-003)
 - [x] IdentityBinding reconciler — stub only (Session 4); full EPG trigger wiring deferred to Session 5

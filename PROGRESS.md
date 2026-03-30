@@ -3,13 +3,87 @@ Session 3 opened. Role: Controller Engineer. Objective: RBACPolicy CRD types, va
 Session 3 closed. All 13 steps complete. 12 unit tests + 5 integration tests green. go vet clean. go build clean. Commit c205ea5.
 Session 4 opened. Role: Controller Engineer. Objectives: remaining CRD types (RBACProfile, IdentityBinding, PermissionSet, PermissionSnapshot, PermissionSnapshotReceipt), RBACProfileReconciler with provisioned gate (CS-INV-005), IdentityBindingReconciler validation, EPGReconciler and IdentityBindingReconciler stubs, deferred PermissionSet existence check in RBACPolicyReconciler. All carry-forward findings acknowledged.
 Session 5 opened. Role: Controller Engineer. EPG impact trace documented. Objective: EPGReconciler.Reconcile full implementation with ceiling intersection, PermissionSnapshot generation, Drift detection. Delivery deferred to Session 6.
+Session 6 opened. Role: Controller Engineer. Redesign acknowledged. Pre-session Governor findings documented (6-A through 6-D). Scope: reconcileDrift wiring, PermissionSnapshotReceipt watch, delivery loop closure. Admission webhook deferred to Session 7. No capability constant implementation this session.
 
 # ONT Platform Progress
 ## Platform State
-Status: Foundation in progress. Shared library complete. ont-security CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Delivery to target cluster agents not yet implemented.
+Status: Foundation in progress. Shared library complete. ont-security CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed — delivery acknowledgement from target cluster agents correctly transitions Status.Drift. Admission webhook not yet implemented (policy without enforcement).
 Current Phase: Phase 1 — Development
-Last Session: Session 5 — Controller Engineer, EPG computation engine and PermissionSnapshot generation
-Next Session: Session 6 — Controller Engineer, PermissionSnapshot delivery mechanism, PermissionSnapshotReceipt watch, admission webhook server skeleton
+Last Session: Session 6 — Controller Engineer, delivery loop, drift detection
+Next Session: Session 7 — Controller Engineer, admission webhook server skeleton
+
+## Session 6 Redesign Acknowledgement
+
+Architectural redesign absorbed (2026-03-30). Key changes confirmed:
+1. Two-binary model: ont-runner (compile, debian, never deployed) and ont-agent
+   (execute+agent, distroless, deployed everywhere). INV-022, INV-023, INV-024.
+2. All images on all clusters are distroless. INV-022.
+3. No execute-mode Jobs on target clusters. Management cluster Jobs only. INV-022.
+4. PackBuild is a local spec file, not a cluster CRD. No PackBuildController.
+   No pack-compile Kueue Job on the management cluster. ont-infra-design.md Section 9.
+5. PermissionSnapshot signing: EPGReconciler generates PermissionSnapshot, management
+   cluster ont-agent signs it. EPGReconciler does not sign. ont-security-design.md Section 6.
+6. PermissionSnapshotReceipt managed by target cluster ont-agent, not a separate
+   ont-security agent. ont-security-schema.md Section 8.
+7. Community tier: 5 target clusters, management cluster never counted. INV-025.
+8. License enforcement in ont-agent agent mode only. ont-runner has no license logic.
+
+Open findings evaluated for continued relevance under the 2026-03-30 redesign:
+- [Session 1] Repository layout (subdirectories) — still valid, unaffected by redesign.
+- [Session 2] Community tier cluster limit conflict — RESOLVED by redesign. INV-025
+  authoritative: 5 target clusters, management cluster excluded. Carry as CLOSED.
+- [Session 3] CRD YAML handwritten, controller-gen not wired — still valid, growing risk.
+- [Session 3] DeepCopy manually written — still valid, same note.
+- [Session 3] KUBEBUILDER_ASSETS env var — still valid, infrastructure note.
+
+## Session 6 Pre-Session Governor Findings
+
+**Finding 6-A — CapabilityPackCompile constant is architecturally ambiguous:** GOVERNOR DECISION RECEIVED.
+The Session 2 capability table records CapabilityPackCompile ("pack-compile") as a Kueue
+Job executor-mode capability. The 2026-03-30 redesign removes compile mode from all clusters.
+
+Governor Resolution: **Option B** — Redefine pack-compile as a validation-only capability.
+pack-compile becomes a lightweight ont-agent Job that verifies a ClusterPack OCI artifact's
+checksum and schema after GitOps apply, before the signing loop runs. This adds a verification
+step without running Helm or Kustomize on the cluster. REQUIRES Runner Engineer session to
+implement. Capability constant in pkg/runnerlib/constants.go must be annotated with a comment
+explaining the new semantics before that session begins.
+
+**Finding 6-B — Community tier cluster limit: CLOSED.** Resolved authoritatively by the
+2026-03-30 redesign. INV-025: 5 target clusters for community tier, management cluster never
+counted. License code in ont-agent must implement this. Carrying forward as CLOSED.
+
+**Finding 6-C — controller-gen not yet wired: REQUIRES GOVERNOR SCHEDULING.** All CRD YAML
+and DeepCopy are handwritten. Growing risk as the type surface expands. Recommend inserting
+a Schema Engineer session before the next domain (ont-platform or ont-infra) implementation
+begins. Blocking risk increases with each new type added without generator.
+
+**Finding 6-D — CapabilityRBACProvision semantics under new model:** GOVERNOR DECISION RECEIVED.
+Governor preference is executor-mode capability. rbac-provision remains a named Kueue Job
+capability. Implementation is non-blocking for this session. REQUIRES Runner Engineer session
+for capability implementation.
+
+## Session 6 Pre-Work Review
+
+EPGReconciler state confirmed as of Session 5 (commit 38056c9):
+- `reconcileDrift` method exists in `internal/controller/epg_controller.go` at line 269.
+  It lists PermissionSnapshots, calls the existing `computeDrift` pure function, and patches
+  `Status.Drift`. It does NOT emit events on transitions and does NOT use the new `ComputeDrift`
+  semantics (empty expectedVersion edge case). The TODO(session-6) comment marks this method
+  as requiring the full implementation.
+- `computeDrift` (unexported, line 296) is the existing pure function: `return expected != lastAcked`.
+  This does not handle the empty expectedVersion edge case. It will be replaced by `ComputeDrift`
+  (exported, in drift.go) with the correct 4-case semantics.
+- `SetupWithManager` watches RBACProfile, RBACPolicy, IdentityBinding, PermissionSet via the
+  annotation filter, all mapping to fixed key `{namespace: "security-system", name: "epg-trigger"}`.
+  No PermissionSnapshotReceipt watch exists yet. No dispatch logic in `Reconcile` — all requests
+  go to the full EPG recomputation path.
+- `Status.LastAckedVersion` ownership model confirmed: the EPGReconciler never writes this field.
+  It is owned exclusively by the management cluster ont-agent receipt observation loop (which reads
+  PermissionSnapshotReceipt from target clusters and propagates the SnapshotVersion to
+  PermissionSnapshot.Status.LastAckedVersion). The EPGReconciler reads it in reconcileDrift only.
+- Fixed reconcile request key: all epg-trigger events use `{namespace: "security-system", name: "epg-trigger"}`.
+  The new drift-check path uses a second fixed key `{namespace: "security-system", name: "drift-check"}`.
 
 ## Session 5 EPG Impact Trace
 
@@ -32,6 +106,21 @@ before any EPG implementation begins):
 - **Delivery:** Deferred to Session 6. Status.Drift=true is the correct initial state for a
   freshly generated snapshot. Status.LastAckedVersion is owned exclusively by the runner agent
   in agent mode. The EPGReconciler never writes LastAckedVersion.
+
+## Completed Gates (Session 6)
+- [Session 6] Architectural redesign (2026-03-30) fully absorbed and acknowledged in PROGRESS.md
+- [Session 6] Pre-session Governor findings documented (6-A CapabilityPackCompile Option B, 6-B community tier CLOSED, 6-C controller-gen risk, 6-D rbac-provision executor-mode)
+- [Session 6] internal/controller/drift.go — DriftResult, ComputeDrift (4-case), ReconcileAllDrift (pure functions)
+- [Session 6] reconcileDrift implemented — lists snapshots, calls ReconcileAllDrift, patches status, emits SnapshotDelivered/SnapshotDriftDetected events on transition
+- [Session 6] PermissionSnapshotReceipt watch wired → drift-check fixed key
+- [Session 6] PermissionSnapshot watch wired → drift-check fixed key (enables Test 1 to work without manual receipt creation)
+- [Session 6] Reconcile dispatch: "epg-trigger" → full EPG recomputation; "drift-check" → reconcileDrift only; unknown → logged and ignored
+- [Session 6] Old unexported computeDrift removed; superseded by exported ComputeDrift with correct 4-case semantics
+- [Session 6] 12 unit tests passing (test/unit/controller/drift_test.go)
+- [Session 6] 6 integration tests passing (test/integration/controller/drift_controller_test.go)
+- [Session 6] All 79 unit tests passing; all 19 integration tests passing (18 controller + 1 EPG)
+- [Session 6] go vet clean, go build clean, go build ./cmd/ont-security/ clean
+- [Session 6] ont-security commit 230e48c
 
 ## Completed Gates (Session 5)
 - [Session 5] EPG impact trace documented before implementation (CLAUDE.md Step 4b compliance)
@@ -150,22 +239,39 @@ before any EPG implementation begins):
 - controller-gen wiring for CRD YAML and DeepCopy generation (future session)
 - PermissionSnapshot push delivery to target cluster agents (Session 6)
 
+## Session 6 Exit State
+
+**Commit:** 230e48c (ont-security, branch session/1-governor-init)
+**Message:** session/6: delivery loop — reconcileDrift, PermissionSnapshotReceipt watch, drift dispatch, unit and integration tests
+
+**New files created:**
+- internal/controller/drift.go — DriftResult, ComputeDrift (4-case), ReconcileAllDrift
+- test/unit/controller/drift_test.go — 12 unit tests
+- test/integration/controller/drift_controller_test.go — 6 integration tests
+
+**Modified files:**
+- internal/controller/epg_controller.go — dispatch logic added, reconcileDrift replaced, computeDrift removed,
+  PermissionSnapshotReceipt and PermissionSnapshot watches added, new epgDriftTriggerName constant
+
+**Test counts:** 79 unit tests passing, 19 integration tests passing (18 controller + 1 EPG)
+
+**TODO items remaining in code:**
+- Admission webhook server — TODO in main.go (Session 7)
+- CNPG two-phase boot sequence (future session)
+- PermissionSet reconciler (ProfileReferenceCount maintenance)
+- PermissionService gRPC server
+
 ## Open Findings
-- [Session 1] Operator repositories (`ont-runner/`, `ont-security/`, `ont-platform/`,
-  `ont-infra/`) reside inside `ontai/` as subdirectories, not as peer repositories
-  alongside `ontai/`. Proceeding with current layout.
-- [Session 2] Community tier cluster limit conflict: CLAUDE.md §8 says max 3 clusters;
-  ont-runner-schema.md §11 and ont-runner-design.md §7.5 say max 5 clusters.
-  Relevant to internal/license implementation (Session 5+).
-  Requires Platform Governor resolution before that session begins.
-- [Session 3] CRD YAML is handwritten. controller-gen is not yet wired. When controller-gen
-  is wired in a future session, the handwritten CRD must be replaced with the generated
-  output and the two must be verified equivalent.
-- [Session 3] DeepCopy implementations are manually written in zz_generated.deepcopy.go.
-  Same note as above — replace with controller-gen output when wired.
-- [Session 3] Integration tests require KUBEBUILDER_ASSETS env var. envtest binaries at
-  /tmp/envtest-bins/k8s/1.35.0-linux-amd64 (obtained via setup-envtest). Not persisted
-  across machine reboots — run setup-envtest again if binaries are absent.
+- [Session 1] Operator repositories reside as subdirectories inside `ontai/`. Proceeding.
+- [Session 3] CRD YAML is handwritten. controller-gen not wired. Growing risk. REQUIRES GOVERNOR SCHEDULING.
+- [Session 3] DeepCopy manually written. Same note.
+- [Session 3] Integration tests require KUBEBUILDER_ASSETS=/tmp/envtest-bins/k8s/1.35.0-linux-amd64. Not persisted across reboots.
+- [Session 6, Finding 6-A] CapabilityPackCompile constant semantics: Option B chosen by Governor (validation-only ont-agent Job). REQUIRES Runner Engineer session to implement. Constant in pkg/runnerlib/constants.go must be annotated before that session.
+- [Session 6, Finding 6-B] Community tier cluster limit: CLOSED. Resolved by 2026-03-30 redesign. INV-025: 5 target clusters, management cluster excluded.
+- [Session 6, Finding 6-C] controller-gen not wired: REQUIRES GOVERNOR SCHEDULING before next domain begins.
+- [Session 6, Finding 6-D] CapabilityRBACProvision semantics: executor-mode Kueue Job (Governor decision). REQUIRES Runner Engineer session.
+- [Session 6] Admission webhook deferred to Session 7. CS-INV-001 and CS-INV-004 unmet. Policy is declarative only — no enforcement on any cluster.
+- [Session 6] PermissionSet reconciler absent — ProfileReferenceCount has no owner. Add to backlog.
 
 ## Session 1 Exit State
 All five repositories initialized. Constitutional documents in ontai root committed
