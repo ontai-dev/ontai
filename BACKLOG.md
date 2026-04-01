@@ -28,7 +28,7 @@
 - [ ] Admission webhook server — Session 7 (CS-INV-001, CS-INV-004)
 - [ ] Session 7: admission webhook server skeleton in ont-security
 - [ ] Schema Engineer session: wire controller-gen, validate CRD YAML equivalence (REQUIRES GOVERNOR SCHEDULING)
-- [ ] Governor resolution: CapabilityPackCompile — annotate constant with Option B semantics (Finding 6-A)
+- ~~[ ] Governor resolution: CapabilityPackCompile — annotate constant with Option B semantics (Finding 6-A)~~ REMOVED — dismissed design. Option B (validation-only ont-agent Job) is withdrawn. pack-compile is an ont-runner compile mode capability. No cluster Job. Finding 6-A closed 2026-04-01.
 - [ ] Governor clarification: CapabilityRBACProvision — executor-mode capability (Finding 6-D, Governor decided)
 - [ ] PermissionSet reconciler: ProfileReferenceCount maintenance (no owner currently)
 - [ ] PermissionService gRPC server (4 operations)
@@ -63,8 +63,8 @@
 - [ ] TalosReboot reconciler — CAPI-delegated for capi.enabled=true clusters. Retained as direct runner Job (node-reboot) for capi.enabled=false. Reconciler scope governed by OperationalJobReconciler routing rule.
 
 ### ont-infra
-- [ ] PackBuild reconciler
-- [ ] RunnerConfig generation from PackBuild spec
+- ~~[ ] PackBuild reconciler~~ REMOVED — dismissed design. PackBuild is a local spec file on the workstation, not a cluster CRD. No PackBuildReconciler or PackBuildController will ever be implemented. Replaced by ont-runner compile mode.
+- ~~[ ] RunnerConfig generation from PackBuild spec~~ REMOVED — dismissed design. PackBuild is not a cluster CRD and triggers no RunnerConfig. pack-compile is an ont-runner compile mode invocation, not a Kueue Job.
 - [ ] ClusterPack reconciler
 - [ ] PackExecution reconciler with execution gatekeeper
 - [ ] PackInstance reconciler with drift integration

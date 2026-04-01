@@ -7,6 +7,7 @@ Session 6 opened. Role: Controller Engineer. Redesign acknowledged. Pre-session 
 Session 7 opened. Role: Controller Engineer. Objective: admission webhook skeleton — decision.go (pure, no server imports), rbac_handler.go, server.go, webhook config, main.go wiring. 13 unit tests + 7 integration tests. Bootstrap window is TODO(session-8). CS-INV-001 and CS-INV-004 closed on management cluster.
 Session 7 closed. All gates complete. 92 unit tests + 26 integration tests green. go vet clean. go build clean. Root cause fixed: ValidatingWebhookConfiguration YAML had webhooks under wrong `spec.` prefix. Metrics port conflict fixed across all integration test suites. Commit 8324c0b.
 Governor session: CAPI adoption cross-document alignment complete. Seven documents amended. Path B ruling recorded as authoritative resolution for management cluster lifecycle under CAPI adoption. Six capability constants confirmed retained and not orphaned. INV-013 amended with named reconciler exceptions. ont-security AGENTS.md intake scope expanded to include CAPI providers. Orphaned-constant open finding closed. INV-013 amendment open finding closed.
+Governor session (2026-04-01): pack-compile misclassification fixed across four documents. CapabilityPackCompile separated into compile-mode section in constants.go. ont-runner-schema.md Section 9 incorrect Note on pack-compile removed; Section 6 table pack-compile row corrected. PROGRESS.md Finding 6-A Option B withdrawn; closed with correct resolution. Session 2 Capability Reference table pack-compile row updated. BACKLOG.md PackBuild controller and PackBuildReconciler items marked REMOVED.
 
 # ONT Platform Progress
 ## Platform State
@@ -69,16 +70,20 @@ Open findings evaluated for continued relevance under the 2026-03-30 redesign:
 
 ## Session 6 Pre-Session Governor Findings
 
-**Finding 6-A — CapabilityPackCompile constant is architecturally ambiguous:** GOVERNOR DECISION RECEIVED.
-The Session 2 capability table records CapabilityPackCompile ("pack-compile") as a Kueue
+**Finding 6-A — CapabilityPackCompile constant is architecturally ambiguous:** CLOSED (2026-04-01).
+The Session 2 capability table recorded CapabilityPackCompile ("pack-compile") as a Kueue
 Job executor-mode capability. The 2026-03-30 redesign removes compile mode from all clusters.
 
-Governor Resolution: **Option B** — Redefine pack-compile as a validation-only capability.
-pack-compile becomes a lightweight ont-agent Job that verifies a ClusterPack OCI artifact's
-checksum and schema after GitOps apply, before the signing loop runs. This adds a verification
-step without running Helm or Kustomize on the cluster. REQUIRES Runner Engineer session to
-implement. Capability constant in pkg/runnerlib/constants.go must be annotated with a comment
-explaining the new semantics before that session begins.
+~~Governor Resolution Option B~~ — WITHDRAWN. Option B (validation-only ont-agent Job) was
+an interim ruling and is superseded by the correct final resolution:
+
+**Final Resolution:** pack-compile is an ont-runner compile mode capability. PackBuild is a
+local spec file on the workstation — not a cluster CRD, not a Kueue Job trigger. The ont-runner
+binary reads the PackBuild spec file directly during compile mode invocation. No cluster Job of
+any kind is submitted for pack compilation. The ClusterPack OCI artifact and CR YAML produced
+by ont-runner are the only outputs that reach the cluster (via OCI registry and GitOps). The
+capability constant in pkg/runnerlib/constants.go has been moved to its own compile-mode
+section with accurate inline semantics. Finding 6-A Option B is fully withdrawn.
 
 **Finding 6-B — Community tier cluster limit: CLOSED.** Resolved authoritatively by the
 2026-03-30 redesign. INV-025: 5 target clusters for community tier, management cluster never
@@ -365,13 +370,15 @@ Mode is always executor unless noted. Triggering CRD from operator schemas.
 | CapabilityCredentialRotate  | credential-rotate   | ont-platform| TalosCredentialRotation | Service account key rotation                     |
 | CapabilityHardeningApply    | hardening-apply     | ont-platform| TalosHardeningApply     | Apply TalosHardeningProfile                      |
 | CapabilityClusterReset      | cluster-reset       | ont-platform| TalosClusterReset       | Destructive factory reset with human gate        |
-| CapabilityPackCompile       | pack-compile        | ont-infra   | PackBuild               | Compile PackBuild into ClusterPack (executor Job)|
+| CapabilityPackCompile       | pack-compile        | ont-infra   | PackBuild spec file (workstation) | Compile mode capability invoked by ont-runner binary on workstation or CI — not a Kueue Job |
 | CapabilityPackDeploy        | pack-deploy         | ont-infra   | PackExecution           | Apply ClusterPack to target cluster              |
 | CapabilityRBACProvision     | rbac-provision      | ont-security| (agent-initiated)       | Provision RBAC artifacts from snapshot           |
 
 Notes:
-- pack-compile runs as a Kueue Job (executor mode) triggered by ont-infra — distinct
-  from the runner compile mode binary subcommand. No confusion with compile mode.
+- pack-compile is a compile mode capability invoked by the ont-runner binary on the workstation
+  or in CI. It is not a Kueue Job. PackBuild is a local spec file, not a cluster CRD. The
+  Session 2 description ("executor Job") was incorrect and is superseded by this correction
+  (2026-04-01, Finding 6-A final resolution).
 - cluster-reset is multi-step and uses the PVC protocol (ont-runner-design.md §5.6).
 - bootstrap is multi-step and uses the PVC protocol.
 - stack-upgrade is multi-step and uses the PVC protocol.

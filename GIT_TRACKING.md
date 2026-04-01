@@ -31,3 +31,5 @@ No pushes to remote until Platform Governor authorizes.
 | ontai        | d92ff78 | session/5: tracking files updated with exit state and ont-security commit hash |
 | ont-security | 230e48c | session/6: delivery loop — reconcileDrift, PermissionSnapshotReceipt watch, drift dispatch, unit and integration tests |
 | ont-security | 8324c0b | session/7: admission webhook — decision.go, rbac_handler.go, server.go, webhook config, main.go wiring, 13 unit + 7 integration tests |
+| ont-runner   | bcbb224 | session/governor: fix pack-compile misclassification across runnerlib, schema, progress, backlog |
+| ontai        | 0fc60fb | session/governor: fix pack-compile misclassification across runnerlib, schema, progress, backlog |

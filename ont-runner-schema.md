@@ -223,7 +223,7 @@ corresponding implementation. ont-agent exits with a structured OperationResult.
 | credential-rotate   | ont-platform    | TalosCredentialRotation                             | Service account key rotation             |
 | hardening-apply     | ont-platform    | TalosHardeningApply                                 | Apply TalosHardeningProfile              |
 | cluster-reset       | ont-platform    | TalosClusterReset                                   | Destructive factory reset with human gate|
-| pack-compile        | ont-infra       | PackBuild                                           | Compile PackBuild into ClusterPack       |
+| pack-compile        | ont-infra       | PackBuild spec file (compile mode — not a cluster CRD, not a Kueue Job) | ont-runner compile mode: renders PackBuild inputs into ClusterPack OCI artifact |
 | pack-deploy         | ont-infra       | PackExecution                                       | Apply ClusterPack to target cluster      |
 | rbac-provision      | ont-security    | (agent-initiated)                                   | Provision RBAC artifacts from snapshot   |
 
@@ -232,9 +232,16 @@ and node-reboot are confirmed retained. They are not orphaned. The Triggering CR
 for each is active when TalosCluster spec.capi.enabled=false only (management cluster
 direct path). For capi.enabled=true clusters CAPI handles these operations natively.
 
-All capabilities run in execute mode on the management cluster as Kueue Jobs using
-the distroless ont-agent image. No capability runs on a target cluster as a Job.
-All capabilities reach target clusters via mounted kubeconfig and talosconfig Secrets.
+All capabilities except pack-compile run in execute mode on the management cluster as
+Kueue Jobs using the distroless ont-agent image. No capability runs on a target cluster
+as a Job. All capabilities reach target clusters via mounted kubeconfig and talosconfig
+Secrets.
+
+Note on pack-compile: pack-compile is the sole compile-mode entry in this table. It does
+not follow the execute-mode Job pattern that all other capabilities follow. It appears
+here for completeness — the capability name constant exists in the shared library so that
+ont-infra and ont-runner share a common vocabulary. However, pack-compile is never
+submitted as a Kueue Job, never run by ont-agent, and never runs on any cluster.
 
 **Future-proofing:** When a new named capability is added to ont-agent, it is
 declared in the shared library's capability manifest. Operators discover it via
@@ -303,13 +310,10 @@ For pack compilation (triggered as a Kueue Job by ont-infra using ont-agent imag
 12. Write OperationResult with registered ClusterPack version and digest.
 13. Exit.
 
-Note on pack-compile: although Helm and Kustomize are compile-mode clients, pack
-compilation runs as a Kueue Job using the ont-agent image. This is possible because
-the pack-compile Job invokes the ont-runner binary (mounted as a sidecar volume or
-init container) rather than ont-agent's capability engine for the compilation step.
-The Job wrapper and OperationResult writing are ont-agent's responsibility. The actual
-Helm rendering and Kustomize resolution are delegated to the ont-runner binary invoked
-within the Job. This is the only context where ont-runner executes within a Job boundary.
+pack-compile is an ont-runner compile mode capability. It is invoked by the human or
+CI/CD pipeline on the workstation. It never runs on any cluster. It never runs as a
+Kueue Job. The ClusterPack OCI artifact and CR YAML it produces are the only outputs
+that reach the cluster, via OCI registry and GitOps respectively.
 
 ---
 
