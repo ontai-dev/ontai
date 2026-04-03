@@ -4,7 +4,7 @@
 |---|---|---|---|
 | ontai        | session/1-governor-init | e1d06cf     | active                    |
 | conductor    | session/1-governor-init | 4e09ead     | active                    |
-| guardian     | session/1-governor-init | e7a401b     | active                    |
+| guardian     | session/1-governor-init | 5fe5952     | active                    |
 | platform     | session/1-governor-init | 001fb16     | active                    |
 | wrapper      | session/1-governor-init | 0371234     | active                    |
 | seam-core    | main                    | c6d4626     | initialized               |
@@ -43,3 +43,4 @@ No pushes to remote until Platform Governor authorizes.
 | ontai        | dd7247f | session/governor: Seam rename — schema renames, .gitignore, tracking updates, seam-core init    |
 | guardian     | 52e1bb6 | session/8: bootstrap RBAC window — INV-020, CS-INV-004                                          |
 | guardian     | e7a401b | session/schema: guardian — wire controller-gen, replace handwritten CRD YAML and deepcopy       |
+| guardian     | 5fe5952 | session/10: Verb enum fix (F-S3C) and IdentityProvider reconciler                               |

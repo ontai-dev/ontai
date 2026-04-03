@@ -37,9 +37,9 @@
 - [ ] PermissionSet reconciler (owns ProfileReferenceCount maintenance)
 - [ ] Third-party RBAC intake process
 - [x] controller-gen wiring (replaces handwritten CRD YAML and zz_generated.deepcopy.go) — DONE Session 9
-- [ ] PermissionRule.Verbs typed enum: change []string to []Verb with +kubebuilder:validation:Enum; regenerate CRD YAML after (Controller Engineer session required)
-- [ ] IdentityProvider reconciler — PREREQUISITE: IdentityProvider must be implemented before
-      any Controller Engineer session implementing identity trust methods in IdentityBinding.
+- [x] PermissionRule.Verbs typed enum — DONE Session 10, commit 5fe5952
+- [x] IdentityProvider reconciler — DONE Session 10, commit 5fe5952. Prerequisite for IdentityBinding trust methods now satisfied.
+- [ ] IdentityBinding identity trust methods — UNBLOCKED (IdentityProvider prerequisite satisfied)
 
 ### platform (formerly ont-platform)
 - [ ] TalosCluster reconciler (bootstrap and import modes — management cluster direct path)

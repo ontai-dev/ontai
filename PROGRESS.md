@@ -10,15 +10,47 @@ Session 8 opened. Role: Controller Engineer. Objective: bootstrap RBAC window �
 Session 8 closed. Bootstrap RBAC window implemented and verified. Commit 52e1bb6.
 Session 9 opened. Role: Schema Engineer. Objective: wire controller-gen, replace handwritten CRD YAML and zz_generated.deepcopy.go, validate equivalence. Finding F-S3 to close.
 Session 9 closed. controller-gen wired. zz_generated.deepcopy.go replaced (780 lines generated, 791 handwritten). All 6 CRD YAML files replaced with generated output — structural schema unchanged. Build clean, 21 unit tests pass. Open sub-finding: PermissionRule.Verbs enum constraint in handwritten CRD cannot be expressed as field-level marker on []string in controller-gen v0.16.1; requires typed Verb string — Controller Engineer session. F-S3 closed. Commit e7a401b.
+Session 10 opened. Role: Controller Engineer. Objectives: fix PermissionRule.Verbs (F-S3C), implement IdentityProvider reconciler.
+Session 10 closed. F-S3C closed. IdentityProvider reconciler implemented. Build clean, all unit tests pass. Commit 5fe5952.
 Governor session: CAPI adoption cross-document alignment complete. Seven documents amended. Path B ruling recorded as authoritative resolution for management cluster lifecycle under CAPI adoption. Six capability constants confirmed retained and not orphaned. INV-013 amended with named reconciler exceptions. guardian AGENTS.md intake scope expanded to include CAPI providers. Orphaned-constant open finding closed. INV-013 amendment open finding closed.
 Governor session (2026-04-01): pack-compile misclassification fixed across four documents. CapabilityPackCompile separated into compile-mode section in constants.go. conductor-schema.md Section 9 incorrect Note on pack-compile removed; Section 6 table pack-compile row corrected. PROGRESS.md Finding 6-A Option B withdrawn; closed with correct resolution. Session 2 Capability Reference table pack-compile row updated. BACKLOG.md PackBuild controller and PackBuildReconciler items marked REMOVED.
 
 # ONT Platform Progress
 ## Platform State
-Status: Foundation in progress. Shared library complete. guardian CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed. Admission webhook operational — CS-INV-001 enforced. Bootstrap RBAC window implemented — INV-020 and CS-INV-004 closed. controller-gen wired — F-S3 closed.
+Status: Foundation in progress. Shared library complete. guardian CRD surface complete. Five reconcilers operational (RBACPolicy, RBACProfile, IdentityBinding, EPG, IdentityProvider). EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed. Admission webhook operational — CS-INV-001 enforced. Bootstrap RBAC window implemented — INV-020 and CS-INV-004 closed. controller-gen wired — F-S3 closed. Verb enum constraint restored — F-S3C closed.
 Current Phase: Phase 1 — Development
-Last Session: Session 9 — Schema Engineer, controller-gen wiring, CRD YAML and deepcopy replacement
-Next Session: PermissionSet reconciler (ProfileReferenceCount), PermissionService gRPC, or typed Verb enum fix (Governor scheduling required)
+Last Session: Session 10 — Controller Engineer, Verb enum fix, IdentityProvider reconciler
+Next Session: PermissionSet reconciler (ProfileReferenceCount), PermissionService gRPC, or IdentityBinding identity trust methods (PREREQUISITE: IdentityProvider now implemented — unblocked)
+
+## Session 10 Exit State
+
+**Commit:** 5fe5952 (guardian, branch session/1-governor-init)
+**Message:** session/10: Verb enum fix (F-S3C) and IdentityProvider reconciler
+
+**Part 1 — Verb enum (F-S3C closed):**
+- Added typed `Verb string` to `permissionset_types.go` with `+kubebuilder:validation:Enum` and eight `Verb*` constants
+- Changed `PermissionRule.Verbs` from `[]string` to `[]Verb`
+- Updated `intersection.go`: `unionVerbSets` converts `Verb` to `string`; added `verbsToStrings` helper; updated `IntersectWithCeiling` call site
+- Updated `permissionset_validation.go`: cast at `validVerbs` map lookup
+- Updated all affected test files: added `toVerbs` helper in epg tests; updated permissionset unit tests and three integration test files
+- Regenerated `zz_generated.deepcopy.go` and `permissionsets` CRD YAML; enum constraint now present in generated CRD `items` schema
+
+**Part 2 — IdentityProvider reconciler:**
+- `api/v1alpha1/identityprovider_types.go`: `IdentityProvider` CRD with `IdentityProviderType` enum (oidc/pki/token), `IdentityProviderSpec` (Type, IssuerURL, CABundle, TokenSigningKey, AllowedAudiences, ValidationRules), `IdentityProviderStatus` with conditions, condition and reason constants
+- `internal/controller/identityprovider_validation.go`: pure structural validation; type-specific required field checks; all-failures collection model
+- `internal/controller/identityprovider_controller.go`: reconciler with structural validation → Valid condition; OIDC reachability check via injectable `HTTPDoer` → Reachable condition; EPG recompute annotation signal on success
+- `internal/controller/epg_controller.go`: IdentityProvider added to annotation-filtered watch and `clearAnnotations`; RBAC marker added
+- `cmd/ont-security/main.go`: `IdentityProviderReconciler` wired before EPGReconciler
+- Generated `security.ontai.dev_identityproviders.yaml` CRD (7 CRDs total)
+- `test/unit/controller/identityprovider_validation_test.go`: 8 unit tests covering all three types, missing required fields, wrong field for type, unknown type defense-in-depth, optional fields pass-through
+
+**Test counts:** 3 unit test packages passing (controller, epg, webhook). Build clean.
+
+**Findings closed:**
+- F-S3C: PermissionRule.Verbs enum constraint restored in generated CRD via typed Verb string.
+
+**Prerequisite unblocked:**
+- BACKLOG item "IdentityProvider reconciler — PREREQUISITE before IdentityBinding identity trust methods" is now satisfied. IdentityBinding identity trust method implementation is unblocked.
 
 ## Session 9 Exit State
 
