@@ -8,7 +8,7 @@
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
 | conductor    | bcbb224     | Shared library complete       | Binary entry points, capability engine, execute/agent modes |
-| guardian     | 52e1bb6     | Bootstrap RBAC window closed  | PermissionSet reconciler, PermissionService gRPC, controller-gen |
+| guardian     | e7a401b     | controller-gen wired, F-S3 closed | PermissionSet reconciler, PermissionService gRPC, typed Verb enum fix |
 | platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
 | seam-core    | c6d4626     | Initialized — skeleton only   | Schema controller implementation                            |
@@ -20,7 +20,7 @@
 | ID    | Description                                                                    | Blocking?                              |
 |-------|--------------------------------------------------------------------------------|----------------------------------------|
 | F-S1  | Repo subdirectories not yet created in component repos                         | No                                     |
-| F-S3  | CRD YAML and DeepCopy are handwritten; controller-gen not wired (growing risk) | Yes — before any new CRD type additions |
+| F-S3  | ~~CRD YAML and DeepCopy are handwritten; controller-gen not wired~~ CLOSED Session 9 | Closed |
 | F-S3B | KUBEBUILDER_ASSETS must be set manually for envtest runs                       | No (infra note)                        |
 | F-6D  | CapabilityRBACProvision executor-mode confirmed; implementation pending        | No — requires Conductor Engineer session |
 
@@ -52,11 +52,11 @@
 **Options (Governor decides):**
 - Guardian: PermissionSet reconciler (ProfileReferenceCount) — no blocking prerequisite
 - Guardian: PermissionService gRPC server (4 operations) — no blocking prerequisite
-- Guardian: controller-gen wiring (F-S3) — REQUIRES GOVERNOR SCHEDULING, blocks new CRD type additions
+- Guardian: typed Verb enum fix — change PermissionRule.Verbs from []string to []Verb with +kubebuilder:validation:Enum; Controller Engineer session; regenerate CRDs after
 - Guardian: IdentityProvider reconciler — PREREQUISITE before IdentityBinding identity trust methods
 - Conductor: binary entry points, capability engine (next major work stream)
 **Pre-conditions (Guardian work):**
-- guardian at 52e1bb6 on branch `session/1-governor-init`
+- guardian at e7a401b on branch `session/1-governor-init`
 - KUBEBUILDER_ASSETS is set in the test environment before running integration tests
 
 ---

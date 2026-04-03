@@ -2,9 +2,9 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | session/1-governor-init | dd7247f     | active                    |
+| ontai        | session/1-governor-init | (pending)   | active                    |
 | conductor    | session/1-governor-init | 4e09ead     | active                    |
-| guardian     | session/1-governor-init | 52e1bb6     | active                    |
+| guardian     | session/1-governor-init | e7a401b     | active                    |
 | platform     | session/1-governor-init | 001fb16     | active                    |
 | wrapper      | session/1-governor-init | 0371234     | active                    |
 | seam-core    | main                    | c6d4626     | initialized               |
@@ -42,3 +42,4 @@ No pushes to remote until Platform Governor authorizes.
 | wrapper      | 0371234 | session/governor: Seam rename — module to wrapper, design doc rename                            |
 | ontai        | dd7247f | session/governor: Seam rename — schema renames, .gitignore, tracking updates, seam-core init    |
 | guardian     | 52e1bb6 | session/8: bootstrap RBAC window — INV-020, CS-INV-004                                          |
+| guardian     | e7a401b | session/schema: guardian — wire controller-gen, replace handwritten CRD YAML and deepcopy       |

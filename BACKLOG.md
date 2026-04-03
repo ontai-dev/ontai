@@ -26,7 +26,7 @@
 - [x] reconcileDrift implemented with transition events (Session 6)
 - [x] Admission webhook server skeleton (Session 7, CS-INV-001, CS-INV-004)
 - [x] Bootstrap RBAC window — close TODO(session-8) in internal/webhook/decision.go (INV-020, CS-INV-004)
-- [ ] Schema Engineer session: wire controller-gen, validate CRD YAML equivalence (REQUIRES GOVERNOR SCHEDULING)
+- [x] Schema Engineer session: wire controller-gen, validate CRD YAML equivalence — DONE Session 9, commit e7a401b. Open sub-finding: PermissionRule.Verbs enum requires typed Verb string (Controller Engineer session)
 - ~~[ ] Governor resolution: CapabilityPackCompile — annotate constant with Option B semantics (Finding 6-A)~~ REMOVED — dismissed design. Option B (validation-only Conductor Job) is withdrawn. pack-compile is a Compiler compile mode capability. No cluster Job. Finding 6-A closed 2026-04-01.
 - [ ] Governor clarification: CapabilityRBACProvision — executor-mode capability (Finding 6-D, Governor decided)
 - [ ] PermissionSet reconciler: ProfileReferenceCount maintenance (no owner currently)
@@ -36,7 +36,8 @@
 - [x] PermissionSet types and validation (Session 4)
 - [ ] PermissionSet reconciler (owns ProfileReferenceCount maintenance)
 - [ ] Third-party RBAC intake process
-- [ ] controller-gen wiring (replaces handwritten CRD YAML and zz_generated.deepcopy.go)
+- [x] controller-gen wiring (replaces handwritten CRD YAML and zz_generated.deepcopy.go) — DONE Session 9
+- [ ] PermissionRule.Verbs typed enum: change []string to []Verb with +kubebuilder:validation:Enum; regenerate CRD YAML after (Controller Engineer session required)
 - [ ] IdentityProvider reconciler — PREREQUISITE: IdentityProvider must be implemented before
       any Controller Engineer session implementing identity trust methods in IdentityBinding.
 

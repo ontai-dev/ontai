@@ -8,15 +8,43 @@ Session 7 opened. Role: Controller Engineer. Objective: admission webhook skelet
 Session 7 closed. All gates complete. 92 unit tests + 26 integration tests green. go vet clean. go build clean. Root cause fixed: ValidatingWebhookConfiguration YAML had webhooks under wrong `spec.` prefix. Metrics port conflict fixed across all integration test suites. Commit 8324c0b.
 Session 8 opened. Role: Controller Engineer. Objective: bootstrap RBAC window — close TODO(session-8) in decision.go, implement INV-020 and CS-INV-004.
 Session 8 closed. Bootstrap RBAC window implemented and verified. Commit 52e1bb6.
+Session 9 opened. Role: Schema Engineer. Objective: wire controller-gen, replace handwritten CRD YAML and zz_generated.deepcopy.go, validate equivalence. Finding F-S3 to close.
+Session 9 closed. controller-gen wired. zz_generated.deepcopy.go replaced (780 lines generated, 791 handwritten). All 6 CRD YAML files replaced with generated output — structural schema unchanged. Build clean, 21 unit tests pass. Open sub-finding: PermissionRule.Verbs enum constraint in handwritten CRD cannot be expressed as field-level marker on []string in controller-gen v0.16.1; requires typed Verb string — Controller Engineer session. F-S3 closed. Commit e7a401b.
 Governor session: CAPI adoption cross-document alignment complete. Seven documents amended. Path B ruling recorded as authoritative resolution for management cluster lifecycle under CAPI adoption. Six capability constants confirmed retained and not orphaned. INV-013 amended with named reconciler exceptions. guardian AGENTS.md intake scope expanded to include CAPI providers. Orphaned-constant open finding closed. INV-013 amendment open finding closed.
 Governor session (2026-04-01): pack-compile misclassification fixed across four documents. CapabilityPackCompile separated into compile-mode section in constants.go. conductor-schema.md Section 9 incorrect Note on pack-compile removed; Section 6 table pack-compile row corrected. PROGRESS.md Finding 6-A Option B withdrawn; closed with correct resolution. Session 2 Capability Reference table pack-compile row updated. BACKLOG.md PackBuild controller and PackBuildReconciler items marked REMOVED.
 
 # ONT Platform Progress
 ## Platform State
-Status: Foundation in progress. Shared library complete. guardian CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed. Admission webhook operational — CS-INV-001 enforced. Bootstrap RBAC window implemented — INV-020 and CS-INV-004 closed.
+Status: Foundation in progress. Shared library complete. guardian CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed. Admission webhook operational — CS-INV-001 enforced. Bootstrap RBAC window implemented — INV-020 and CS-INV-004 closed. controller-gen wired — F-S3 closed.
 Current Phase: Phase 1 — Development
-Last Session: Session 8 — Controller Engineer, bootstrap RBAC window, 21 webhook unit tests
-Next Session: PermissionSet reconciler (ProfileReferenceCount), PermissionService gRPC, or controller-gen wiring (Governor scheduling required)
+Last Session: Session 9 — Schema Engineer, controller-gen wiring, CRD YAML and deepcopy replacement
+Next Session: PermissionSet reconciler (ProfileReferenceCount), PermissionService gRPC, or typed Verb enum fix (Governor scheduling required)
+
+## Session 9 Exit State
+
+**Commit:** e7a401b (guardian, branch session/1-governor-init)
+**Message:** session/schema: guardian — wire controller-gen, replace handwritten CRD YAML and deepcopy
+
+**Modified files:**
+- api/v1alpha1/groupversion_info.go — added `+groupName=security.ontai.dev` and `+kubebuilder:object:generate=true` package-level markers; required for correct controller-gen v0.16.1 behaviour
+- api/v1alpha1/zz_generated.deepcopy.go — replaced handwritten (791 lines) with generated (780 lines); all types covered alphabetically; all pointer/slice/map fields deep-copied correctly
+- config/crd/*.yaml (all 6) — replaced handwritten CRD YAML with generated; structural schema identical; generated files add version annotation and full field descriptions from Go doc comments
+- Makefile — `generate` target now invokes controller-gen for both object (deepcopy) and crd; `generate-deepcopy` and `generate-crd` available as discrete targets
+
+**Finding F-S3 closed.** controller-gen is now the authoritative generator for deepcopy and CRD YAML.
+
+**Open sub-finding (logged for Controller Engineer session):**
+- `PermissionRule.Verbs []string` had an enum constraint (`get, list, watch, create, update, patch, delete, deletecollection`) in the handwritten CRD YAML.
+- This cannot be expressed as a field-level marker on `[]string` in controller-gen v0.16.1 — the `+kubebuilder:validation:items:Enum` marker crashes the generator.
+- Correct fix: define a typed `Verb string` with `+kubebuilder:validation:Enum=...` and change field to `[]Verb`. This is a non-trivial API type change requiring a Controller Engineer session.
+- Until fixed, the generated CRD allows any string in the Verbs list (no enum validation at the API server level). Validation in the controller remains effective.
+
+**Test counts:** 21 webhook unit tests + all prior unit tests passing. Build clean.
+
+**Invariants closed this session:**
+- F-S3: controller-gen wired; handwritten CRD YAML and deepcopy eliminated.
+
+**F-S3B note:** KUBEBUILDER_ASSETS must still be set manually before integration tests. Infrastructure note, not a code issue.
 
 ## Session 8 Exit State
 
