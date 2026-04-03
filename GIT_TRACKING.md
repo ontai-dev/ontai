@@ -2,7 +2,7 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | session/1-governor-init | (pending)   | active                    |
+| ontai        | session/1-governor-init | dd7247f     | active                    |
 | conductor    | session/1-governor-init | 4e09ead     | active                    |
 | guardian     | session/1-governor-init | 0eb92da     | active                    |
 | platform     | session/1-governor-init | 001fb16     | active                    |
@@ -40,3 +40,4 @@ No pushes to remote until Platform Governor authorizes.
 | guardian     | 0eb92da | session/governor: Seam rename — module to guardian, import paths, annotation value, design doc  |
 | platform     | 001fb16 | session/governor: Seam rename — module to platform, design doc rename, licensing removal        |
 | wrapper      | 0371234 | session/governor: Seam rename — module to wrapper, design doc rename                            |
+| ontai        | dd7247f | session/governor: Seam rename — schema renames, .gitignore, tracking updates, seam-core init    |
