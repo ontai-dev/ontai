@@ -34,3 +34,4 @@ No pushes to remote until Platform Governor authorizes.
 | ont-security | 8324c0b | session/7: admission webhook — decision.go, rbac_handler.go, server.go, webhook config, main.go wiring, 13 unit + 7 integration tests |
 | ont-runner   | bcbb224 | session/governor: fix pack-compile misclassification across runnerlib, schema, progress, backlog |
 | ontai        | 0fc60fb | session/governor: fix pack-compile misclassification across runnerlib, schema, progress, backlog |
+| ontai        | 1f1071d | session/governor: rebranding to Seam — operator names, consolidated platform CRDs, IdentityProvider schema, branding directory, tracking updates |
