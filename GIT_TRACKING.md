@@ -7,7 +7,7 @@
 | guardian     | session/1-governor-init | 5fe5952     | active                    |
 | platform     | session/1-governor-init | 001fb16     | active                    |
 | wrapper      | session/1-governor-init | 0371234     | active                    |
-| seam-core    | main                    | c6d4626     | initialized               |
+| seam-core    | main                    | d0fba81     | lineage stub — pkg/lineage + InfrastructureLineageIndex types |
 
 ## Branch Convention
 session/{N}-{role}-{description} for all work branches.
@@ -44,3 +44,4 @@ No pushes to remote until Platform Governor authorizes.
 | guardian     | 52e1bb6 | session/8: bootstrap RBAC window — INV-020, CS-INV-004                                          |
 | guardian     | e7a401b | session/schema: guardian — wire controller-gen, replace handwritten CRD YAML and deepcopy       |
 | guardian     | 5fe5952 | session/10: Verb enum fix (F-S3C) and IdentityProvider reconciler                               |
+| seam-core    | d0fba81 | session/schema: lineage stub — InfrastructureLineageIndex types and pkg/lineage shared library  |
