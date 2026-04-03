@@ -1,4 +1,4 @@
-# ont-platform-schema
+# platform-schema
 > API Group: platform.ontai.dev
 > Operator: Platform
 > CAPI Providers: cluster.x-k8s.io, bootstrap.cluster.x-k8s.io, infrastructure.cluster.x-k8s.io
@@ -112,13 +112,13 @@ it runs on. The management cluster bootstrap path is:
 Human runs Compiler compile mode → generates machineconfigs, SOPS-encrypts
 secrets → secrets committed to git → TalosCluster CR (mode: bootstrap) committed
 to git → GitOps applies to a temporary Kubernetes context (or direct kubectl) →
-Platform generates a bootstrap Job using Compiler directly → runner pushes
+Platform generates a bootstrap Job using compiler directly → conductor pushes
 machineconfigs to seed nodes on port 50000 → etcd initializes → Kubernetes API
 comes up → enable phase installs Guardian first, then CAPI providers and
 remaining prerequisites, then other operators.
 
 After the management cluster exists, CAPI is installed and manages only target
-clusters. The management cluster's own TalosCluster CR in ont-system has
+clusters. The management cluster's own TalosCluster CR in seam-system has
 mode: bootstrap and no CAPI children — management cluster lifecycle is not
 CAPI-managed.
 
@@ -185,7 +185,7 @@ Status fields:
 ### TalosControlPlane
 
 Scope: Namespaced — tenant-{cluster-name}
-Short name: tcp
+Short name: tcpl
 API group: platform.ontai.dev
 
 Dual-mode CRD. At compile time it serves as a command contract: Compiler reads
@@ -232,7 +232,7 @@ specs.
 
 These CRDs are owned by Platform. They are not delegated to CAPI because CAPI has
 no equivalent concept, or because they represent dual-path operations where the
-management cluster path requires a direct runner Job while CAPI handles the target
+management cluster path requires a direct conductor Job while CAPI handles the target
 cluster path natively.
 
 ### TalosCluster
@@ -274,11 +274,11 @@ this window. This is expected and not a degraded state.
 
 Scope: Namespaced — tenant-{cluster-name}
 Short name: em
-Named runner capabilities: etcd-backup, etcd-restore, etcd-defrag
+Named conductor capabilities: etcd-backup, etcd-restore, etcd-defrag
 
 Absorbs TalosBackup, TalosEtcdMaintenance, TalosRecovery. Covers all etcd
 lifecycle operations for both management and target clusters. CAPI has no etcd
-concept. Always a direct runner Job regardless of spec.capi.enabled on TalosCluster.
+concept. Always a direct conductor (mode: execute) Job regardless of spec.capi.enabled on TalosCluster.
 
 Key spec fields: clusterRef, operation (backup, restore, defrag), s3Destination (for
 backup), s3SnapshotPath (for restore), targetNodes (for restore), schedule (for
@@ -290,11 +290,11 @@ recurring backup).
 
 Scope: Namespaced — tenant-{cluster-name}
 Short name: nm
-Named runner capabilities: node-patch, hardening-apply, credential-rotate
+Named conductor capabilities: node-patch, hardening-apply, credential-rotate
 
 Absorbs TalosNodePatch, TalosHardeningApply, TalosCredentialRotation. Covers
 targeted node-level operations CAPI has no equivalent for. Applies to both
-management and target clusters via direct runner Job regardless of spec.capi.enabled.
+management and target clusters via direct conductor(mode: execute) Job regardless of spec.capi.enabled.
 
 Key spec fields: clusterRef, operation (patch, hardening-apply, credential-rotate),
 targetNodes, patchSecretRef (for patch), hardeningProfileRef (for hardening-apply),
@@ -306,10 +306,10 @@ rotateServiceAccountKeys and rotateOIDCCredentials (for credential-rotate).
 
 Scope: Namespaced — tenant-{cluster-name}
 Short name: pkir
-Named runner capability: pki-rotate
+Named Conductor capability: pki-rotate
 
 Absorbs TalosPKIRotation. Single-purpose. Applies to both management and target
-clusters via direct runner Job. CAPI has no PKI rotation equivalent.
+clusters via direct conductor(mode: execute) Job. CAPI has no PKI rotation equivalent.
 
 Key spec fields: clusterRef.
 
@@ -319,7 +319,7 @@ Key spec fields: clusterRef.
 
 Scope: Namespaced — tenant-{cluster-name}
 Short name: crst
-Named runner capability: cluster-reset
+Named conductor capability: cluster-reset
 
 Absorbs TalosClusterReset. Destructive factory reset. Human gate required:
 ontai.dev/reset-approved=true annotation must be present before any reconciliation
@@ -327,10 +327,9 @@ proceeds.
 
 For CAPI-managed clusters (spec.capi.enabled=true): deletes CAPI Cluster object
 first, waits for all Machine objects to reach Deleted phase through the Seam
-Infrastructure Provider, then submits cluster-reset runner Job.
+Infrastructure Provider, then submits cluster-reset conductor(mode: execute) Job.
 
-For management cluster (spec.capi.enabled=false): submits cluster-reset runner
-Job directly.
+For management cluster (spec.capi.enabled=false): submits cluster-reset Conductor(mode: execute) Job directly.
 
 Key spec fields: clusterRef, drainGracePeriodSeconds, wipeDisks.
 
@@ -359,10 +358,10 @@ by spec.capi.enabled on the owning TalosCluster.
 
 For CAPI-managed clusters (spec.capi.enabled=true): updates TalosControlPlane
 version field and MachineDeployment rolling upgrade settings natively through CAPI
-machinery — no runner Job submitted.
+machinery — no conductor(mode: execute) Job submitted.
 
 For management cluster (spec.capi.enabled=false): submits talos-upgrade, kube-upgrade,
-or stack-upgrade runner Job via OperationalJobReconciler routing.
+or stack-upgrade conductor(mode: execute) Job via OperationalJobReconciler routing.
 
 Key spec fields: clusterRef, upgradeType (talos, kubernetes, stack),
 targetTalosVersion, targetKubernetesVersion, rollingStrategy, healthGateConditions.
@@ -382,7 +381,7 @@ replicas for scale-up, deletes specific Machine objects for decommission, or set
 Machine reboot annotation — all handled natively by CAPI.
 
 For management cluster (spec.capi.enabled=false): submits node-scale-up,
-node-decommission, or node-reboot runner Job.
+node-decommission, or node-reboot conductor(mode: execute) Job.
 
 Key spec fields: clusterRef, operation (scale-up, decommission, reboot),
 targetNodes, replicaCount (for scale-up).
@@ -400,7 +399,7 @@ For CAPI-managed clusters (spec.capi.enabled=true): sets cluster.x-k8s.io/paused
 on the CAPI Cluster object when no active window exists and blockOutsideWindows=true.
 Pause halts all CAPI reconciliation until the window opens and the annotation is lifted.
 
-For management cluster (spec.capi.enabled=false): blocks runner Job admission gate for
+For management cluster (spec.capi.enabled=false): blocks conductor(mode: execute) Job admission gate for
 the cluster during restricted periods.
 
 Key spec fields: clusterRef, windows, blockOutsideWindows.
@@ -492,15 +491,15 @@ Never writes to security.ontai.dev, infra.ontai.dev, or runner.ontai.dev CRDs.
 
 *2026-03-30 — Section 6 retitled "CRDs Delegated to CAPI for Target Clusters"*
 *  (Path B ruling). Six lifecycle CRDs retained with dual-path semantics:*
-*  CAPI-native for spec.capi.enabled=true (target clusters), direct runner Job via*
+*  CAPI-native for spec.capi.enabled=true (target clusters), direct conductor(mode: execute) Job via*
 *  OperationalJobReconciler for spec.capi.enabled=false (management cluster).*
-*  Named runner capability references restored for all six entries.*
+*  Named conductor capability references restored for all six entries.*
 
-*2026-04-03 — Operator rename: Platform (formerly ont-platform), Guardian (formerly*
-*  ont-security), Wrapper (formerly ont-infra), Compiler (formerly ont-runner).*
+*2026-04-03 — Operator rename: Platform (formerly platform), Guardian (formerly*
+*  guardian), Wrapper (formerly wrapper), Conductor [Compiler, Conductor (formerly conductor).*]
 *  CAPI infrastructure CRDs renamed: SeamInfrastructureCluster (formerly*
-*  ONTInfrastructureCluster), SeamInfrastructureMachine (formerly*
-*  ONTInfrastructureMachine). API group infrastructure.cluster.x-k8s.io unchanged.*
+*  SeamInfrastructureCluster), SeamInfrastructureMachine (formerly*
+*  SeamInfrastructureMachine). API group infrastructure.cluster.x-k8s.io unchanged.*
 *  TalosControlPlane and TalosWorkerConfig added as dual-mode CRDs with explicit*
 *  compile-time and runtime semantics documented. Sixteen day-two CRDs consolidated*
 *  into eight: EtcdMaintenance, NodeMaintenance, PKIRotation, ClusterReset,*

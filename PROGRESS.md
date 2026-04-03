@@ -6,23 +6,23 @@ Session 5 opened. Role: Controller Engineer. EPG impact trace documented. Object
 Session 6 opened. Role: Controller Engineer. Redesign acknowledged. Pre-session Governor findings documented (6-A through 6-D). Scope: reconcileDrift wiring, PermissionSnapshotReceipt watch, delivery loop closure. Admission webhook deferred to Session 7. No capability constant implementation this session.
 Session 7 opened. Role: Controller Engineer. Objective: admission webhook skeleton — decision.go (pure, no server imports), rbac_handler.go, server.go, webhook config, main.go wiring. 13 unit tests + 7 integration tests. Bootstrap window is TODO(session-8). CS-INV-001 and CS-INV-004 closed on management cluster.
 Session 7 closed. All gates complete. 92 unit tests + 26 integration tests green. go vet clean. go build clean. Root cause fixed: ValidatingWebhookConfiguration YAML had webhooks under wrong `spec.` prefix. Metrics port conflict fixed across all integration test suites. Commit 8324c0b.
-Governor session: CAPI adoption cross-document alignment complete. Seven documents amended. Path B ruling recorded as authoritative resolution for management cluster lifecycle under CAPI adoption. Six capability constants confirmed retained and not orphaned. INV-013 amended with named reconciler exceptions. ont-security AGENTS.md intake scope expanded to include CAPI providers. Orphaned-constant open finding closed. INV-013 amendment open finding closed.
-Governor session (2026-04-01): pack-compile misclassification fixed across four documents. CapabilityPackCompile separated into compile-mode section in constants.go. ont-runner-schema.md Section 9 incorrect Note on pack-compile removed; Section 6 table pack-compile row corrected. PROGRESS.md Finding 6-A Option B withdrawn; closed with correct resolution. Session 2 Capability Reference table pack-compile row updated. BACKLOG.md PackBuild controller and PackBuildReconciler items marked REMOVED.
+Governor session: CAPI adoption cross-document alignment complete. Seven documents amended. Path B ruling recorded as authoritative resolution for management cluster lifecycle under CAPI adoption. Six capability constants confirmed retained and not orphaned. INV-013 amended with named reconciler exceptions. guardian AGENTS.md intake scope expanded to include CAPI providers. Orphaned-constant open finding closed. INV-013 amendment open finding closed.
+Governor session (2026-04-01): pack-compile misclassification fixed across four documents. CapabilityPackCompile separated into compile-mode section in constants.go. conductor-schema.md Section 9 incorrect Note on pack-compile removed; Section 6 table pack-compile row corrected. PROGRESS.md Finding 6-A Option B withdrawn; closed with correct resolution. Session 2 Capability Reference table pack-compile row updated. BACKLOG.md PackBuild controller and PackBuildReconciler items marked REMOVED.
 
 # ONT Platform Progress
 ## Platform State
-Status: Foundation in progress. Shared library complete. ont-security CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed. Admission webhook operational — CS-INV-001 and CS-INV-004 enforced on management cluster. Bootstrap window is TODO(session-8).
+Status: Foundation in progress. Shared library complete. guardian CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed. Admission webhook operational — CS-INV-001 and CS-INV-004 enforced on management cluster. Bootstrap window is TODO(session-8).
 Current Phase: Phase 1 — Development
 Last Session: Session 7 — Controller Engineer, admission webhook skeleton, 118 tests total
 Next Session: Session 8 — Bootstrap RBAC window implementation (INV-020, CS-INV-004)
 
 ## Session 7 Exit State
 
-**Commit:** 8324c0b (ont-security, branch session/1-governor-init)
+**Commit:** 8324c0b (guardian, branch session/1-governor-init)
 **Message:** session/7: admission webhook — decision.go, rbac_handler.go, server.go, webhook config, main.go wiring, 13 unit + 7 integration tests
 
 **New files created:**
-- internal/webhook/decision.go — EvaluateAdmission pure function, annotation constants, InterceptedKinds, AdmissionRequest/Decision types. TODO(session-8) bootstrap window stub present. No controller-runtime imports (safe for ont-agent reuse).
+- internal/webhook/decision.go — EvaluateAdmission pure function, annotation constants, InterceptedKinds, AdmissionRequest/Decision types. TODO(session-8) bootstrap window stub present. No controller-runtime imports (safe for conductor reuse).
 - internal/webhook/rbac_handler.go — RBACAdmissionHandler (admission.Handler), raw JSON unmarshal for annotation extraction
 - internal/webhook/server.go — AdmissionWebhookServer, WebhookPath constant, Register() method
 - config/webhook/validating-webhook-configuration.yaml — ValidatingWebhookConfiguration (top-level webhooks, not spec.webhooks)
@@ -30,7 +30,7 @@ Next Session: Session 8 — Bootstrap RBAC window implementation (INV-020, CS-IN
 - test/integration/webhook/rbac_webhook_test.go — 7 integration tests via envtest
 
 **Modified files:**
-- cmd/ont-security/main.go — --webhook-port flag, webhook server registered before manager.Start
+- cmd/guardian/main.go — --webhook-port flag, webhook server registered before manager.Start
 - test/integration/controller/rbacpolicy_controller_test.go — metrics disabled (port conflict fix)
 - test/integration/epg/epg_reconciler_test.go — metrics disabled (port conflict fix)
 
@@ -47,18 +47,18 @@ Next Session: Session 8 — Bootstrap RBAC window implementation (INV-020, CS-IN
 ## Session 6 Redesign Acknowledgement
 
 Architectural redesign absorbed (2026-03-30). Key changes confirmed:
-1. Two-binary model: ont-runner (compile, debian, never deployed) and ont-agent
+1. Two-binary model: conductor (compile, debian, never deployed) and conductor
    (execute+agent, distroless, deployed everywhere). INV-022, INV-023, INV-024.
 2. All images on all clusters are distroless. INV-022.
 3. No execute-mode Jobs on target clusters. Management cluster Jobs only. INV-022.
 4. PackBuild is a local spec file, not a cluster CRD. No PackBuildController.
-   No pack-compile Kueue Job on the management cluster. ont-infra-design.md Section 9.
+   No pack-compile Kueue Job on the management cluster. wrapper-design.md Section 9.
 5. PermissionSnapshot signing: EPGReconciler generates PermissionSnapshot, management
-   cluster ont-agent signs it. EPGReconciler does not sign. ont-security-design.md Section 6.
-6. PermissionSnapshotReceipt managed by target cluster ont-agent, not a separate
-   ont-security agent. ont-security-schema.md Section 8.
+   cluster conductor signs it. EPGReconciler does not sign. guardian-design.md Section 6.
+6. PermissionSnapshotReceipt managed by target cluster conductor, not a separate
+   guardian agent. guardian-schema.md Section 8.
 7. Community tier: 5 target clusters, management cluster never counted. INV-025.
-8. License enforcement in ont-agent agent mode only. ont-runner has no license logic.
+8. License enforcement in conductor agent mode only. conductor has no license logic.
 
 Open findings evaluated for continued relevance under the 2026-03-30 redesign:
 - [Session 1] Repository layout (subdirectories) — still valid, unaffected by redesign.
@@ -74,24 +74,24 @@ Open findings evaluated for continued relevance under the 2026-03-30 redesign:
 The Session 2 capability table recorded CapabilityPackCompile ("pack-compile") as a Kueue
 Job executor-mode capability. The 2026-03-30 redesign removes compile mode from all clusters.
 
-~~Governor Resolution Option B~~ — WITHDRAWN. Option B (validation-only ont-agent Job) was
+~~Governor Resolution Option B~~ — WITHDRAWN. Option B (validation-only conductor Job) was
 an interim ruling and is superseded by the correct final resolution:
 
-**Final Resolution:** pack-compile is an ont-runner compile mode capability. PackBuild is a
-local spec file on the workstation — not a cluster CRD, not a Kueue Job trigger. The ont-runner
+**Final Resolution:** pack-compile is an conductor compile mode capability. PackBuild is a
+local spec file on the workstation — not a cluster CRD, not a Kueue Job trigger. The conductor
 binary reads the PackBuild spec file directly during compile mode invocation. No cluster Job of
 any kind is submitted for pack compilation. The ClusterPack OCI artifact and CR YAML produced
-by ont-runner are the only outputs that reach the cluster (via OCI registry and GitOps). The
+by conductor are the only outputs that reach the cluster (via OCI registry and GitOps). The
 capability constant in pkg/runnerlib/constants.go has been moved to its own compile-mode
 section with accurate inline semantics. Finding 6-A Option B is fully withdrawn.
 
 **Finding 6-B — Community tier cluster limit: CLOSED.** Resolved authoritatively by the
 2026-03-30 redesign. INV-025: 5 target clusters for community tier, management cluster never
-counted. License code in ont-agent must implement this. Carrying forward as CLOSED.
+counted. License code in conductor must implement this. Carrying forward as CLOSED.
 
 **Finding 6-C — controller-gen not yet wired: REQUIRES GOVERNOR SCHEDULING.** All CRD YAML
 and DeepCopy are handwritten. Growing risk as the type surface expands. Recommend inserting
-a Schema Engineer session before the next domain (ont-platform or ont-infra) implementation
+a Schema Engineer session before the next domain (platform or wrapper) implementation
 begins. Blocking risk increases with each new type added without generator.
 
 **Finding 6-D — CapabilityRBACProvision semantics under new model:** GOVERNOR DECISION RECEIVED.
@@ -115,7 +115,7 @@ EPGReconciler state confirmed as of Session 5 (commit 38056c9):
   No PermissionSnapshotReceipt watch exists yet. No dispatch logic in `Reconcile` — all requests
   go to the full EPG recomputation path.
 - `Status.LastAckedVersion` ownership model confirmed: the EPGReconciler never writes this field.
-  It is owned exclusively by the management cluster ont-agent receipt observation loop (which reads
+  It is owned exclusively by the management cluster conductor receipt observation loop (which reads
   PermissionSnapshotReceipt from target clusters and propagates the SnapshotVersion to
   PermissionSnapshot.Status.LastAckedVersion). The EPGReconciler reads it in reconcileDrift only.
 - Fixed reconcile request key: all epg-trigger events use `{namespace: "security-system", name: "epg-trigger"}`.
@@ -144,22 +144,22 @@ before any EPG implementation begins):
   in agent mode. The EPGReconciler never writes LastAckedVersion.
 
 ## Completed Gates (CAPI Governor Amendment Session — 2026-03-30)
-- ont-platform-schema.md Section 6 retitled "CRDs Delegated to CAPI for Target Clusters." Dual-path semantics applied to all six lifecycle CRDs. Named runner capability references restored. Amendment record appended.
-- ont-platform/ont-platform-design.md Section 2.1 OperationalJobReconciler expanded from seven to thirteen CRDs. CAPIDelegated routing rule added. TalosClusterReset clarified as base extension. Amendment record appended.
-- Root CLAUDE.md INV-013 amended to name ONTInfrastructureClusterReconciler and ONTInfrastructureMachineReconciler as the sole talos goclient exceptions. Amendment record appended.
-- BACKLOG.md ont-platform section reclassified: six lifecycle CRDs now carry dual-path note. Six new CAPI backlog items added (TalosClusterReconciler CAPI path, ONTInfrastructureClusterReconciler, ONTInfrastructureMachineReconciler, Cilium deployment trigger, TalosNoMaintenanceReconciler, TalosClusterResetReconciler).
-- ont-runner-schema.md capability table updated with Triggering CRD column. Six lifecycle capability constants confirmed retained. Orphaned-constant finding closed. Amendment record appended.
-- ont-security/AGENTS.md Controller Engineer third-party RBAC intake scope expanded to include CAPI core (installOrder 5) and CABPT (installOrder 6). Amendment record appended.
-- ont-platform/AGENTS.md Capability Confirmation Gate replaced with three-category routing: CAPI-managed (no gate), operational runner Job CRDs (full gate), tenant coordination (no gate). Amendment record appended.
+- platform-schema.md Section 6 retitled "CRDs Delegated to CAPI for Target Clusters." Dual-path semantics applied to all six lifecycle CRDs. Named runner capability references restored. Amendment record appended.
+- platform/platform-design.md Section 2.1 OperationalJobReconciler expanded from seven to thirteen CRDs. CAPIDelegated routing rule added. TalosClusterReset clarified as base extension. Amendment record appended.
+- Root CLAUDE.md INV-013 amended to name SeamInfrastructureClusterReconciler and SeamInfrastructureMachineReconciler as the sole talos goclient exceptions. Amendment record appended.
+- BACKLOG.md platform section reclassified: six lifecycle CRDs now carry dual-path note. Six new CAPI backlog items added (TalosClusterReconciler CAPI path, SeamInfrastructureClusterReconciler, SeamInfrastructureMachineReconciler, Cilium deployment trigger, TalosNoMaintenanceReconciler, TalosClusterResetReconciler).
+- conductor-schema.md capability table updated with Triggering CRD column. Six lifecycle capability constants confirmed retained. Orphaned-constant finding closed. Amendment record appended.
+- guardian/AGENTS.md Controller Engineer third-party RBAC intake scope expanded to include CAPI core (installOrder 5) and CABPT (installOrder 6). Amendment record appended.
+- platform/AGENTS.md Capability Confirmation Gate replaced with three-category routing: CAPI-managed (no gate), operational runner Job CRDs (full gate), tenant coordination (no gate). Amendment record appended.
 - Path B ruling: six lifecycle CRDs retained as direct runner Jobs for capi.enabled=false (management cluster). CAPI-delegated for capi.enabled=true (target clusters). This is the authoritative resolution.
-- Files touched: ont-platform-schema.md, ont-platform/ont-platform-design.md, CLAUDE.md, BACKLOG.md, ont-runner-schema.md, ont-security/AGENTS.md, ont-platform/AGENTS.md, PROGRESS.md, GIT_TRACKING.md.
+- Files touched: platform-schema.md, platform/platform-design.md, CLAUDE.md, BACKLOG.md, conductor-schema.md, guardian/AGENTS.md, platform/AGENTS.md, PROGRESS.md, GIT_TRACKING.md.
 
 ## Completed Gates (Session 7)
 - [Session 7] internal/webhook/decision.go — EvaluateAdmission pure function, AnnotationRBACOwner/Value constants, InterceptedKinds, AdmissionRequest/Decision types
 - [Session 7] internal/webhook/rbac_handler.go — RBACAdmissionHandler implementing admission.Handler, raw JSON extraction of annotations, delegates to EvaluateAdmission
 - [Session 7] internal/webhook/server.go — AdmissionWebhookServer, Register() wires handler at /validate-rbac
 - [Session 7] config/webhook/validating-webhook-configuration.yaml — ValidatingWebhookConfiguration for RBAC+ServiceAccount, kube-system excluded, failurePolicy: Fail
-- [Session 7] cmd/ont-security/main.go — webhook server registered (--webhook-port flag, port 9443 default)
+- [Session 7] cmd/guardian/main.go — webhook server registered (--webhook-port flag, port 9443 default)
 - [Session 7] 13 unit tests passing (test/unit/webhook/decision_test.go) — all EvaluateAdmission branches covered
 - [Session 7] 7 integration tests passing (test/integration/webhook/rbac_webhook_test.go) — envtest webhook server live
 - [Session 7] Root cause fix: ValidatingWebhookConfiguration YAML had `spec.webhooks` instead of top-level `webhooks` — envtest parsed correctly but webhook array was empty
@@ -180,8 +180,8 @@ before any EPG implementation begins):
 - [Session 6] 12 unit tests passing (test/unit/controller/drift_test.go)
 - [Session 6] 6 integration tests passing (test/integration/controller/drift_controller_test.go)
 - [Session 6] All 79 unit tests passing; all 19 integration tests passing (18 controller + 1 EPG)
-- [Session 6] go vet clean, go build clean, go build ./cmd/ont-security/ clean
-- [Session 6] ont-security commit 230e48c
+- [Session 6] go vet clean, go build clean, go build ./cmd/guardian/ clean
+- [Session 6] guardian commit 230e48c
 
 ## Completed Gates (Session 5)
 - [Session 5] EPG impact trace documented before implementation (CLAUDE.md Step 4b compliance)
@@ -199,7 +199,7 @@ before any EPG implementation begins):
 
 ## Session 5 Exit State
 
-**Commit:** 38056c9 (ont-security, branch session/1-governor-init)
+**Commit:** 38056c9 (guardian, branch session/1-governor-init)
 **Message:** session/5: EPG computation with ceiling intersection, PermissionSnapshot generation, EPGReconciler, unit and integration tests
 
 **New files created:**
@@ -230,7 +230,7 @@ before any EPG implementation begins):
 - [Session 1] Constitutional documents committed to ontai root
 - [Session 1] All repository directories initialized with git and initial structure
 - [Session 1] Tracking documents created (PROGRESS.md, BACKLOG.md, GIT_TRACKING.md)
-- [Session 1] Prompt injection in ont-runner-schema.md detected and flagged; removed by Platform Governor
+- [Session 1] Prompt injection in conductor-schema.md detected and flagged; removed by Platform Governor
 - [Session 2] pkg/runnerlib shared library types defined — RunnerConfigSpec, CapabilityManifest, OperationResultSpec, JobSpecBuilder
 - [Session 2] All 18 named capability constants defined and verified unique
 - [Session 2] Generator implementations: GenerateFromTalosCluster, GenerateFromPackBuild
@@ -240,7 +240,7 @@ before any EPG implementation begins):
 - [Session 3] Manual DeepCopy implementations (zz_generated.deepcopy.go), SetCondition/FindCondition helpers
 - [Session 3] ValidateRBACPolicySpec — all-failures collection, 4 checks (scope, mode, cluster format, permset ref)
 - [Session 3] RBACPolicyReconciler — fetch, defer status patch, ObservedGeneration, validate, set conditions, emit events
-- [Session 3] Controller-runtime manager skeleton (cmd/ont-security/main.go) — flags, scheme, leader election, health probes
+- [Session 3] Controller-runtime manager skeleton (cmd/guardian/main.go) — flags, scheme, leader election, health probes
 - [Session 3] CRD YAML (config/crd/security.ontai.dev_rbacpolicies.yaml) — handwritten, envtest-compatible
 - [Session 3] 12 unit tests passing (test/unit/controller/rbacpolicy_validation_test.go)
 - [Session 3] 5 integration tests passing via envtest (test/integration/controller/rbacpolicy_controller_test.go)
@@ -258,11 +258,11 @@ before any EPG implementation begins):
 - [Session 4] All reconcilers registered in main.go
 - [Session 4] 49 unit tests passing (test/unit/controller/)
 - [Session 4] 12 integration tests passing including 6 from Session 3 carried forward
-- [Session 4] go vet clean, go build clean, go build ./cmd/ont-security/ clean
+- [Session 4] go vet clean, go build clean, go build ./cmd/guardian/ clean
 
 ## Session 4 Exit State
 
-**Commit:** 64ac2e8 (ont-security, branch session/1-governor-init)
+**Commit:** 64ac2e8 (guardian, branch session/1-governor-init)
 
 **New files created:**
 - api/v1alpha1/permissionset_types.go
@@ -290,7 +290,7 @@ before any EPG implementation begins):
 
 **Modified files:**
 - api/v1alpha1/zz_generated.deepcopy.go (DeepCopy for all new types)
-- cmd/ont-security/main.go (all 4 reconcilers registered)
+- cmd/guardian/main.go (all 4 reconcilers registered)
 - internal/controller/rbacpolicy_controller.go (PermissionSet existence check)
 - test/integration/controller/rbacpolicy_controller_test.go (Test 6 + updated Session 3 tests for PermissionSet existence)
 
@@ -302,7 +302,7 @@ before any EPG implementation begins):
 
 ## Session 6 Exit State
 
-**Commit:** 230e48c (ont-security, branch session/1-governor-init)
+**Commit:** 230e48c (guardian, branch session/1-governor-init)
 **Message:** session/6: delivery loop — reconcileDrift, PermissionSnapshotReceipt watch, drift dispatch, unit and integration tests
 
 **New files created:**
@@ -327,14 +327,14 @@ before any EPG implementation begins):
 - [Session 3] CRD YAML is handwritten. controller-gen not wired. Growing risk. REQUIRES GOVERNOR SCHEDULING.
 - [Session 3] DeepCopy manually written. Same note.
 - [Session 3] Integration tests require KUBEBUILDER_ASSETS=/tmp/envtest-bins/k8s/1.35.0-linux-amd64. Not persisted across reboots.
-- [Session 6, Finding 6-A] CapabilityPackCompile constant semantics: Option B chosen by Governor (validation-only ont-agent Job). REQUIRES Runner Engineer session to implement. Constant in pkg/runnerlib/constants.go must be annotated before that session.
+- [Session 6, Finding 6-A] CapabilityPackCompile constant semantics: Option B chosen by Governor (validation-only conductor Job). REQUIRES Runner Engineer session to implement. Constant in pkg/runnerlib/constants.go must be annotated before that session.
 - [Session 6, Finding 6-B] Community tier cluster limit: CLOSED. Resolved by 2026-03-30 redesign. INV-025: 5 target clusters, management cluster excluded.
 - [Session 6, Finding 6-C] controller-gen not wired: REQUIRES GOVERNOR SCHEDULING before next domain begins.
 - [Session 6, Finding 6-D] CapabilityRBACProvision semantics: executor-mode Kueue Job (Governor decision). REQUIRES Runner Engineer session.
 - [Session 7] Bootstrap RBAC window (TODO(session-8)) — CS-INV-004, INV-020. Window is permanently closed until Session 8. Must be implemented before production deployment.
 - [Session 6] PermissionSet reconciler absent — ProfileReferenceCount has no owner. Add to backlog.
-- [CAPI Governor] Six capability constants (talos-upgrade, kube-upgrade, stack-upgrade, node-scale-up, node-decommission, node-reboot): CLOSED. Confirmed retained. Not orphaned. Active when TalosCluster spec.capi.enabled=false only. ont-runner-schema.md Triggering CRD column updated.
-- [CAPI Governor] INV-013 amendment: CLOSED. Named reconciler exceptions (ONTInfrastructureClusterReconciler, ONTInfrastructureMachineReconciler) added to root CLAUDE.md INV-013 inline text and amendment record.
+- [CAPI Governor] Six capability constants (talos-upgrade, kube-upgrade, stack-upgrade, node-scale-up, node-decommission, node-reboot): CLOSED. Confirmed retained. Not orphaned. Active when TalosCluster spec.capi.enabled=false only. conductor-schema.md Triggering CRD column updated.
+- [CAPI Governor] INV-013 amendment: CLOSED. Named reconciler exceptions (SeamInfrastructureClusterReconciler, SeamInfrastructureMachineReconciler) added to root CLAUDE.md INV-013 inline text and amendment record.
 
 ## Session 1 Exit State
 All five repositories initialized. Constitutional documents in ontai root committed
@@ -342,50 +342,50 @@ on branch session/1-governor-init. All component repositories initialized with
 skeleton structure on branch session/1-governor-init.
 
 Commit hashes:
-- ont-runner:   d176ed9
-- ont-security: 194934c
-- ont-platform: a38188f
-- ont-infra:    86807d4
+- conductor:   d176ed9
+- guardian: 194934c
+- platform: a38188f
+- wrapper:    86807d4
 - ontai:        d54ac90
 
 ## Session 2 Capability Reference
 
-All 18 named capabilities from ont-runner-schema.md Section 6.
+All 18 named capabilities from conductor-schema.md Section 6.
 Mode is always executor unless noted. Triggering CRD from operator schemas.
 
 | Constant                    | String Value        | Owner       | Triggering CRD          | Description                                      |
 |-----------------------------|---------------------|-------------|-------------------------|--------------------------------------------------|
-| CapabilityBootstrap         | bootstrap           | ont-platform| TalosCluster            | Full cluster bootstrap from seed nodes           |
-| CapabilityTalosUpgrade      | talos-upgrade       | ont-platform| TalosUpgrade            | Rolling Talos OS version upgrade                 |
-| CapabilityKubeUpgrade       | kube-upgrade        | ont-platform| TalosKubeUpgrade        | Kubernetes version upgrade                       |
-| CapabilityStackUpgrade      | stack-upgrade       | ont-platform| TalosStackUpgrade       | Coordinated Talos OS + Kubernetes upgrade        |
-| CapabilityNodePatch         | node-patch          | ont-platform| TalosNodePatch          | Machine config patch to nodes                    |
-| CapabilityNodeScaleUp       | node-scale-up       | ont-platform| TalosNodeScaleUp        | Add nodes to existing cluster                    |
-| CapabilityNodeDecommission  | node-decommission   | ont-platform| TalosNodeDecommission   | Cordon, drain, remove node                       |
-| CapabilityNodeReboot        | node-reboot         | ont-platform| TalosReboot             | Reboot nodes                                     |
-| CapabilityEtcdBackup        | etcd-backup         | ont-platform| TalosBackup             | etcd snapshot + config export to S3              |
-| CapabilityEtcdMaintenance   | etcd-maintenance    | ont-platform| TalosEtcdMaintenance    | etcd defrag and optional snapshot                |
-| CapabilityEtcdRestore       | etcd-restore        | ont-platform| TalosRecovery           | Disaster recovery from S3 snapshot               |
-| CapabilityPKIRotate         | pki-rotate          | ont-platform| TalosPKIRotation        | PKI certificate rotation                         |
-| CapabilityCredentialRotate  | credential-rotate   | ont-platform| TalosCredentialRotation | Service account key rotation                     |
-| CapabilityHardeningApply    | hardening-apply     | ont-platform| TalosHardeningApply     | Apply TalosHardeningProfile                      |
-| CapabilityClusterReset      | cluster-reset       | ont-platform| TalosClusterReset       | Destructive factory reset with human gate        |
-| CapabilityPackCompile       | pack-compile        | ont-infra   | PackBuild spec file (workstation) | Compile mode capability invoked by ont-runner binary on workstation or CI — not a Kueue Job |
-| CapabilityPackDeploy        | pack-deploy         | ont-infra   | PackExecution           | Apply ClusterPack to target cluster              |
-| CapabilityRBACProvision     | rbac-provision      | ont-security| (agent-initiated)       | Provision RBAC artifacts from snapshot           |
+| CapabilityBootstrap         | bootstrap           | platform| TalosCluster            | Full cluster bootstrap from seed nodes           |
+| CapabilityTalosUpgrade      | talos-upgrade       | platform| TalosUpgrade            | Rolling Talos OS version upgrade                 |
+| CapabilityKubeUpgrade       | kube-upgrade        | platform| TalosKubeUpgrade        | Kubernetes version upgrade                       |
+| CapabilityStackUpgrade      | stack-upgrade       | platform| TalosStackUpgrade       | Coordinated Talos OS + Kubernetes upgrade        |
+| CapabilityNodePatch         | node-patch          | platform| TalosNodePatch          | Machine config patch to nodes                    |
+| CapabilityNodeScaleUp       | node-scale-up       | platform| TalosNodeScaleUp        | Add nodes to existing cluster                    |
+| CapabilityNodeDecommission  | node-decommission   | platform| TalosNodeDecommission   | Cordon, drain, remove node                       |
+| CapabilityNodeReboot        | node-reboot         | platform| TalosReboot             | Reboot nodes                                     |
+| CapabilityEtcdBackup        | etcd-backup         | platform| TalosBackup             | etcd snapshot + config export to S3              |
+| CapabilityEtcdMaintenance   | etcd-maintenance    | platform| TalosEtcdMaintenance    | etcd defrag and optional snapshot                |
+| CapabilityEtcdRestore       | etcd-restore        | platform| TalosRecovery           | Disaster recovery from S3 snapshot               |
+| CapabilityPKIRotate         | pki-rotate          | platform| TalosPKIRotation        | PKI certificate rotation                         |
+| CapabilityCredentialRotate  | credential-rotate   | platform| TalosCredentialRotation | Service account key rotation                     |
+| CapabilityHardeningApply    | hardening-apply     | platform| TalosHardeningApply     | Apply TalosHardeningProfile                      |
+| CapabilityClusterReset      | cluster-reset       | platform| TalosClusterReset       | Destructive factory reset with human gate        |
+| CapabilityPackCompile       | pack-compile        | wrapper   | PackBuild spec file (workstation) | Compile mode capability invoked by conductor binary on workstation or CI — not a Kueue Job |
+| CapabilityPackDeploy        | pack-deploy         | wrapper   | PackExecution           | Apply ClusterPack to target cluster              |
+| CapabilityRBACProvision     | rbac-provision      | guardian| (agent-initiated)       | Provision RBAC artifacts from snapshot           |
 
 Notes:
-- pack-compile is a compile mode capability invoked by the ont-runner binary on the workstation
+- pack-compile is a compile mode capability invoked by the conductor binary on the workstation
   or in CI. It is not a Kueue Job. PackBuild is a local spec file, not a cluster CRD. The
   Session 2 description ("executor Job") was incorrect and is superseded by this correction
   (2026-04-01, Finding 6-A final resolution).
-- cluster-reset is multi-step and uses the PVC protocol (ont-runner-design.md §5.6).
+- cluster-reset is multi-step and uses the PVC protocol (conductor-design.md §5.6).
 - bootstrap is multi-step and uses the PVC protocol.
 - stack-upgrade is multi-step and uses the PVC protocol.
 
 ## Session 2 Exit State
 
-**Commit:** 56e1582 (ont-runner, branch session/1-governor-init)
+**Commit:** 56e1582 (conductor, branch session/1-governor-init)
 
 **Files created in pkg/runnerlib/:**
 - doc.go — package-level godoc
@@ -417,7 +417,7 @@ Notes:
 
 ## Session 3 Exit State
 
-**Commit:** c205ea5 (ont-security, branch session/1-governor-init)
+**Commit:** c205ea5 (guardian, branch session/1-governor-init)
 
 **Files created in api/v1alpha1/:**
 - groupversion_info.go — GroupVersion, SchemeBuilder, AddToScheme
@@ -429,8 +429,8 @@ Notes:
 - rbacpolicy_validation.go — ValidationCheckName constants, PolicyValidationResult, ValidateRBACPolicySpec (4 checks, all-failures collection)
 - rbacpolicy_controller.go — RBACPolicyReconciler (fetch, defer status patch, ObservedGeneration, validate, set conditions, emit events), SetupWithManager with GenerationChangedPredicate
 
-**Files created in cmd/ont-security/:**
-- main.go — flag parsing, scheme setup, RBACPolicyReconciler registration, health/readiness probes, leader election (lease: ont-security-leader, namespace: security-system)
+**Files created in cmd/guardian/:**
+- main.go — flag parsing, scheme setup, RBACPolicyReconciler registration, health/readiness probes, leader election (lease: guardian-leader, namespace: security-system)
 
 **Files created in config/crd/:**
 - security.ontai.dev_rbacpolicies.yaml — handwritten CRD YAML, envtest-compatible

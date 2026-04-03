@@ -11,7 +11,7 @@
 - [x] Shared library: full unit test coverage
 - [ ] Binary entry points: compile, execute, agent mode routing
 - [ ] Capability engine: registry, resolver, dispatcher
-- [ ] All named capabilities implemented (see ont-runner-schema.md capability table)
+- [ ] All named capabilities implemented (see conductor-schema.md capability table)
 - [ ] Agent mode: leader election, capability publisher, control loops
 - [ ] Compile mode: TalosCluster validation pipeline
 - [ ] Compile mode: PackBuild compilation pipeline

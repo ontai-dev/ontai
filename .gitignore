@@ -3,10 +3,12 @@ CLAUDE.md
 AGENTS.md
 
 # Nested component repositories — each has its own git history
-ont-runner/
-ont-security/
-ont-platform/
-ont-infra/
+conductor/
+guardian/
+platform/
+wrapper/
+seam-core/
+ont-lab/
 
 # OS
 .DS_Store

@@ -5,16 +5,13 @@
 
 ## 1. Platform State
 
-> **Migration note:** Schema files retain their current filenames in this session.
-> A future Governor session will rename them to align with the new operator names.
-
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
 | conductor    | bcbb224     | Shared library complete       | Binary entry points, capability engine, execute/agent modes |
 | guardian     | 8324c0b     | Admission webhook operational | Bootstrap RBAC window (TODO session-8, INV-020, CS-INV-004) |
 | platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
-| seam-core    | N/A         | Declared — not initialized    | Schema controller implementation                            |
+| seam-core    | c6d4626     | Initialized — skeleton only   | Schema controller implementation                            |
 
 ---
 
@@ -31,18 +28,15 @@
 
 ## 3. Role Reading Map
 
-> Schema files retain their current filenames. A future Governor session will rename
-> them to align with the new operator names (guardian-schema.md, platform-schema.md, etc.).
-
 | Role                    | Required Documents (beyond CONTEXT.md)                                                       |
 |-------------------------|----------------------------------------------------------------------------------------------|
 | Governor                | PROGRESS.md, GIT_TRACKING.md, BACKLOG.md                                                     |
 | Domain Architect        | *-schema.md for target domain                                                                |
 | Schema Engineer         | Target *-schema.md + target component *-design.md + existing CRD YAML in that repo          |
-| Controller Engineer     | ont-security-schema.md + guardian/guardian-design.md (Guardian work)                        |
-| Controller Engineer     | ont-platform-schema.md + platform/platform-design.md (Platform work)                        |
-| Controller Engineer     | ont-infra-schema.md + wrapper/wrapper-design.md (Wrapper work)                              |
-| Conductor Engineer      | ont-runner-schema.md + conductor/conductor-design.md + all operator *-schema.md             |
+| Controller Engineer     | guardian-schema.md + guardian/guardian-design.md (Guardian work)                        |
+| Controller Engineer     | platform-schema.md + platform/platform-design.md (Platform work)                        |
+| Controller Engineer     | wrapper-schema.md + wrapper/wrapper-design.md (Wrapper work)                              |
+| Conductor Engineer      | conductor-schema.md + conductor/conductor-design.md + all operator *-schema.md             |
 | Platform Engineer       | Target component *-schema.md + Dockerfile context for that component                        |
 | Test Engineer           | Target *-schema.md + target component *-design.md                                           |
 | Lab Operator            | ont-lab/ runbooks + CLAUDE.md §9                                                             |

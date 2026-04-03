@@ -1,4 +1,4 @@
-# ont-runner-schema
+# conductor-schema
 > API Group: runner.ontai.dev
 > Repository: conductor (produces both Compiler and Conductor binaries)
 > All agents absorb this document. This schema governs both binaries.
@@ -284,7 +284,7 @@ Human invokes: compiler compile [cluster|pack] --input <path> --output <path>
 
 For cluster compilation:
 1. Read TalosCluster spec and human-provided machineconfig files.
-2. Validate TalosCluster spec against ~/ontai/ont-platform-schema.md rules.
+2. Validate TalosCluster spec against ~/ontai/platform-schema.md rules.
 3. Validate machineconfig structure against the declared Talos version.
 4. SOPS-encrypt talos-secret, machineconfigs, talosconfig using admin's age key.
 5. Write encrypted files to the output path (clusters/{cluster-name}/ in git).
@@ -345,7 +345,7 @@ that target clusters only execute packs and honor permissions that have been
 explicitly authorized by the management cluster's security plane.
 
 **Leader election lease:** Lives in ont-system as a Lease resource named
-ont-agent-{cluster-name}. All Conductor Deployment replicas compete. Only the
+conductor-{cluster-name}. All Conductor Deployment replicas compete. Only the
 leader performs writes.
 
 ---
@@ -400,8 +400,8 @@ that the produced binary runs cleanly on the distroless/base image before releas
   these operations natively. Orphaned-constant finding closed — these six capability
   constants are not orphaned.
 
-2026-04-03 — Binary rename throughout: ont-runner → Compiler, ont-agent → Conductor.
-  Repository renamed conductor (was ont-runner). Module path updated to
+2026-04-03 — Binary rename throughout: conductor → Compiler, conductor → Conductor.
+  Repository renamed conductor (was conductor). Module path updated to
   github.com/ontai-dev/conductor. Section 11 Enterprise License Enforcement removed
   entirely — Seam is fully open source with no licensing tier; replaced with single
   sentence. All licensing references removed from RunnerConfig spec and status fields:
@@ -409,7 +409,7 @@ that the produced binary runs cleanly on the distroless/base image before releas
   Agent startup sequence step 3 (license check) removed; steps renumbered. Section 9
   pack compilation corrected: removed erroneous description of pack-compile as Kueue
   Job triggered by Wrapper; pack-compile is a Compiler invocation mode only.
-  Operator name references updated: Platform (formerly ont-platform), Guardian
-  (formerly ont-security), Wrapper (formerly ont-infra). Capability table updated
+  Operator name references updated: Platform (formerly platform), Guardian
+  (formerly guardian), Wrapper (formerly wrapper). Capability table updated
   to reference consolidated day-two CRDs: UpgradePolicy, NodeOperation,
   EtcdMaintenance, NodeMaintenance, PKIRotation, ClusterReset, HardeningProfile.

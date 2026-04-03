@@ -1,13 +1,13 @@
-# ont-security-schema
+# guardian-schema
 > API Group: security.ontai.dev
-> Operator: ont-security
+> Operator: guardian
 > All agents absorb this document. Security is platform-wide.
 
 ---
 
 ## 1. Domain Boundary
 
-ont-security owns all RBAC across the entire platform — management cluster and
+guardian owns all RBAC across the entire platform — management cluster and
 every target cluster. It is the only operator with cross-cutting authority. It
 is the only operator with genuine in-process intelligence (EPG computation, policy
 validation, admission webhook). It is the only operator with a CNPG dependency.
@@ -15,20 +15,20 @@ validation, admission webhook). It is the only operator with a CNPG dependency.
 **Absolute rules with no exceptions:**
 - No ONT operator or application implements its own authorization logic.
 - No component provisions its own Kubernetes RBAC artifacts.
-- All authorization flows through ont-security's PermissionService.
-- ont-security's admission webhook gates every RBAC resource on every cluster.
-- ont-security deploys first. All other operators wait for RBACProfile provisioned=true
+- All authorization flows through guardian's PermissionService.
+- guardian's admission webhook gates every RBAC resource on every cluster.
+- guardian deploys first. All other operators wait for RBACProfile provisioned=true
   before being considered enabled. INV-003.
 
 **Deployment boundary:**
-The ont-security controller (EPG computation, PermissionSnapshot generation, policy
+The guardian controller (EPG computation, PermissionSnapshot generation, policy
 validation, gRPC PermissionService) runs only on the management cluster in the
 security-system namespace.
 
 On target clusters, the security plane responsibilities — admission webhook,
 PermissionSnapshot receipt, local PermissionService, RBAC enforcement — are
-hosted by the ont-agent Deployment in ont-system. There is no separate ont-security
-Deployment on target clusters. The ont-agent binary incorporates all target cluster
+hosted by the conductor Deployment in ont-system. There is no separate guardian
+Deployment on target clusters. The conductor binary incorporates all target cluster
 security plane functions. This is the zero-attack-surface model: one distroless
 binary per cluster, no redundant deployments.
 
@@ -50,19 +50,19 @@ binary per cluster, no redundant deployments.
 
 ## 3. Two-Phase Boot
 
-ont-security has a structured boot sequence to resolve the CNPG chicken-and-egg
-problem. This is a named phase in the ont-runner enable protocol — not a silent
+guardian has a structured boot sequence to resolve the CNPG chicken-and-egg
+problem. This is a named phase in the conductor enable protocol — not a silent
 fallback. This sequence applies only to the management cluster.
 
 **Phase 1 — CRD-only mode:**
-ont-security starts with in-memory and CRD status persistence only. It provisions:
+guardian starts with in-memory and CRD status persistence only. It provisions:
 its own RBACProfile from the bootstrap RBACPolicy (compiled into git at compile
 time), CNPG's RBAC, cert-manager's RBAC, Kueue's RBAC, metallb's RBAC. All state
-held in CRD status. The ont-runner enable phase installs these components in this
-window with their RBAC already provisioned by ont-security before installation begins.
+held in CRD status. The conductor enable phase installs these components in this
+window with their RBAC already provisioned by guardian before installation begins.
 
 **Phase 2 — Database-backed mode:**
-CNPG comes online. ont-security detects CNPG readiness, migrates EPG and audit
+CNPG comes online. guardian detects CNPG readiness, migrates EPG and audit
 state to CNPG, switches to database-backed persistence. All subsequent EPG
 computation and audit logging goes to CNPG.
 
@@ -73,63 +73,63 @@ cluster is rebuilt, Phase 1 is re-executed and Phase 2 resumes once CNPG is heal
 
 ## 4. Bootstrap RBAC Window
 
-Before ont-security's admission webhook is operational on the management cluster,
-the ont-runner enable phase must apply RBAC to install ont-security itself. This
+Before guardian's admission webhook is operational on the management cluster,
+the conductor enable phase must apply RBAC to install guardian itself. This
 window is explicitly declared in the enable phase protocol. The bootstrap RBACPolicy
-in git defines exactly what is permitted in this window. As soon as ont-security's
+in git defines exactly what is permitted in this window. As soon as guardian's
 webhook becomes operational, the window closes permanently. RBAC applied in this
-window is immediately reconciled by ont-security on startup — validated and
+window is immediately reconciled by guardian on startup — validated and
 ownership-annotated if compliant, flagged for remediation if not. INV-020.
 
-On target clusters, the bootstrap RBAC window is handled differently: the ont-agent
-Deployment arrives via the agent ClusterPack deployment. Once the ont-agent starts
+On target clusters, the bootstrap RBAC window is handled differently: the conductor
+Deployment arrives via the agent ClusterPack deployment. Once the conductor starts
 on a target cluster, its admission webhook is immediately operational. There is no
 bootstrap RBAC window on target clusters — the agent pack is applied via the
-agent bootstrap exception (ont-infra-schema.md Section 6) before any webhook exists,
+agent bootstrap exception (wrapper-schema.md Section 6) before any webhook exists,
 and from that point forward the webhook runs continuously.
 
 ---
 
 ## 5. Admission Webhook
 
-ont-security runs an admission webhook on the management cluster. The webhook
+guardian runs an admission webhook on the management cluster. The webhook
 intercepts all creates and updates to: Role, ClusterRole, RoleBinding,
 ClusterRoleBinding, ServiceAccount.
 
-Any RBAC resource arriving without annotation ontai.dev/rbac-owner=ont-security
+Any RBAC resource arriving without annotation ontai.dev/rbac-owner=guardian
 is rejected at admission with a structured error. The only path for RBAC resources
-to land on the management cluster is through ont-security taking ownership first.
+to land on the management cluster is through guardian taking ownership first.
 
-**On target clusters:** The admission webhook is hosted by the ont-agent Deployment
-in ont-system, not by a separate ont-security controller. The ont-agent webhook
+**On target clusters:** The admission webhook is hosted by the conductor Deployment
+in ont-system, not by a separate guardian controller. The conductor webhook
 uses the current PermissionSnapshotReceipt as its authority for admission decisions.
 This means target cluster RBAC enforcement is fully operational even when the
-management cluster is temporarily unreachable — the ont-agent serves decisions
+management cluster is temporarily unreachable — the conductor serves decisions
 from its local acknowledged snapshot state.
 
 The webhook behavior is identical on management and target clusters: any RBAC
-resource lacking the ontai.dev/rbac-owner=ont-security annotation is rejected.
-The implementation in ont-agent shares the webhook logic package from the shared
+resource lacking the ontai.dev/rbac-owner=guardian annotation is rejected.
+The implementation in conductor shares the webhook logic package from the shared
 library.
 
 ---
 
 ## 6. Third-Party RBAC Ownership
 
-ont-security wraps third-party component RBAC — CNPG, cert-manager, Kueue, metallb,
+guardian wraps third-party component RBAC — CNPG, cert-manager, Kueue, metallb,
 and future components — into RBACProfiles with ownership annotations.
 
 The model is wrapping, not replacement:
-- ont-security creates a RBACProfile declaring policy compliance for the component.
-- Existing RBAC resources are annotated: ontai.dev/rbac-owner=ont-security.
-- ont-security watches those resources. Drift from the declared RBACProfile raises
+- guardian creates a RBACProfile declaring policy compliance for the component.
+- Existing RBAC resources are annotated: ontai.dev/rbac-owner=guardian.
+- guardian watches those resources. Drift from the declared RBACProfile raises
   a policy violation. It never silently overwrites.
-- The ont-runner enable phase splits compiled chart output into RBAC resources and
-  workload resources. RBAC goes through ont-security intake. Workload applies directly.
+- The conductor enable phase splits compiled chart output into RBAC resources and
+  workload resources. RBAC goes through guardian intake. Workload applies directly.
 
 Any ONT operator joining the stack on the management cluster must, by default, request
-RBAC from ont-security before its controller starts. The RBACProfile gate (provisioned=true)
-blocks all operator controllers until ont-security has validated and provisioned their
+RBAC from guardian before its controller starts. The RBACProfile gate (provisioned=true)
+blocks all operator controllers until guardian has validated and provisioned their
 permission declarations. INV-003.
 
 ---
@@ -144,9 +144,9 @@ Short name: rp
 Governing policy that constrains what RBACProfiles within its scope may declare.
 Profiles that exceed their governing policy are rejected at admission.
 
-The bootstrap RBACPolicy for the management cluster is generated by ont-runner
+The bootstrap RBACPolicy for the management cluster is generated by conductor
 compile mode and committed to git alongside TalosCluster. It exists on the
-management cluster before ont-security is installed.
+management cluster before guardian is installed.
 
 Key spec fields: subjectScope, allowedClusters, maximumPermissionSetRef,
 enforcementMode (strict or audit).
@@ -167,7 +167,7 @@ rbacPolicyRef.
 
 Status conditions: Provisioned, ValidationFailed, Pending.
 
-Invariant: provisioned=true is set exclusively by ont-security. No other controller
+Invariant: provisioned=true is set exclusively by guardian. No other controller
 writes to RBACProfile status. CS-INV-005.
 
 ---
@@ -223,28 +223,28 @@ Key spec fields: permissions (API group, resource, verbs), description.
 
 ### PermissionSnapshot
 
-Scope: Namespaced — security-system. Internal to ont-security.
+Scope: Namespaced — security-system. Internal to guardian.
 Short name: psn
 
 Computed, versioned, signed EPG for a specific target cluster. Generated on any
-input change by the EPGReconciler. Signed by the management cluster ont-agent
+input change by the EPGReconciler. Signed by the management cluster conductor
 after generation. Never manually authored. One per target cluster, replaced
 in-place on recomputation. Version field provides monotonic ordering.
 
 Delivery tracking fields: expectedVersion, lastAckedVersion, drift, lastSeen.
 
 The signature annotation (ontai.dev/snapshot-signature) is written by the management
-cluster ont-agent signing loop, not by the EPGReconciler. Operators and reconcilers
-must not write this annotation. It is validated by target cluster ont-agent before
+cluster conductor signing loop, not by the EPGReconciler. Operators and reconcilers
+must not write this annotation. It is validated by target cluster conductor before
 receipt acknowledgement.
 
 ---
 
-## 8. CRDs — Target Cluster (ont-agent Managed)
+## 8. CRDs — Target Cluster (conductor Managed)
 
-All CRDs in this section are created and maintained exclusively by the ont-agent
-Deployment in ont-system on the target cluster. No separate ont-security agent
-exists on target clusters. ont-agent incorporates all target cluster security plane
+All CRDs in this section are created and maintained exclusively by the conductor
+Deployment in ont-system on the target cluster. No separate guardian agent
+exists on target clusters. conductor incorporates all target cluster security plane
 responsibilities.
 
 ### PermissionSnapshotReceipt
@@ -253,12 +253,12 @@ Scope: Namespaced — ont-system on target cluster.
 Short name: psr
 
 Local record of current acknowledged PermissionSnapshot and provisioned RBAC
-artifact status. Created and maintained exclusively by ont-agent in agent mode.
+artifact status. Created and maintained exclusively by conductor in agent mode.
 Never authored manually.
 
-Before writing a receipt acknowledgement, ont-agent verifies the cryptographic
+Before writing a receipt acknowledgement, conductor verifies the cryptographic
 signature on the PermissionSnapshot against the platform public key embedded in
-the ont-agent binary. Verification failure results in SyncStatus=DegradedSecurityState
+the conductor binary. Verification failure results in SyncStatus=DegradedSecurityState
 and does not advance lastAckedVersion. This prevents a compromised management cluster
 from pushing malicious permission snapshots to target clusters.
 
@@ -276,7 +276,7 @@ Push is optimization. Pull is correctness. Acknowledgement is truth.
 Verification is trust.
 
 **Delivery contract:** sign snapshot → push snapshot → agent verifies signature →
-agent acknowledges → ont-security records.
+agent acknowledges → guardian records.
 
 **SnapshotOutOfSync:** acknowledgement not received within 2× TTL (default 10 min).
 Consequence: new PackExecution blocked on affected cluster.
@@ -285,7 +285,7 @@ Consequence: new PackExecution blocked on affected cluster.
 verification failure.
 Consequence: no new authorization decisions permitted. Human intervention required.
 
-**Pull loop:** ont-agent periodically compares local version against management cluster
+**Pull loop:** conductor periodically compares local version against management cluster
 expected version. Self-heals by pulling and re-verifying. Pull is the correctness
 guarantee. Push is the performance optimization.
 
@@ -298,19 +298,19 @@ call this service. No operator queries Kubernetes RBAC API directly.
 
 Operations: CheckPermission, ListPermissions, WhoCanDo, ExplainDecision.
 
-**On management cluster:** the ont-security controller exposes the PermissionService
+**On management cluster:** the guardian controller exposes the PermissionService
 gRPC endpoint backed by the current in-memory EPG (backed by CNPG).
 
-**On target clusters:** ont-agent in agent mode exposes a local PermissionService
+**On target clusters:** conductor in agent mode exposes a local PermissionService
 gRPC endpoint in ont-system. Application operators and controllers on the target
 cluster call the local agent endpoint. The agent serves decisions from its current
 acknowledged PermissionSnapshotReceipt without requiring management cluster
-connectivity. This is how future ont-virt and application operators achieve runtime
+connectivity. This is how future Screen and application operators achieve runtime
 authorization without management cluster network dependency.
 
-The local PermissionService implementation in ont-agent is a read-only projection
+The local PermissionService implementation in conductor is a read-only projection
 of the acknowledged snapshot — it does not compute the EPG. EPG computation is
-exclusively a management cluster function in the ont-security controller.
+exclusively a management cluster function in the guardian controller.
 
 PermissionService is the planned QuantAI integration point for AI-proposed
 infrastructure operations requiring human gate review.
@@ -320,7 +320,7 @@ infrastructure operations requiring human gate review.
 ## 11. Execution Gatekeeper
 
 All four conditions must pass before PackExecution is admitted to Kueue. Enforced
-by ont-security's admission webhook on the management cluster — a hard block, not
+by guardian's admission webhook on the management cluster — a hard block, not
 a soft check:
 
 1. Target cluster has current, acknowledged, verified PermissionSnapshot.
@@ -335,18 +335,18 @@ a soft check:
 Three-layer isolation, each independent of the others:
 1. Namespace isolation: tenant-{cluster-name} namespace boundary.
 2. RBAC enforcement: tenants cannot list cluster-scoped resources globally.
-3. Policy-level: ont-security validates targetCluster against allowedClusters at
+3. Policy-level: guardian validates targetCluster against allowedClusters at
    admission. Bypass via RBAC misconfiguration in layers 1 or 2 is impossible.
 
 ---
 
 ## 13. CNPG Security Warehouse Access Controls
 
-NetworkPolicy restricts ingress to security-system to ont-security pods only.
+NetworkPolicy restricts ingress to security-system to guardian pods only.
 CNPG credentials are Secrets in security-system with no RBAC bindings for human
 users — not even cluster-admin can read them through normal paths.
 Audit access for the security team is granted through a designated read-only view
-exposed by ont-security's PermissionService — never through direct database access.
+exposed by guardian's PermissionService — never through direct database access.
 
 ---
 
@@ -358,27 +358,27 @@ Reads: platform.ontai.dev/TalosCluster to detect new cluster registrations and
 Reads: runner.ontai.dev/RunnerConfig status (capability confirmation).
 Intercepts: infra.ontai.dev/PackExecution at admission (execution gatekeeper).
 Writes: security.ontai.dev resources on management cluster.
-Writes: PermissionSnapshotReceipt on target clusters via ont-agent.
+Writes: PermissionSnapshotReceipt on target clusters via conductor.
 Writes: Kueue ClusterQueue and ResourceFlavor resources (derived from QueueProfile).
 Never writes to platform.ontai.dev or infra.ontai.dev CRDs.
 
 The signing annotation (ontai.dev/snapshot-signature) on PermissionSnapshot is
-written by the management cluster ont-agent, not by the ont-security controller.
+written by the management cluster conductor, not by the guardian controller.
 The controller generates the snapshot. The agent signs it. These are sequential,
 not concurrent writes.
 
 ---
 
-*security.ontai.dev schema — ont-security*
+*security.ontai.dev schema — guardian*
 *Amendments appended below with date and rationale.*
 
-2026-03-30 — Target cluster security plane responsibilities transferred to ont-agent.
-  No separate ont-security Deployment on target clusters. ont-agent hosts admission
+2026-03-30 — Target cluster security plane responsibilities transferred to conductor.
+  No separate guardian Deployment on target clusters. conductor hosts admission
   webhook, PermissionSnapshotReceipt management, local PermissionService, and drift
   detection on target clusters. Cryptographic signing model added: management cluster
-  ont-agent signs PermissionSnapshot; target cluster ont-agent verifies before
+  conductor signs PermissionSnapshot; target cluster conductor verifies before
   acknowledgement. Section 1 domain boundary clarified. Section 5 admission webhook
-  updated for two-context model. Section 8 receipt management updated to name ont-agent
+  updated for two-context model. Section 8 receipt management updated to name conductor
   explicitly. Section 10 PermissionService split into management and target context.
   INV-026 referenced.
 
