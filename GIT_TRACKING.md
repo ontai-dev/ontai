@@ -2,7 +2,7 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | session/1-governor-init | (pending)   | active                    |
+| ontai        | session/1-governor-init | e1d06cf     | active                    |
 | conductor    | session/1-governor-init | 4e09ead     | active                    |
 | guardian     | session/1-governor-init | e7a401b     | active                    |
 | platform     | session/1-governor-init | 001fb16     | active                    |
