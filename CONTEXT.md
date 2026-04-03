@@ -1,16 +1,20 @@
-# ONT Platform — Fast Bootstrap Context
+# Seam Platform — Fast Bootstrap Context
 > Read this file first. PROGRESS.md is the detailed audit record — consult on demand.
 
 ---
 
 ## 1. Platform State
 
+> **Migration note:** Schema files retain their current filenames in this session.
+> A future Governor session will rename them to align with the new operator names.
+
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
-| ont-runner   | bcbb224     | Shared library complete       | Binary entry points, capability engine, agent/compile modes |
-| ont-security | 8324c0b     | Admission webhook operational | Bootstrap RBAC window (TODO session-8, INV-020, CS-INV-004) |
-| ont-platform | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
-| ont-infra    | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
+| conductor    | bcbb224     | Shared library complete       | Binary entry points, capability engine, execute/agent modes |
+| guardian     | 8324c0b     | Admission webhook operational | Bootstrap RBAC window (TODO session-8, INV-020, CS-INV-004) |
+| platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
+| wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
+| seam-core    | N/A         | Declared — not initialized    | Schema controller implementation                            |
 
 ---
 
@@ -21,37 +25,41 @@
 | F-S1  | Repo subdirectories not yet created in component repos                         | No                                     |
 | F-S3  | CRD YAML and DeepCopy are handwritten; controller-gen not wired (growing risk) | Yes — before any new CRD type additions |
 | F-S3B | KUBEBUILDER_ASSETS must be set manually for envtest runs                       | No (infra note)                        |
-| F-6D  | CapabilityRBACProvision executor-mode confirmed; implementation pending        | No — requires Runner Engineer session  |
+| F-6D  | CapabilityRBACProvision executor-mode confirmed; implementation pending        | No — requires Conductor Engineer session |
 
 ---
 
 ## 3. Role Reading Map
 
-| Role                | Required Documents (beyond CONTEXT.md)                                                   |
-|---------------------|------------------------------------------------------------------------------------------|
-| Governor            | PROGRESS.md, GIT_TRACKING.md, BACKLOG.md                                                 |
-| Domain Architect    | *-schema.md for target domain                                                            |
-| Schema Engineer     | Target *-schema.md + target component *-design.md + existing CRD YAML in that repo      |
-| Controller Engineer | ont-security-schema.md + ont-security/ont-security-design.md (ont-security work)        |
-| Controller Engineer | ont-platform-schema.md + ont-platform/ont-platform-design.md (ont-platform work)        |
-| Controller Engineer | ont-infra-schema.md + ont-infra/ont-infra-design.md (ont-infra work)                    |
-| Runner Engineer     | ont-runner-schema.md + ont-runner/ont-runner-design.md + all operator *-schema.md       |
-| Platform Engineer   | Target component *-schema.md + Dockerfile context for that component                    |
-| Test Engineer       | Target *-schema.md + target component *-design.md                                       |
-| Lab Operator        | ont-lab/ runbooks + CLAUDE.md §10                                                        |
-| Release Engineer    | GIT_TRACKING.md, BACKLOG.md                                                              |
-| Incident Analyst    | PROGRESS.md + target component *-schema.md                                               |
+> Schema files retain their current filenames. A future Governor session will rename
+> them to align with the new operator names (guardian-schema.md, platform-schema.md, etc.).
+
+| Role                    | Required Documents (beyond CONTEXT.md)                                                       |
+|-------------------------|----------------------------------------------------------------------------------------------|
+| Governor                | PROGRESS.md, GIT_TRACKING.md, BACKLOG.md                                                     |
+| Domain Architect        | *-schema.md for target domain                                                                |
+| Schema Engineer         | Target *-schema.md + target component *-design.md + existing CRD YAML in that repo          |
+| Controller Engineer     | ont-security-schema.md + guardian/guardian-design.md (Guardian work)                        |
+| Controller Engineer     | ont-platform-schema.md + platform/platform-design.md (Platform work)                        |
+| Controller Engineer     | ont-infra-schema.md + wrapper/wrapper-design.md (Wrapper work)                              |
+| Conductor Engineer      | ont-runner-schema.md + conductor/conductor-design.md + all operator *-schema.md             |
+| Platform Engineer       | Target component *-schema.md + Dockerfile context for that component                        |
+| Test Engineer           | Target *-schema.md + target component *-design.md                                           |
+| Lab Operator            | ont-lab/ runbooks + CLAUDE.md §9                                                             |
+| Release Engineer        | GIT_TRACKING.md, BACKLOG.md                                                                  |
+| Incident Analyst        | PROGRESS.md + target component *-schema.md                                                   |
 
 ---
 
 ## 4. Next Session
 
 **Role:** Controller Engineer
+**Component:** Guardian (formerly ont-security)
 **Objective:** Bootstrap RBAC window — close TODO(session-8) in `internal/webhook/decision.go`,
 enforce INV-020 and CS-INV-004. Webhook must admit bootstrap operations during the window and
-harden permanently after ont-security's admission webhook becomes operational.
+harden permanently after Guardian's admission webhook becomes operational.
 **Pre-conditions:**
-- ont-security at 8324c0b on branch `session/1-governor-init`
+- guardian at 8324c0b on branch `session/1-governor-init`
 - `internal/webhook/decision.go` contains `TODO(session-8)` bootstrap window stub
 - KUBEBUILDER_ASSETS is set in the test environment before running integration tests
 

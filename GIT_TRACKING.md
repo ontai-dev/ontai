@@ -1,12 +1,13 @@
 # ONT Git Tracking
 ## Repository Status
-| Repository   | Branch                  | Last Commit | Status      |
+| Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | session/1-governor-init | dd2ce1f     | active      |
-| ont-runner   | session/1-governor-init | 56e1582     | active      |
-| ont-security | session/1-governor-init | 8324c0b     | active      |
-| ont-platform | session/1-governor-init | 7237416     | active      |
-| ont-infra    | session/1-governor-init | 86807d4     | initialized |
+| ontai        | session/1-governor-init | dd2ce1f     | active                    |
+| conductor    | session/1-governor-init | bcbb224     | active                    |
+| guardian     | session/1-governor-init | 8324c0b     | active                    |
+| platform     | session/1-governor-init | 7237416     | active                    |
+| wrapper      | session/1-governor-init | 86807d4     | initialized               |
+| seam-core    | N/A                     | N/A         | declared — not initialized |
 
 ## Branch Convention
 session/{N}-{role}-{description} for all work branches.
