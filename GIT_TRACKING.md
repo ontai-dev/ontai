@@ -4,7 +4,7 @@
 |---|---|---|---|
 | ontai        | session/1-governor-init | dd7247f     | active                    |
 | conductor    | session/1-governor-init | 4e09ead     | active                    |
-| guardian     | session/1-governor-init | 0eb92da     | active                    |
+| guardian     | session/1-governor-init | 52e1bb6     | active                    |
 | platform     | session/1-governor-init | 001fb16     | active                    |
 | wrapper      | session/1-governor-init | 0371234     | active                    |
 | seam-core    | main                    | c6d4626     | initialized               |
@@ -41,3 +41,4 @@ No pushes to remote until Platform Governor authorizes.
 | platform     | 001fb16 | session/governor: Seam rename — module to platform, design doc rename, licensing removal        |
 | wrapper      | 0371234 | session/governor: Seam rename — module to wrapper, design doc rename                            |
 | ontai        | dd7247f | session/governor: Seam rename — schema renames, .gitignore, tracking updates, seam-core init    |
+| guardian     | 52e1bb6 | session/8: bootstrap RBAC window — INV-020, CS-INV-004                                          |

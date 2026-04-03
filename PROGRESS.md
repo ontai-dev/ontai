@@ -6,15 +6,42 @@ Session 5 opened. Role: Controller Engineer. EPG impact trace documented. Object
 Session 6 opened. Role: Controller Engineer. Redesign acknowledged. Pre-session Governor findings documented (6-A through 6-D). Scope: reconcileDrift wiring, PermissionSnapshotReceipt watch, delivery loop closure. Admission webhook deferred to Session 7. No capability constant implementation this session.
 Session 7 opened. Role: Controller Engineer. Objective: admission webhook skeleton — decision.go (pure, no server imports), rbac_handler.go, server.go, webhook config, main.go wiring. 13 unit tests + 7 integration tests. Bootstrap window is TODO(session-8). CS-INV-001 and CS-INV-004 closed on management cluster.
 Session 7 closed. All gates complete. 92 unit tests + 26 integration tests green. go vet clean. go build clean. Root cause fixed: ValidatingWebhookConfiguration YAML had webhooks under wrong `spec.` prefix. Metrics port conflict fixed across all integration test suites. Commit 8324c0b.
+Session 8 opened. Role: Controller Engineer. Objective: bootstrap RBAC window — close TODO(session-8) in decision.go, implement INV-020 and CS-INV-004.
+Session 8 closed. Bootstrap RBAC window implemented and verified. Commit 52e1bb6.
 Governor session: CAPI adoption cross-document alignment complete. Seven documents amended. Path B ruling recorded as authoritative resolution for management cluster lifecycle under CAPI adoption. Six capability constants confirmed retained and not orphaned. INV-013 amended with named reconciler exceptions. guardian AGENTS.md intake scope expanded to include CAPI providers. Orphaned-constant open finding closed. INV-013 amendment open finding closed.
 Governor session (2026-04-01): pack-compile misclassification fixed across four documents. CapabilityPackCompile separated into compile-mode section in constants.go. conductor-schema.md Section 9 incorrect Note on pack-compile removed; Section 6 table pack-compile row corrected. PROGRESS.md Finding 6-A Option B withdrawn; closed with correct resolution. Session 2 Capability Reference table pack-compile row updated. BACKLOG.md PackBuild controller and PackBuildReconciler items marked REMOVED.
 
 # ONT Platform Progress
 ## Platform State
-Status: Foundation in progress. Shared library complete. guardian CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed. Admission webhook operational — CS-INV-001 and CS-INV-004 enforced on management cluster. Bootstrap window is TODO(session-8).
+Status: Foundation in progress. Shared library complete. guardian CRD surface complete. All four reconcilers operational. EPG computation with ceiling intersection verified. PermissionSnapshot generation live. Drift detection loop closed. Admission webhook operational — CS-INV-001 enforced. Bootstrap RBAC window implemented — INV-020 and CS-INV-004 closed.
 Current Phase: Phase 1 — Development
-Last Session: Session 7 — Controller Engineer, admission webhook skeleton, 118 tests total
-Next Session: Session 8 — Bootstrap RBAC window implementation (INV-020, CS-INV-004)
+Last Session: Session 8 — Controller Engineer, bootstrap RBAC window, 21 webhook unit tests
+Next Session: PermissionSet reconciler (ProfileReferenceCount), PermissionService gRPC, or controller-gen wiring (Governor scheduling required)
+
+## Session 8 Exit State
+
+**Commit:** 52e1bb6 (guardian, branch session/1-governor-init)
+**Message:** session/8: bootstrap RBAC window — INV-020, CS-INV-004
+
+**Modified files:**
+- internal/webhook/decision.go — `BootstrapWindow` type added (sync/atomic.Bool, starts open). `BootstrapWindowOpen bool` added to `AdmissionRequest`. `EvaluateAdmission` step 2 implemented: when window is open, intercepted RBAC admitted unconditionally. TODO(session-8) removed.
+- internal/webhook/rbac_handler.go — `RBACAdmissionHandler` holds `*BootstrapWindow`, reads it per request into `AdmissionRequest.BootstrapWindowOpen`.
+- internal/webhook/server.go — `Register(window *BootstrapWindow)` now accepts the window, passes it to the handler, then permanently closes it after registration. This is the INV-020 close event.
+- cmd/ont-security/main.go — creates `NewBootstrapWindow()`, passes to `Register()`.
+- test/unit/webhook/decision_test.go — 9 new tests (13–21): BootstrapWindow state transitions (starts open, close is permanent, idempotent), EvaluateAdmission with window open for all intercepted kinds, EvaluateAdmission with window closed confirms normal enforcement. Removed `TestDecisionGo_BootstrapWindowStub_Present`.
+- test/integration/webhook/rbac_webhook_test.go — TestMain updated for new `Register(window)` signature.
+
+**Invariants closed:**
+- INV-020: bootstrap RBAC window named, documented, bounded. Closes permanently in `Register()`.
+- CS-INV-004: window has definite close — on first successful webhook registration.
+
+**Test counts:** 21 webhook unit tests passing (was 13). All prior unit and integration tests unaffected.
+
+**TODO items remaining in code:**
+- CNPG two-phase boot sequence (future session)
+- PermissionSet reconciler (ProfileReferenceCount maintenance)
+- PermissionService gRPC server (4 operations)
+- IdentityProvider reconciler (prerequisite before identity trust methods in IdentityBinding)
 
 ## Session 7 Exit State
 
@@ -331,7 +358,7 @@ before any EPG implementation begins):
 - [Session 6, Finding 6-B] Community tier cluster limit: CLOSED. Resolved by 2026-03-30 redesign. INV-025: 5 target clusters, management cluster excluded.
 - [Session 6, Finding 6-C] controller-gen not wired: REQUIRES GOVERNOR SCHEDULING before next domain begins.
 - [Session 6, Finding 6-D] CapabilityRBACProvision semantics: executor-mode Kueue Job (Governor decision). REQUIRES Runner Engineer session.
-- [Session 7] Bootstrap RBAC window (TODO(session-8)) — CS-INV-004, INV-020. Window is permanently closed until Session 8. Must be implemented before production deployment.
+- [Session 7 → Session 8 CLOSED] Bootstrap RBAC window — CS-INV-004, INV-020. Implemented in Session 8. BootstrapWindow type (atomic bool), Register() closes window permanently. 9 new unit tests. Commit 52e1bb6.
 - [Session 6] PermissionSet reconciler absent — ProfileReferenceCount has no owner. Add to backlog.
 - [CAPI Governor] Six capability constants (talos-upgrade, kube-upgrade, stack-upgrade, node-scale-up, node-decommission, node-reboot): CLOSED. Confirmed retained. Not orphaned. Active when TalosCluster spec.capi.enabled=false only. conductor-schema.md Triggering CRD column updated.
 - [CAPI Governor] INV-013 amendment: CLOSED. Named reconciler exceptions (SeamInfrastructureClusterReconciler, SeamInfrastructureMachineReconciler) added to root CLAUDE.md INV-013 inline text and amendment record.

@@ -8,7 +8,7 @@
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
 | conductor    | bcbb224     | Shared library complete       | Binary entry points, capability engine, execute/agent modes |
-| guardian     | 8324c0b     | Admission webhook operational | Bootstrap RBAC window (TODO session-8, INV-020, CS-INV-004) |
+| guardian     | 52e1bb6     | Bootstrap RBAC window closed  | PermissionSet reconciler, PermissionService gRPC, controller-gen |
 | platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
 | seam-core    | c6d4626     | Initialized — skeleton only   | Schema controller implementation                            |
@@ -47,14 +47,16 @@
 
 ## 4. Next Session
 
-**Role:** Controller Engineer
-**Component:** Guardian (formerly ont-security)
-**Objective:** Bootstrap RBAC window — close TODO(session-8) in `internal/webhook/decision.go`,
-enforce INV-020 and CS-INV-004. Webhook must admit bootstrap operations during the window and
-harden permanently after Guardian's admission webhook becomes operational.
-**Pre-conditions:**
-- guardian at 8324c0b on branch `session/1-governor-init`
-- `internal/webhook/decision.go` contains `TODO(session-8)` bootstrap window stub
+**Role:** Governor scheduling required
+**Component:** Guardian or Conductor
+**Options (Governor decides):**
+- Guardian: PermissionSet reconciler (ProfileReferenceCount) — no blocking prerequisite
+- Guardian: PermissionService gRPC server (4 operations) — no blocking prerequisite
+- Guardian: controller-gen wiring (F-S3) — REQUIRES GOVERNOR SCHEDULING, blocks new CRD type additions
+- Guardian: IdentityProvider reconciler — PREREQUISITE before IdentityBinding identity trust methods
+- Conductor: binary entry points, capability engine (next major work stream)
+**Pre-conditions (Guardian work):**
+- guardian at 52e1bb6 on branch `session/1-governor-init`
 - KUBEBUILDER_ASSETS is set in the test environment before running integration tests
 
 ---

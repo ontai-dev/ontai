@@ -25,7 +25,7 @@
 - [x] PermissionSnapshotReceipt watch and drift-check dispatch (Session 6)
 - [x] reconcileDrift implemented with transition events (Session 6)
 - [x] Admission webhook server skeleton (Session 7, CS-INV-001, CS-INV-004)
-- [ ] Bootstrap RBAC window — close TODO(session-8) in internal/webhook/decision.go (INV-020, CS-INV-004)
+- [x] Bootstrap RBAC window — close TODO(session-8) in internal/webhook/decision.go (INV-020, CS-INV-004)
 - [ ] Schema Engineer session: wire controller-gen, validate CRD YAML equivalence (REQUIRES GOVERNOR SCHEDULING)
 - ~~[ ] Governor resolution: CapabilityPackCompile — annotate constant with Option B semantics (Finding 6-A)~~ REMOVED — dismissed design. Option B (validation-only Conductor Job) is withdrawn. pack-compile is a Compiler compile mode capability. No cluster Job. Finding 6-A closed 2026-04-01.
 - [ ] Governor clarification: CapabilityRBACProvision — executor-mode capability (Finding 6-D, Governor decided)
