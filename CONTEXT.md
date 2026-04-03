@@ -22,6 +22,7 @@
 | F-S1  | Repo subdirectories not yet created in component repos                         | No                                     |
 | F-S3  | ~~CRD YAML and DeepCopy are handwritten; controller-gen not wired~~ CLOSED Session 9 | Closed |
 | F-S3B | KUBEBUILDER_ASSETS must be set manually for envtest runs                       | No (infra note)                        |
+| F-S3C | PermissionRule.Verbs requires typed Verb string with +kubebuilder:validation:Enum — field-level items enum not supported on []string in controller-gen v0.16.1; generated CRD omits verb enum validation | Yes — blocks strict CRD validation; Controller Engineer session required |
 | F-6D  | CapabilityRBACProvision executor-mode confirmed; implementation pending        | No — requires Conductor Engineer session |
 
 ---
