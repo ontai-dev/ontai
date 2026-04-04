@@ -7,7 +7,7 @@
 
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
-| conductor    | 1ae4bf9     | ConfigMap write, leader election, capability manifest publish, receipt reconciliation complete | Capability handler implementations (bootstrap, talos-upgrade, etc.), signing key integration (INV-026), admission webhook server, PermissionService gRPC server |
+| conductor    | 12f7019     | All 17 execute-mode capability handlers implemented (bootstrap, talos-upgrade, kube-upgrade, stack-upgrade, node-patch, node-scale-up, node-decommission, node-reboot, etcd-backup, etcd-maintenance, etcd-restore, pki-rotate, credential-rotate, hardening-apply, cluster-reset, pack-deploy, rbac-provision); TalosNodeClient/StorageClient/OCIRegistryClient interfaces; ExecuteClients injection; 37 unit tests green | Signing key integration (INV-026) — TalosClientAdapter from mounted talosconfig, StorageClient S3 adapter, OCIRegistryClient adapter; admission webhook server; PermissionService gRPC server |
 | guardian     | 740be82     | IdentityBinding trust methods, PermissionSet reconciler, PermissionService gRPC complete | SealedCausalChain immutability webhook, LineageController (deferred) |
 | platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
@@ -53,9 +53,9 @@
 
 **Guardian — SealedCausalChain immutability webhook** (admission webhook, Guardian Controller Engineer session)
 
-**Conductor — capability handler implementations** (replace stub handlers with real logic for each of the 17 named capabilities; each uses pure Go kube/talos clients; Conductor Engineer session)
+**Conductor — client adapter implementations** (TalosClientAdapter wrapping real talos/client.Client from mounted talosconfig; S3-compatible StorageClient; OCIRegistryClient from registry; wire all three into main.go runExecute(); INV-026 signing key; Conductor Engineer session)
 
-**Conductor — signing key integration + admission webhook + PermissionService gRPC** (INV-026 signing; agent mode webhook server and local gRPC server; Conductor Engineer session)
+**Conductor — admission webhook + PermissionService gRPC** (agent mode RBAC intercept webhook server and local gRPC authorization server; Conductor Engineer session)
 
 **LineageController — deferred** until Platform and Wrapper have meaningful object-producing implementations
 
@@ -65,10 +65,10 @@
 - All unit and integration tests currently green
 
 **Pre-conditions (Conductor work):**
-- conductor at 1ae4bf9 on branch `session/1-governor-init`
+- conductor at session/14 commit on branch `session/1-governor-init`
 - All unit tests green: `go test ./test/unit/...` from conductor root
-- Session 13 complete: ConfigMap write, leader election, capability publisher, receipt reconciler all implemented and tested
-- Next: capability handler implementations (replace stubs with real logic) — reads conductor-schema.md §6 + all operator schemas
+- Session 14 complete: all 17 capability handlers implemented with real client calls; TalosNodeClient/StorageClient/OCIRegistryClient interfaces defined; ExecuteClients injection through RunExecute; 37 handler unit tests covering nil-client contracts and happy paths
+- Next: client adapters (TalosClientAdapter, S3StorageClient, OCIRegistryClient concrete impls) + wire into main.go runExecute()
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*
