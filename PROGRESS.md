@@ -633,3 +633,66 @@ Verified by inspection: only seaminfrastructuremachine_reconciler.go has import 
 
 ### Next Session
 **Wrapper ClusterPack, PackExecution, PackInstance reconcilers.** Platform is substantially complete.
+
+---
+
+## Session 21 Exit State — Controller Engineer, Wrapper
+
+**Commit:** 3438aec (wrapper, branch session/1-governor-init)
+**Message:** session/21: WS1+WS2+WS3 — ClusterPack/PackExecution/PackInstance CRDs, reconcilers, 17 unit tests
+
+### WS1 — CRD types and scaffold
+
+**api/v1alpha1/groupversion_info.go** — infra.ontai.dev group registration
+**api/v1alpha1/conditions.go** — SetCondition/FindCondition helpers
+**api/v1alpha1/lineage_conditions.go** — ConditionTypeLineageSynced, ReasonLineageControllerAbsent
+**api/v1alpha1/clusterpack_types.go** — ClusterPack + list; spec: version (immutable), registryRef, checksum, sourceBuildRef, executionOrder, lifecyclePolicies, provenance, lineage; status: Signed, PackSignature, conditions
+**api/v1alpha1/packexecution_types.go** — PackExecution + list; spec: clusterPackRef, targetClusterRef, admissionProfileRef, lineage; status: jobName, operationResultRef, conditions
+**api/v1alpha1/packinstance_types.go** — PackInstance + list; spec: clusterPackRef, targetClusterRef, dependsOn, dependencyPolicy, lineage; status: deliveredAt, driftSummary, conditions
+**api/v1alpha1/zz_generated.deepcopy.go** — controller-gen generated
+**config/crd/** — 3 CRD YAML files generated (ClusterPack, PackExecution, PackInstance)
+**cmd/ont-infra/main.go** — manager entry point with all three reconcilers wired, CI-INV-004 leader election
+
+**go.mod:** seam-core replace directive added; k8s/controller-runtime deps added
+**make generate:** Clean — deepcopy + 3 CRD YAMLs
+**go build ./...:** Clean
+
+### WS2 — ClusterPackReconciler and PackExecutionReconciler
+
+**internal/controller/clusterpack_reconciler.go:**
+- Spec snapshot annotation recorded BEFORE deferred status patch (avoids fake client in-memory status corruption)
+- LineageSynced=False/LineageControllerAbsent on first observation
+- ImmutabilityViolation on spec mutation (CI-INV-002)
+- Revoked=True → stop, no requeue
+- Conductor signature annotation → transition to Available, status.Signed=true
+- SignaturePending=True + RequeueAfter:15s when not yet signed
+
+**internal/controller/packexecution_reconciler.go:**
+- 4-gate check in order: Signature → Revocation → PermissionSnapshot → RBACProfile
+- PermissionSnapshot and RBACProfile read via unstructured (no cross-operator type import)
+- Kueue label (kueue.x-k8s.io/queue-name) mandatory on pack-deploy Job — wrapper-design.md §4
+- Job spec: conductor image, CAPABILITY/CLUSTER_REF/OPERATION_RESULT_CM/PACK_REGISTRY_REF/PACK_CHECKSUM/PACK_SIGNATURE env vars, kubeconfig volume mount, ServiceAccount: infra-system/wrapper-runner, TTL 600s
+- OperationResult ConfigMap read after Job succeeds
+- Terminal state guards: Succeeded and PackRevoked conditions
+
+### WS3 — PackInstanceReconciler
+
+**internal/controller/packinstance_reconciler.go:**
+- PackReceipt read via unstructured (target-cluster conductor mirrors to management namespace)
+- SecurityViolation raised if PackReceipt.signatureVerified=false; blocks all further ops
+- Drifted=True from PackReceipt.driftStatus=Drifted
+- DependencyBlocked when DriftPolicy=Block and dependency PackInstance is Drifted
+- driftCheckInterval=60s continuous polling
+- Ready=True when signature verified + no drift + no dependency block
+
+### Test coverage
+- test/unit/clusterpack_reconciler_test.go: 5 tests (AwaitingSignature, SignedTransitionsToAvailable, LineageSyncedInitialized, ImmutabilityViolation, RevokedNoRequeue)
+- test/unit/packexecution_reconciler_test.go: 6 tests (Gate1-4, AllGatesClear_JobSubmitted, LineageSyncedInitialized)
+- test/unit/packinstance_reconciler_test.go: 6 tests (NoReceipt, SecurityViolation, DriftDetected, InSync, DependencyBlock, LineageSyncedInitialized)
+- Total: 17 tests, all passing
+
+### Notable design decision
+Spec snapshot annotation recorded before deferred status patch setup. Calling r.Client.Patch() (metadata/spec patch) after patchBase is taken causes the fake client to update the in-memory object reference, clearing any status mutations that were set before the call. Solution: metadata patch first, then take patchBase.
+
+### Next Session
+**LineageController implementation.** Platform (5dbe1aa) and Wrapper (3438aec) now both have meaningful object-producing implementations. LineageController pre-conditions are met. Role: Controller Engineer, repository: seam-core.

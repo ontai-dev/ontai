@@ -6,7 +6,7 @@
 | conductor    | session/1-governor-init | 5e5bebb     | active                    |
 | guardian     | session/1-governor-init | 740be82     | active                    |
 | platform     | session/1-governor-init | 5dbe1aa     | active                    |
-| wrapper      | session/1-governor-init | 0371234     | active                    |
+| wrapper      | session/1-governor-init | 3438aec     | active                    |
 | seam-core    | main                    | d0fba81     | lineage stub — pkg/lineage + InfrastructureLineageIndex types |
 
 ## Branch Convention
@@ -55,3 +55,4 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | 5e5bebb | session/18: PermissionSnapshot pull loop — target cluster pulls, verifies INV-026, updates store |
 | platform     | 8c02a4f | session/19: WS1+WS2 — TalosCluster CRD types, reconciler scaffold, CAPI helpers, main.go       |
 | platform     | 5dbe1aa | session/20: WS1+WS2 — SeamInfrastructureCluster/Machine CRDs, SIC+SIM reconcilers, unit tests  |
+| wrapper      | 3438aec | session/21: WS1+WS2+WS3 — ClusterPack/PackExecution/PackInstance CRDs, reconcilers, 17 unit tests |
