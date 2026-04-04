@@ -3,7 +3,7 @@
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
 | ontai        | session/1-governor-init | e1d06cf     | active                    |
-| conductor    | session/1-governor-init | 5e5bebb     | active                    |
+| conductor    | session/1-governor-init | 2e2afa9     | active                    |
 | guardian     | session/1-governor-init | d3b5e74     | active                    |
 | platform     | session/1-governor-init | 5dbe1aa     | active                    |
 | wrapper      | session/1-governor-init | 3438aec     | active                    |
@@ -53,6 +53,7 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | c39a8c3 | session/15: WS1 adapters, WS2 Ed25519 signing, WS3 SealedCausalChain webhook                  |
 | conductor    | 0ccbb2a | session/16: WS1 signing loops + WS2 local PermissionService gRPC                              |
 | conductor    | 5e5bebb | session/18: PermissionSnapshot pull loop — target cluster pulls, verifies INV-026, updates store |
+| conductor    | 2e2afa9 | session/25: CapabilityRBACProvision — Ed25519 signature verification (INV-026) + bootstrap window mode (INV-020), 4 new unit tests green |
 | platform     | 8c02a4f | session/19: WS1+WS2 — TalosCluster CRD types, reconciler scaffold, CAPI helpers, main.go       |
 | platform     | 5dbe1aa | session/20: WS1+WS2 — SeamInfrastructureCluster/Machine CRDs, SIC+SIM reconcilers, unit tests  |
 | wrapper      | 3438aec | session/21: WS1+WS2+WS3 — ClusterPack/PackExecution/PackInstance CRDs, reconcilers, 17 unit tests |
