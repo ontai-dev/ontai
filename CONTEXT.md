@@ -10,7 +10,7 @@
 | conductor    | 5e5bebb     | WS1: SigningLoop signs PackInstance+PermissionSnapshot CRs with Ed25519 (SIGNING_PRIVATE_KEY_PATH gate, management cluster only, INV-026); WS2: local PermissionService gRPC (SnapshotStore + LocalService + hand-written service descriptor, PERMISSION_SERVICE_ADDR, all clusters); WS3: SnapshotPullLoop — target cluster pulls PermissionSnapshot from management, verifies Ed25519 (SIGNING_PUBLIC_KEY_PATH + MGMT_KUBECONFIG_PATH gates), calls SnapshotStore.Update; DegradedSecurityState on failure; bootstrap window mode (INV-020); 7 suites, all green | Guardian SealedCausalChain spec.lineage embedding |
 | guardian     | 9a9432a     | WS1: SealedCausalChain spec.lineage added to RBACPolicy, RBACProfile, IdentityBinding, IdentityProvider, PermissionSet; CRDs regenerated; seam-core dependency wired; WS2: LineageSynced=False/LineageControllerAbsent initialization in all 5 reconcilers; lineage_conditions.go added | LineageController (deferred), SealedCausalChain immutability webhook (deferred) |
 | platform     | 5dbe1aa     | TalosCluster + SeamInfrastructureCluster/Machine CRD types, all three reconcilers (TalosCluster, SIC, SIM), SIC/SIM CRDs with lineage + controller-gen clean, SIM implements 6-step machineconfig delivery via TalosMachineConfigApplier (only file with talos goclient, CP-INV-001 clean), unit tests green, go build clean | Wrapper ClusterPack/PackExecution/PackInstance reconcilers |
-| wrapper      | 3438aec     | WS1: ClusterPack/PackExecution/PackInstance CRDs + deepcopy + 3 CRD YAMLs; WS2: ClusterPackReconciler (immutability enforcement, signature transition, SignaturePending requeue), PackExecutionReconciler (4-gate check, Kueue Job submission, OperationResult read); WS3: PackInstanceReconciler (PackReceipt drift/security, DependencyBlock); 17 unit tests green | LineageController (seam-core) — now unblocked |
+| wrapper      | 3438aec     | WS1: ClusterPack/PackExecution/PackInstance CRDs + deepcopy + 3 CRD YAMLs; WS2: ClusterPackReconciler (immutability enforcement, signature transition, SignaturePending requeue), PackExecutionReconciler (4-gate check, Kueue Job submission, OperationResult read); WS3: PackInstanceReconciler (PackReceipt drift/security, DependencyBlock); spec.lineage (SealedCausalChain) embedded in all 3 root-declaration specs, CRD YAMLs regenerated; 17 unit tests green | Governor scheduling for remaining deferred items |
 | seam-core    | be0aaa1     | LineageController complete — full ILI spec, controller-gen, manager, LineageReconciler (9 GVKs), governance annotation, LineageSynced transfer, 9 tests green | Governor scheduling for remaining deferred items |
 
 ---
@@ -49,7 +49,7 @@
 ## 4. Next Session
 
 **Role:** Governor
-**Purpose:** Review deferred items, schedule next Controller Engineer session.
+**Purpose:** Review remaining deferred items, schedule next session (SealedCausalChain immutability webhook or CapabilityRBACProvision).
 
 **LineageController — CLOSED.** seam-core be0aaa1 delivers:
 - Full InfrastructureLineageIndex spec (rootBinding, descendantRegistry, policyBindingStatus)
@@ -64,7 +64,7 @@
 - SealedCausalChain immutability admission webhook (guardian + seam-core)
 - LineageIndex controller-authorship admission webhook (seam-core)
 - Guardian CapabilityRBACProvision executor mode (conductor)
-- Wrapper SealedCausalChain spec.lineage embedding
+- ~~Wrapper SealedCausalChain spec.lineage embedding~~ CLOSED — delivered in session 21 (3438aec); confirmed session 23
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*
