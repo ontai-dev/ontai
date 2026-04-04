@@ -7,7 +7,7 @@
 
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
-| conductor    | 05b63e6     | Binary entry points, capability engine, execute/agent mode stubs complete | ConfigMap write after execute dispatch (stub TODO), leader election, control loops |
+| conductor    | 05b63e6     | Binary entry points, capability engine, execute and agent mode handlers complete | RunExecute ConfigMap write (OperationResultSpec), agent mode control loops (leader election, capability manifest publish, receipt reconciliation) |
 | guardian     | 740be82     | IdentityBinding trust methods, PermissionSet reconciler, PermissionService gRPC complete | SealedCausalChain immutability webhook, LineageController (deferred) |
 | platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
@@ -35,9 +35,9 @@
 | Domain Architect        | *-schema.md for target domain                                                                |
 | Schema Engineer         | Target *-schema.md + target component *-design.md + existing CRD YAML in that repo          |
 | Controller Engineer     | guardian-schema.md + guardian/guardian-design.md + domain-core-schema.md + seam-core-schema.md (Guardian work) |
-| Controller Engineer     | platform-schema.md + platform/platform-design.md (Platform work)                        |
-| Controller Engineer     | wrapper-schema.md + wrapper/wrapper-design.md (Wrapper work)                              |
-| Conductor Engineer      | conductor-schema.md + conductor/conductor-design.md + all operator *-schema.md             |
+| Controller Engineer     | platform-schema.md + platform/platform-design.md + domain-core-schema.md + seam-core-schema.md (Platform work) |
+| Controller Engineer     | wrapper-schema.md + wrapper/wrapper-design.md + domain-core-schema.md + seam-core-schema.md (Wrapper work)   |
+| Conductor Engineer      | conductor-schema.md + conductor/conductor-design.md + all operator *-schema.md + domain-core-schema.md + seam-core-schema.md |
 | Platform Engineer       | Target component *-schema.md + Dockerfile context for that component                        |
 | Test Engineer           | Target *-schema.md + target component *-design.md                                           |
 | Lab Operator            | ont-lab/ runbooks + CLAUDE.md §9                                                             |
@@ -53,7 +53,7 @@
 
 **Guardian — SealedCausalChain immutability webhook** (admission webhook, Guardian Controller Engineer session)
 
-**Conductor — execute-mode ConfigMap write** (OperationResultSpec → ConfigMap, the only output channel between operator and Conductor Job; next Conductor Engineer session)
+**Conductor Phase 4 — RunExecute ConfigMap write + agent mode control loops** (OperationResultSpec → ConfigMap write in kernel/execute.go; leader election, capability manifest publish, receipt reconciliation in kernel/agent.go; Conductor Engineer session)
 
 **LineageController — deferred** until Platform and Wrapper have meaningful object-producing implementations
 
