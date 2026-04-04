@@ -7,7 +7,7 @@
 
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
-| conductor    | bcbb224     | Shared library complete       | Binary entry points, capability engine, execute/agent modes |
+| conductor    | 05b63e6     | Binary entry points, capability engine, execute/agent mode stubs complete | ConfigMap write after execute dispatch (stub TODO), leader election, control loops |
 | guardian     | 740be82     | IdentityBinding trust methods, PermissionSet reconciler, PermissionService gRPC complete | SealedCausalChain immutability webhook, LineageController (deferred) |
 | platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
@@ -53,7 +53,7 @@
 
 **Guardian — SealedCausalChain immutability webhook** (admission webhook, Guardian Controller Engineer session)
 
-**Conductor — binary entry points and capability engine** (next major workstream)
+**Conductor — execute-mode ConfigMap write** (OperationResultSpec → ConfigMap, the only output channel between operator and Conductor Job; next Conductor Engineer session)
 
 **LineageController — deferred** until Platform and Wrapper have meaningful object-producing implementations
 
@@ -61,6 +61,11 @@
 - guardian at 740be82 on branch `session/1-governor-init`
 - KUBEBUILDER_ASSETS is set in the test environment before running integration tests
 - All unit and integration tests currently green
+
+**Pre-conditions (Conductor work):**
+- conductor at 05b63e6 on branch `session/1-governor-init`
+- All unit tests green: `go test ./test/unit/...` from conductor root
+- WS1–WS3 complete; next work is kernel/execute.go Phase 4 (ConfigMap write) and agent mode control loops
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*
