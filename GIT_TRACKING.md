@@ -4,7 +4,7 @@
 |---|---|---|---|
 | ontai        | session/1-governor-init | e1d06cf     | active                    |
 | conductor    | session/1-governor-init | 4e09ead     | active                    |
-| guardian     | session/1-governor-init | 5fe5952     | active                    |
+| guardian     | session/1-governor-init | 740be82     | active                    |
 | platform     | session/1-governor-init | 001fb16     | active                    |
 | wrapper      | session/1-governor-init | 0371234     | active                    |
 | seam-core    | main                    | d0fba81     | lineage stub — pkg/lineage + InfrastructureLineageIndex types |
@@ -45,3 +45,5 @@ No pushes to remote until Platform Governor authorizes.
 | guardian     | e7a401b | session/schema: guardian — wire controller-gen, replace handwritten CRD YAML and deepcopy       |
 | guardian     | 5fe5952 | session/10: Verb enum fix (F-S3C) and IdentityProvider reconciler                               |
 | seam-core    | d0fba81 | session/schema: lineage stub — InfrastructureLineageIndex types and pkg/lineage shared library  |
+| guardian     | d1e35b7 | session/11: WS1+WS2 — IdentityBinding trust methods and PermissionSet reconciler               |
+| guardian     | 740be82 | session/11: WS3 — PermissionService gRPC server (four operations)                              |
