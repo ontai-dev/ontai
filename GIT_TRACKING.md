@@ -4,10 +4,10 @@
 |---|---|---|---|
 | ontai        | session/1-governor-init | e1d06cf     | active                    |
 | conductor    | session/1-governor-init | 5e5bebb     | active                    |
-| guardian     | session/1-governor-init | 740be82     | active                    |
+| guardian     | session/1-governor-init | d3b5e74     | active                    |
 | platform     | session/1-governor-init | 5dbe1aa     | active                    |
 | wrapper      | session/1-governor-init | 3438aec     | active                    |
-| seam-core    | main                    | be0aaa1     | LineageController complete — ILI spec, controller-gen, manager, LineageReconciler (9 GVKs), 9 tests green |
+| seam-core    | session/1-governor-init | 54d4409     | active                    |
 
 ## Branch Convention
 session/{N}-{role}-{description} for all work branches.
@@ -57,3 +57,5 @@ No pushes to remote until Platform Governor authorizes.
 | platform     | 5dbe1aa | session/20: WS1+WS2 — SeamInfrastructureCluster/Machine CRDs, SIC+SIM reconcilers, unit tests  |
 | wrapper      | 3438aec | session/21: WS1+WS2+WS3 — ClusterPack/PackExecution/PackInstance CRDs, reconcilers, 17 unit tests |
 | seam-core    | be0aaa1 | session/22: LineageController — ILI spec, controller-gen, manager, LineageReconciler (9 GVKs), governance annotation, LineageSynced transfer, 9 tests |
+| guardian     | d3b5e74 | session/24: WS1 — SealedCausalChain immutability webhook (5 kinds, /validate-lineage), 16 unit tests green |
+| seam-core    | 54d4409 | session/24: WS2+WS3 — ILI rootBinding immutability + controller-authorship gate, 29 unit tests green |
