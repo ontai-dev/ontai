@@ -539,3 +539,47 @@ Notes:
 **Integration test note:**
 Tests require KUBEBUILDER_ASSETS=/tmp/envtest-bins/k8s/1.35.0-linux-amd64.
 Run: setup-envtest use --bin-dir /tmp/envtest-bins to restore if absent.
+
+## Session 19 Exit State — Controller Engineer (platform)
+
+**Role:** Controller Engineer — platform repository
+
+**Commit:** 8c02a4f (platform, branch session/1-governor-init)
+
+### Workstream 1 — TalosCluster CRD types and reconciler scaffold: COMPLETE
+
+**Files created in api/v1alpha1/:**
+- groupversion_info.go — GroupVersion `platform.ontai.dev/v1alpha1`, SchemeBuilder, AddToScheme
+- taloscluster_types.go — TalosClusterMode, TalosClusterOrigin, condition/reason constants, CAPICiliumPackRef, CAPIWorkerPool, CAPIControlPlaneConfig, CAPIConfig, TalosClusterSpec (with `spec.lineage *lineage.SealedCausalChain` from seam-core), LocalObjectRef, TalosClusterStatus, TalosCluster, TalosClusterList; kubebuilder markers including shortName=tc
+- conditions.go — SetCondition, FindCondition helpers (exact guardian pattern)
+- lineage_conditions.go — ConditionTypeLineageSynced, ReasonLineageControllerAbsent
+- zz_generated.deepcopy.go — controller-gen output, all types covered
+
+**Files created in config/crd/:**
+- platform.ontai.dev_talosclusters.yaml — controller-gen output, clean
+
+**Files created in internal/controller/:**
+- taloscluster_controller.go — TalosClusterReconciler: fetch TalosCluster, deferred status patch, ObservedGeneration advance, one-time LineageSynced=False/LineageControllerAbsent init (seam-core-schema.md §7 Declaration 5), route by spec.capi.enabled; reconcileDirectBootstrap (bootstrap Job submit, OperationResult poll, Ready transition); reconcileCAPIPath (10-step CAPI flow, Cilium gate); transitionToReady; SetupWithManager
+- taloscluster_helpers.go — bootstrapPollInterval=15s, capiPollInterval=20s, bootstrapCapability="cluster-bootstrap"; getBootstrapJob, submitBootstrapJob (BackoffLimit=0, INV-018, TTL=600, ownerRef), readOperationResult; ensureTenantNamespace (CP-INV-004), ensureSeamInfrastructureCluster, ensureCAPICluster, ensureTalosConfigTemplate (CNI=none + Cilium BPF params, CP-INV-009), ensureTalosControlPlane, ensureWorkerPool, getCAPIClusterPhase, isCiliumPackInstanceReady, boolPtr; all CAPI objects via unstructured.Unstructured (avoids sigs.k8s.io/cluster-api dependency); all CAPI objects carry TalosCluster ownerRef (CP-INV-008)
+
+**Files created in cmd/ont-platform/:**
+- main.go — flag parsing, scheme setup (clientgoscheme + platformv1alpha1), ctrl.NewManager with CP-INV-007 leader election (platform-leader / platform-system), TalosClusterReconciler registration, health/readiness probes
+
+**go.mod:** seam-core replace directive added; k8s.io and controller-runtime dependencies resolved
+**go mod tidy:** Clean
+**make generate (controller-gen):** Clean — deepcopy and CRD YAML generated without errors
+**go build ./...:** Clean — no compiler errors
+
+### Open Items / Next Session
+
+**WS2 — Seam Infrastructure Provider (not yet started):**
+- SeamInfrastructureCluster and SeamInfrastructureMachine CRD types in api/infrastructure/v1alpha1/
+- SeamInfrastructureClusterReconciler — CAPI InfrastructureCluster contract, controlPlaneEndpoint write-back
+- SeamInfrastructureMachineReconciler — 6-step machineconfig delivery via talos goclient (platform-design.md §3.1); only file in this codebase permitted to use talos goclient (CP-INV-001)
+- Wire both reconcilers into main.go
+- Unit tests
+
+**Notes:**
+- CAPI objects use unstructured.Unstructured throughout — deliberate to avoid heavy sigs.k8s.io/cluster-api import
+- Bootstrap Job image uses placeholder `registry.ontai.dev/ontai-dev/conductor:latest` with TODO comment; real image comes from RunnerConfig once SC-INV-002 migration is complete
+- gopls BrokenImport diagnostics are workspace config noise (module not in go.work); `go build ./...` is the real compiler gate

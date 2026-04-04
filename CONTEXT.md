@@ -9,7 +9,7 @@
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
 | conductor    | 5e5bebb     | WS1: SigningLoop signs PackInstance+PermissionSnapshot CRs with Ed25519 (SIGNING_PRIVATE_KEY_PATH gate, management cluster only, INV-026); WS2: local PermissionService gRPC (SnapshotStore + LocalService + hand-written service descriptor, PERMISSION_SERVICE_ADDR, all clusters); WS3: SnapshotPullLoop — target cluster pulls PermissionSnapshot from management, verifies Ed25519 (SIGNING_PUBLIC_KEY_PATH + MGMT_KUBECONFIG_PATH gates), calls SnapshotStore.Update; DegradedSecurityState on failure; bootstrap window mode (INV-020); 7 suites, all green | Guardian SealedCausalChain spec.lineage embedding |
 | guardian     | 9a9432a     | WS1: SealedCausalChain spec.lineage added to RBACPolicy, RBACProfile, IdentityBinding, IdentityProvider, PermissionSet; CRDs regenerated; seam-core dependency wired; WS2: LineageSynced=False/LineageControllerAbsent initialization in all 5 reconcilers; lineage_conditions.go added | LineageController (deferred), SealedCausalChain immutability webhook (deferred) |
-| platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
+| platform     | 8c02a4f     | TalosCluster CRD types (bootstrap/import modes, CAPI path, LineageSynced), TalosClusterReconciler (direct bootstrap Job path + CAPI path — all 10 CAPI helpers, Cilium gate, transitionToReady), main.go with CP-INV-007 leader election, controller-gen clean, go build clean | SeamInfrastructureCluster/Machine CRD types + reconcilers (WS2 deferred) |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
 | seam-core    | c6d4626     | Initialized — skeleton only   | Schema controller implementation                            |
 
@@ -51,14 +51,20 @@
 **Role:** Platform Controller Engineer
 **Component:** platform
 
-**Platform — TalosCluster reconciler** (bootstrap + CAPI paths). This is the primary remaining Platform workstream. Platform is currently a skeleton (commit 7237416). The TalosCluster reconciler drives cluster lifecycle: bootstrap via Compiler, CAPI integration via SeamInfrastructureClusterReconciler and SeamInfrastructureMachineReconciler (INV-013). Read platform-schema.md and platform/platform-design.md before starting.
+**Platform — SeamInfrastructureCluster and SeamInfrastructureMachine reconcilers** (WS2). These are the Seam CAPI Infrastructure Provider reconcilers. Only these two reconcilers may use talos goclient (INV-013, CP-INV-001). Implement:
+1. SeamInfrastructureCluster and SeamInfrastructureMachine CRD types (API group: `infrastructure.cluster.x-k8s.io`) in `api/infrastructure/v1alpha1/`
+2. SeamInfrastructureClusterReconciler — sets status.ready=true when all CP machines ready, writes controlPlaneEndpoint back to CAPI Cluster
+3. SeamInfrastructureMachineReconciler — 6-step machineconfig delivery via talos goclient (platform-design.md §3.1)
+4. Wire both reconcilers into main.go
+5. Unit tests green
 
 **LineageController** — deferred until Platform and Wrapper have meaningful object-producing implementations.
 
-**Pre-conditions (Platform TalosCluster reconciler):**
-- platform at 7237416 on branch `session/1-governor-init`
-- Read platform-schema.md and platform/platform-design.md in full before any implementation
-- conductor Conductor is substantially complete (pull loop, signing, PermissionService all wired)
+**Pre-conditions (SeamInfrastructureCluster/Machine reconcilers):**
+- platform at 8c02a4f on branch `session/1-governor-init`
+- TalosClusterReconciler fully implemented and committed
+- Read platform-design.md §3 (Seam Infrastructure Provider) before starting
+- talos goclient is ONLY permitted in these two files — any other file importing it is CP-INV-001 violation
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*
