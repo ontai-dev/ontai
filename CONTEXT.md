@@ -7,7 +7,7 @@
 
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
-| conductor    | session/15 (uncommitted) | WS1: TalosClientAdapter/S3StorageClientAdapter/OCIRegistryClientAdapter concrete impls wired into runExecute(); WS2: real Ed25519 INV-026 signing key verification in ReceiptReconciler (NewReceiptReconcilerWithKey, SIGNING_PUBLIC_KEY_PATH env var, DegradedSecurityState on failure); WS3: SealedCausalChainWebhook and WebhookServer wired into agent.go (WEBHOOK_TLS_CERT_PATH/KEY_PATH/ADDR env vars); 71 unit tests green across 6 suites | Commit these changes; future: PackInstance/PermissionSnapshot signing loops; PermissionService gRPC (target cluster local authorization) |
+| conductor    | 0ccbb2a     | WS1: SigningLoop signs PackInstance+PermissionSnapshot CRs with Ed25519 (SIGNING_PRIVATE_KEY_PATH gate, management cluster only, INV-026); WS2: local PermissionService gRPC (SnapshotStore + LocalService + hand-written service descriptor, PERMISSION_SERVICE_ADDR, all clusters); 7 suites, all green | PermissionSnapshot pull loop (target cluster pull from management); Guardian SealedCausalChain spec.lineage embedding |
 | guardian     | 740be82     | IdentityBinding trust methods, PermissionSet reconciler, PermissionService gRPC complete | SealedCausalChain immutability webhook, LineageController (deferred) |
 | platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
@@ -49,29 +49,24 @@
 ## 4. Next Session
 
 **Role:** Governor scheduling required
-**Component:** Guardian or Conductor
+**Component:** Guardian (immediate) or Conductor (pull loop)
 
-**Commit conductor Session 15 changes** then schedule next work:
+**Guardian — SealedCausalChain spec.lineage field embedding** (add spec.lineage to all 5 root-declaration CRD specs; Schema Engineer session; approved by Governor Directive §14 Decision 6)
 
-**Conductor — PackInstance/PermissionSnapshot signing loops** (management cluster only; signs CRs with platform signing key; Conductor Engineer session)
-
-**Conductor — PermissionService gRPC** (target cluster local authorization server; session in guardian-schema.md §8; Conductor Engineer session)
-
-**Guardian — SealedCausalChain spec.lineage field embedding** (add spec.lineage to all 5 root-declaration CRD specs; Guardian Controller Engineer session)
+**Conductor — PermissionSnapshot pull loop** (target cluster pulls PermissionSnapshot from management cluster, verifies signature, updates SnapshotStore; required for local PermissionService to serve live data)
 
 **LineageController** — deferred until Platform and Wrapper have meaningful object-producing implementations
 
-**Pre-conditions (Conductor commit):**
-- conductor Session 15 changes uncommitted on branch `session/1-governor-init`
-- All unit tests green: `go test ./... 2>&1` — 6 suites pass, 71 tests
-- New files: internal/capability/adapters.go, internal/webhook/sealed_causal_chain.go
-- Modified: internal/agent/receipt_reconciler.go, internal/kernel/agent.go, cmd/conductor/main.go, go.mod, go.sum
-- New test files: test/unit/capability/adapters_test.go, test/unit/agent/signing_test.go, test/unit/webhook/sealed_causal_chain_test.go
-
 **Pre-conditions (Guardian work):**
 - guardian at 740be82 on branch `session/1-governor-init`
+- Add spec.lineage to: TalosCluster, PackExecution, RBACProfile, PermissionSet, IdentityBinding CRD specs
 - LineageSynced initialization in all 5 reconcilers pending commit (Schema Engineer session — approved, not committed)
 - KUBEBUILDER_ASSETS must be set before envtest runs
+
+**Pre-conditions (Conductor pull loop):**
+- conductor at 0ccbb2a on branch `session/1-governor-init`
+- All 7 suites green: `go test ./...`
+- SnapshotStore.Update is the population API; wired into local PermissionService
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*
