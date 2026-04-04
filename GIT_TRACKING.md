@@ -5,7 +5,7 @@
 | ontai        | session/1-governor-init | e1d06cf     | active                    |
 | conductor    | session/1-governor-init | 5e5bebb     | active                    |
 | guardian     | session/1-governor-init | 740be82     | active                    |
-| platform     | session/1-governor-init | 8c02a4f     | active                    |
+| platform     | session/1-governor-init | 5dbe1aa     | active                    |
 | wrapper      | session/1-governor-init | 0371234     | active                    |
 | seam-core    | main                    | d0fba81     | lineage stub — pkg/lineage + InfrastructureLineageIndex types |
 
@@ -54,3 +54,4 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | 0ccbb2a | session/16: WS1 signing loops + WS2 local PermissionService gRPC                              |
 | conductor    | 5e5bebb | session/18: PermissionSnapshot pull loop — target cluster pulls, verifies INV-026, updates store |
 | platform     | 8c02a4f | session/19: WS1+WS2 — TalosCluster CRD types, reconciler scaffold, CAPI helpers, main.go       |
+| platform     | 5dbe1aa | session/20: WS1+WS2 — SeamInfrastructureCluster/Machine CRDs, SIC+SIM reconcilers, unit tests  |

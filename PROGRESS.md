@@ -583,3 +583,53 @@ Run: setup-envtest use --bin-dir /tmp/envtest-bins to restore if absent.
 - CAPI objects use unstructured.Unstructured throughout — deliberate to avoid heavy sigs.k8s.io/cluster-api import
 - Bootstrap Job image uses placeholder `registry.ontai.dev/ontai-dev/conductor:latest` with TODO comment; real image comes from RunnerConfig once SC-INV-002 migration is complete
 - gopls BrokenImport diagnostics are workspace config noise (module not in go.work); `go build ./...` is the real compiler gate
+
+## Session 20 Exit State — Controller Engineer (platform)
+
+**Role:** Controller Engineer — platform repository
+
+**Commit:** 5dbe1aa (platform, branch session/1-governor-init)
+
+### Workstream 1 — SeamInfrastructureCluster and SeamInfrastructureMachine CRD types: COMPLETE
+
+**Files created in api/infrastructure/v1alpha1/:**
+- groupversion_info.go — GroupVersion `infrastructure.cluster.x-k8s.io/v1alpha1`, SchemeBuilder, AddToScheme
+- conditions.go — SetCondition, FindCondition helpers (same pattern as api/v1alpha1)
+- lineage_conditions.go — ConditionTypeLineageSynced, ReasonLineageControllerAbsent
+- seaminfrastructurecluster_types.go — APIEndpoint, SeamInfrastructureClusterSpec (controlPlaneEndpoint, lineage), SeamInfrastructureClusterStatus (ready, conditions), SeamInfrastructureCluster (sic), SeamInfrastructureClusterList; condition constants InfrastructureReady, AllControlPlaneMachinesReady, ControlPlaneMachinesNotReady, ControlPlaneMachinesPending
+- seaminfrastructuremachine_types.go — NodeRole (controlplane/worker), SecretRef, SeamInfrastructureMachineSpec (address, port, talosConfigSecretRef, nodeRole, lineage), SeamInfrastructureMachineStatus (ready, machineConfigApplied, providerID, conditions), SeamInfrastructureMachine (sim), SeamInfrastructureMachineTemplate (simt) and template list types; condition constants MachineReady, BootstrapDataNotReady, MachineConfigApplied, MachineConfigFailed, MachineOutOfMaintenance, CAPIMachineNotBound
+- zz_generated.deepcopy.go — controller-gen output, all 8 types covered
+
+**Files created in config/crd/:**
+- infrastructure.cluster.x-k8s.io_seaminfrastructureclusters.yaml
+- infrastructure.cluster.x-k8s.io_seaminfrastructuremachines.yaml
+- infrastructure.cluster.x-k8s.io_seaminfrastructuremachinetemplates.yaml
+
+All three CRD YAMLs generated clean by controller-gen.
+
+### Workstream 2 — SeamInfrastructureClusterReconciler and SeamInfrastructureMachineReconciler: COMPLETE
+
+**Files created in internal/controller/:**
+- seaminfrastructurecluster_reconciler.go — SeamInfrastructureClusterReconciler: list all SIM objects in namespace, filter by spec.nodeRole=controlplane in Go code, wait for all ready, set cluster status.ready=true, patch CAPI Cluster controlPlaneEndpoint via unstructured; LineageSynced one-time init; idempotency gate (already-ready short-circuits); CP-INV-001 clean (no talos goclient)
+- seaminfrastructuremachine_reconciler.go — MachineConfigApplier interface (ApplyConfiguration, IsOutOfMaintenance); TalosMachineConfigApplier real implementation (talos goclient — this file is one of exactly two permitted CP-INV-001 files); SeamInfrastructureMachineReconciler with Applier field for testability; 6-step machineconfig delivery per platform-design.md §3.1; findOwningCAPIMachine (ownerReferences scan); idempotency gate; providerID format talos://{cluster-name}/{node-ip}; ExtractClusterName exported helper
+
+**cmd/ont-platform/main.go updated:**
+- infrav1alpha1.AddToScheme registered
+- SeamInfrastructureClusterReconciler wired
+- SeamInfrastructureMachineReconciler wired with TalosMachineConfigApplier{}
+
+**go.mod:** github.com/siderolabs/talos/pkg/machinery v1.12.6 added (matches conductor version)
+**go mod tidy:** Clean
+**make generate:** Clean — deepcopy + 3 new CRD YAMLs
+**go build ./...:** Clean
+**go test ./...:** 1 test package, all passing
+
+### Test coverage
+- test/unit/controller/seaminfrastructurecluster_reconciler_test.go: 5 tests (LineageSynced init, no CP machines, some not ready, all ready, already-ready idempotency)
+- test/unit/controller/seaminfrastructuremachine_reconciler_test.go: 5 tests (LineageSynced init, no CAPI Machine, Machine not found, already-ready idempotency, ExtractClusterName)
+
+### CP-INV-001 compliance
+Verified by inspection: only seaminfrastructuremachine_reconciler.go has import statements for github.com/siderolabs/talos/pkg/machinery. No other file in the platform codebase has these imports.
+
+### Next Session
+**Wrapper ClusterPack, PackExecution, PackInstance reconcilers.** Platform is substantially complete.
