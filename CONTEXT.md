@@ -7,7 +7,7 @@
 
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
-| conductor    | 12f7019     | All 17 execute-mode capability handlers implemented (bootstrap, talos-upgrade, kube-upgrade, stack-upgrade, node-patch, node-scale-up, node-decommission, node-reboot, etcd-backup, etcd-maintenance, etcd-restore, pki-rotate, credential-rotate, hardening-apply, cluster-reset, pack-deploy, rbac-provision); TalosNodeClient/StorageClient/OCIRegistryClient interfaces; ExecuteClients injection; 37 unit tests green | Signing key integration (INV-026) — TalosClientAdapter from mounted talosconfig, StorageClient S3 adapter, OCIRegistryClient adapter; admission webhook server; PermissionService gRPC server |
+| conductor    | session/15 (uncommitted) | WS1: TalosClientAdapter/S3StorageClientAdapter/OCIRegistryClientAdapter concrete impls wired into runExecute(); WS2: real Ed25519 INV-026 signing key verification in ReceiptReconciler (NewReceiptReconcilerWithKey, SIGNING_PUBLIC_KEY_PATH env var, DegradedSecurityState on failure); WS3: SealedCausalChainWebhook and WebhookServer wired into agent.go (WEBHOOK_TLS_CERT_PATH/KEY_PATH/ADDR env vars); 71 unit tests green across 6 suites | Commit these changes; future: PackInstance/PermissionSnapshot signing loops; PermissionService gRPC (target cluster local authorization) |
 | guardian     | 740be82     | IdentityBinding trust methods, PermissionSet reconciler, PermissionService gRPC complete | SealedCausalChain immutability webhook, LineageController (deferred) |
 | platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
@@ -51,24 +51,27 @@
 **Role:** Governor scheduling required
 **Component:** Guardian or Conductor
 
-**Guardian — SealedCausalChain immutability webhook** (admission webhook, Guardian Controller Engineer session)
+**Commit conductor Session 15 changes** then schedule next work:
 
-**Conductor — client adapter implementations** (TalosClientAdapter wrapping real talos/client.Client from mounted talosconfig; S3-compatible StorageClient; OCIRegistryClient from registry; wire all three into main.go runExecute(); INV-026 signing key; Conductor Engineer session)
+**Conductor — PackInstance/PermissionSnapshot signing loops** (management cluster only; signs CRs with platform signing key; Conductor Engineer session)
 
-**Conductor — admission webhook + PermissionService gRPC** (agent mode RBAC intercept webhook server and local gRPC authorization server; Conductor Engineer session)
+**Conductor — PermissionService gRPC** (target cluster local authorization server; session in guardian-schema.md §8; Conductor Engineer session)
 
-**LineageController — deferred** until Platform and Wrapper have meaningful object-producing implementations
+**Guardian — SealedCausalChain spec.lineage field embedding** (add spec.lineage to all 5 root-declaration CRD specs; Guardian Controller Engineer session)
+
+**LineageController** — deferred until Platform and Wrapper have meaningful object-producing implementations
+
+**Pre-conditions (Conductor commit):**
+- conductor Session 15 changes uncommitted on branch `session/1-governor-init`
+- All unit tests green: `go test ./... 2>&1` — 6 suites pass, 71 tests
+- New files: internal/capability/adapters.go, internal/webhook/sealed_causal_chain.go
+- Modified: internal/agent/receipt_reconciler.go, internal/kernel/agent.go, cmd/conductor/main.go, go.mod, go.sum
+- New test files: test/unit/capability/adapters_test.go, test/unit/agent/signing_test.go, test/unit/webhook/sealed_causal_chain_test.go
 
 **Pre-conditions (Guardian work):**
 - guardian at 740be82 on branch `session/1-governor-init`
-- KUBEBUILDER_ASSETS is set in the test environment before running integration tests
-- All unit and integration tests currently green
-
-**Pre-conditions (Conductor work):**
-- conductor at session/14 commit on branch `session/1-governor-init`
-- All unit tests green: `go test ./test/unit/...` from conductor root
-- Session 14 complete: all 17 capability handlers implemented with real client calls; TalosNodeClient/StorageClient/OCIRegistryClient interfaces defined; ExecuteClients injection through RunExecute; 37 handler unit tests covering nil-client contracts and happy paths
-- Next: client adapters (TalosClientAdapter, S3StorageClient, OCIRegistryClient concrete impls) + wire into main.go runExecute()
+- LineageSynced initialization in all 5 reconcilers pending commit (Schema Engineer session — approved, not committed)
+- KUBEBUILDER_ASSETS must be set before envtest runs
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*
