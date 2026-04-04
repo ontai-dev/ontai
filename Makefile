@@ -4,7 +4,7 @@ lint: lint-docs
 
 lint-docs:
 	@echo ">>> lint-docs: verifying no unintended tracked .md files"
-	@bad=$$(git ls-files '*.md' | grep -v '^README\.md$$' | grep -v -- '-schema\.md$$'); \
+	@bad=$$(git ls-files '*.md' | grep -v '^README\.md$$' | grep -v -- '-schema\.md$$' | grep -v '^CONTEXT\.md$$'); \
 	if [ -n "$$bad" ]; then \
 		echo "FAIL: tracked .md files violating policy:"; \
 		echo "$$bad"; \
