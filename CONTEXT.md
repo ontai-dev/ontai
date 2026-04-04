@@ -11,7 +11,7 @@
 | guardian     | 9a9432a     | WS1: SealedCausalChain spec.lineage added to RBACPolicy, RBACProfile, IdentityBinding, IdentityProvider, PermissionSet; CRDs regenerated; seam-core dependency wired; WS2: LineageSynced=False/LineageControllerAbsent initialization in all 5 reconcilers; lineage_conditions.go added | LineageController (deferred), SealedCausalChain immutability webhook (deferred) |
 | platform     | 5dbe1aa     | TalosCluster + SeamInfrastructureCluster/Machine CRD types, all three reconcilers (TalosCluster, SIC, SIM), SIC/SIM CRDs with lineage + controller-gen clean, SIM implements 6-step machineconfig delivery via TalosMachineConfigApplier (only file with talos goclient, CP-INV-001 clean), unit tests green, go build clean | Wrapper ClusterPack/PackExecution/PackInstance reconcilers |
 | wrapper      | 3438aec     | WS1: ClusterPack/PackExecution/PackInstance CRDs + deepcopy + 3 CRD YAMLs; WS2: ClusterPackReconciler (immutability enforcement, signature transition, SignaturePending requeue), PackExecutionReconciler (4-gate check, Kueue Job submission, OperationResult read); WS3: PackInstanceReconciler (PackReceipt drift/security, DependencyBlock); 17 unit tests green | LineageController (seam-core) — now unblocked |
-| seam-core    | c6d4626     | Initialized — skeleton only   | Schema controller implementation                            |
+| seam-core    | be0aaa1     | LineageController complete — full ILI spec, controller-gen, manager, LineageReconciler (9 GVKs), governance annotation, LineageSynced transfer, 9 tests green | Governor scheduling for remaining deferred items |
 
 ---
 
@@ -48,19 +48,23 @@
 
 ## 4. Next Session
 
-**Role:** Controller Engineer
-**Component:** seam-core (LineageController)
+**Role:** Governor
+**Purpose:** Review deferred items, schedule next Controller Engineer session.
 
-**LineageController — now unblocked.** Platform (5dbe1aa) and Wrapper (3438aec) both have meaningful object-producing implementations. LineageController prerequisites are met.
+**LineageController — CLOSED.** seam-core be0aaa1 delivers:
+- Full InfrastructureLineageIndex spec (rootBinding, descendantRegistry, policyBindingStatus)
+- controller-gen wiring (Makefile with generate-deepcopy + generate-crd targets)
+- cmd/seam-core/main.go manager entry point (leader election, 9 GVK registrations)
+- LineageReconciler watching all 9 root-declaration GVKs across 3 operators
+- governance.infrastructure.ontai.dev annotation sub-prefix enforcement
+- LineageSynced condition ownership transfer (False/LineageControllerAbsent → True/LineageIndexCreated)
+- 9 unit tests, all green
 
-The LineageController manages InfrastructureLineageIndex CR lifecycle. It watches all root-declaration CRDs across operators (ClusterPack, PackExecution, PackInstance, TalosCluster, RBACPolicy, etc.), creates one InfrastructureLineageIndex per root declaration, and transitions the LineageSynced condition from False/LineageControllerAbsent to True.
-
-**Pre-conditions:**
-- seam-core at d0fba81 — lineage types stubbed (InfrastructureLineageIndex, pkg/lineage)
-- wrapper at 3438aec — LineageSynced=False initialized on all three CRDs
-- platform at 5dbe1aa — LineageSynced=False initialized on TalosCluster
-- guardian at 740be82 — LineageSynced=False initialized on all five guardian CRDs
-- Read seam-core-schema.md §7 in full before implementation
+**Remaining deferred items to schedule:**
+- SealedCausalChain immutability admission webhook (guardian + seam-core)
+- LineageIndex controller-authorship admission webhook (seam-core)
+- Guardian CapabilityRBACProvision executor mode (conductor)
+- Wrapper SealedCausalChain spec.lineage embedding
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*

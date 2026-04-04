@@ -7,7 +7,7 @@
 | guardian     | session/1-governor-init | 740be82     | active                    |
 | platform     | session/1-governor-init | 5dbe1aa     | active                    |
 | wrapper      | session/1-governor-init | 3438aec     | active                    |
-| seam-core    | main                    | d0fba81     | lineage stub — pkg/lineage + InfrastructureLineageIndex types |
+| seam-core    | main                    | be0aaa1     | LineageController complete — ILI spec, controller-gen, manager, LineageReconciler (9 GVKs), 9 tests green |
 
 ## Branch Convention
 session/{N}-{role}-{description} for all work branches.
@@ -56,3 +56,4 @@ No pushes to remote until Platform Governor authorizes.
 | platform     | 8c02a4f | session/19: WS1+WS2 — TalosCluster CRD types, reconciler scaffold, CAPI helpers, main.go       |
 | platform     | 5dbe1aa | session/20: WS1+WS2 — SeamInfrastructureCluster/Machine CRDs, SIC+SIM reconcilers, unit tests  |
 | wrapper      | 3438aec | session/21: WS1+WS2+WS3 — ClusterPack/PackExecution/PackInstance CRDs, reconcilers, 17 unit tests |
+| seam-core    | be0aaa1 | session/22: LineageController — ILI spec, controller-gen, manager, LineageReconciler (9 GVKs), governance annotation, LineageSynced transfer, 9 tests |
