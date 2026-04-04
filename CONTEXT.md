@@ -7,7 +7,7 @@
 
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
-| conductor    | 05b63e6     | Binary entry points, capability engine, execute and agent mode handlers complete | RunExecute ConfigMap write (OperationResultSpec), agent mode control loops (leader election, capability manifest publish, receipt reconciliation) |
+| conductor    | 1ae4bf9     | ConfigMap write, leader election, capability manifest publish, receipt reconciliation complete | Capability handler implementations (bootstrap, talos-upgrade, etc.), signing key integration (INV-026), admission webhook server, PermissionService gRPC server |
 | guardian     | 740be82     | IdentityBinding trust methods, PermissionSet reconciler, PermissionService gRPC complete | SealedCausalChain immutability webhook, LineageController (deferred) |
 | platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
@@ -53,7 +53,9 @@
 
 **Guardian — SealedCausalChain immutability webhook** (admission webhook, Guardian Controller Engineer session)
 
-**Conductor Phase 4 — RunExecute ConfigMap write + agent mode control loops** (OperationResultSpec → ConfigMap write in kernel/execute.go; leader election, capability manifest publish, receipt reconciliation in kernel/agent.go; Conductor Engineer session)
+**Conductor — capability handler implementations** (replace stub handlers with real logic for each of the 17 named capabilities; each uses pure Go kube/talos clients; Conductor Engineer session)
+
+**Conductor — signing key integration + admission webhook + PermissionService gRPC** (INV-026 signing; agent mode webhook server and local gRPC server; Conductor Engineer session)
 
 **LineageController — deferred** until Platform and Wrapper have meaningful object-producing implementations
 
@@ -63,9 +65,10 @@
 - All unit and integration tests currently green
 
 **Pre-conditions (Conductor work):**
-- conductor at 05b63e6 on branch `session/1-governor-init`
+- conductor at 1ae4bf9 on branch `session/1-governor-init`
 - All unit tests green: `go test ./test/unit/...` from conductor root
-- WS1–WS3 complete; next work is kernel/execute.go Phase 4 (ConfigMap write) and agent mode control loops
+- Session 13 complete: ConfigMap write, leader election, capability publisher, receipt reconciler all implemented and tested
+- Next: capability handler implementations (replace stubs with real logic) — reads conductor-schema.md §6 + all operator schemas
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*

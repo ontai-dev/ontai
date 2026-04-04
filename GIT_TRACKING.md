@@ -3,7 +3,7 @@
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
 | ontai        | session/1-governor-init | e1d06cf     | active                    |
-| conductor    | session/1-governor-init | 05b63e6     | active                    |
+| conductor    | session/1-governor-init | 1ae4bf9     | active                    |
 | guardian     | session/1-governor-init | 740be82     | active                    |
 | platform     | session/1-governor-init | 001fb16     | active                    |
 | wrapper      | session/1-governor-init | 0371234     | active                    |
@@ -48,3 +48,4 @@ No pushes to remote until Platform Governor authorizes.
 | guardian     | d1e35b7 | session/11: WS1+WS2 — IdentityBinding trust methods and PermissionSet reconciler               |
 | guardian     | 740be82 | session/11: WS3 — PermissionService gRPC server (four operations)                              |
 | conductor    | 05b63e6 | session/12: WS1–WS3 — binary entry points, capability engine, execute/agent modes              |
+| conductor    | 1ae4bf9 | session/13: WS1+WS2 — ConfigMap write, agent control loops                                    |
