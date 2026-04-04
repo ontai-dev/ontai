@@ -3,7 +3,7 @@
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
 | ontai        | session/1-governor-init | e1d06cf     | active                    |
-| conductor    | session/1-governor-init | 12f7019     | active                    |
+| conductor    | session/1-governor-init | 5e5bebb     | active                    |
 | guardian     | session/1-governor-init | 740be82     | active                    |
 | platform     | session/1-governor-init | 001fb16     | active                    |
 | wrapper      | session/1-governor-init | 0371234     | active                    |
@@ -50,3 +50,6 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | 05b63e6 | session/12: WS1–WS3 — binary entry points, capability engine, execute/agent modes              |
 | conductor    | 1ae4bf9 | session/13: WS1+WS2 — ConfigMap write, agent control loops                                    |
 | conductor    | 12f7019 | session/14: all 17 capability handlers — real implementations with client interfaces           |
+| conductor    | c39a8c3 | session/15: WS1 adapters, WS2 Ed25519 signing, WS3 SealedCausalChain webhook                  |
+| conductor    | 0ccbb2a | session/16: WS1 signing loops + WS2 local PermissionService gRPC                              |
+| conductor    | 5e5bebb | session/18: PermissionSnapshot pull loop — target cluster pulls, verifies INV-026, updates store |

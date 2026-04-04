@@ -7,7 +7,7 @@
 
 | Component    | Last Commit | Status                        | Next Pending Work                                           |
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
-| conductor    | 0ccbb2a     | WS1: SigningLoop signs PackInstance+PermissionSnapshot CRs with Ed25519 (SIGNING_PRIVATE_KEY_PATH gate, management cluster only, INV-026); WS2: local PermissionService gRPC (SnapshotStore + LocalService + hand-written service descriptor, PERMISSION_SERVICE_ADDR, all clusters); 7 suites, all green | PermissionSnapshot pull loop (target cluster pull from management); Guardian SealedCausalChain spec.lineage embedding |
+| conductor    | 5e5bebb     | WS1: SigningLoop signs PackInstance+PermissionSnapshot CRs with Ed25519 (SIGNING_PRIVATE_KEY_PATH gate, management cluster only, INV-026); WS2: local PermissionService gRPC (SnapshotStore + LocalService + hand-written service descriptor, PERMISSION_SERVICE_ADDR, all clusters); WS3: SnapshotPullLoop — target cluster pulls PermissionSnapshot from management, verifies Ed25519 (SIGNING_PUBLIC_KEY_PATH + MGMT_KUBECONFIG_PATH gates), calls SnapshotStore.Update; DegradedSecurityState on failure; bootstrap window mode (INV-020); 7 suites, all green | Guardian SealedCausalChain spec.lineage embedding |
 | guardian     | 9a9432a     | WS1: SealedCausalChain spec.lineage added to RBACPolicy, RBACProfile, IdentityBinding, IdentityProvider, PermissionSet; CRDs regenerated; seam-core dependency wired; WS2: LineageSynced=False/LineageControllerAbsent initialization in all 5 reconcilers; lineage_conditions.go added | LineageController (deferred), SealedCausalChain immutability webhook (deferred) |
 | platform     | 7237416     | Skeleton only                 | TalosCluster reconciler (bootstrap + CAPI paths)            |
 | wrapper      | 86807d4     | Skeleton only                 | ClusterPack, PackExecution, PackInstance reconcilers        |
@@ -48,19 +48,17 @@
 
 ## 4. Next Session
 
-**Role:** Conductor Engineer
-**Component:** conductor
+**Role:** Platform Controller Engineer
+**Component:** platform
 
-**Conductor — PermissionSnapshot pull loop** (target cluster pulls PermissionSnapshot from management cluster, verifies signature per INV-026, calls SnapshotStore.Update to populate local PermissionService; required for local PermissionService to serve live data)
+**Platform — TalosCluster reconciler** (bootstrap + CAPI paths). This is the primary remaining Platform workstream. Platform is currently a skeleton (commit 7237416). The TalosCluster reconciler drives cluster lifecycle: bootstrap via Compiler, CAPI integration via SeamInfrastructureClusterReconciler and SeamInfrastructureMachineReconciler (INV-013). Read platform-schema.md and platform/platform-design.md before starting.
 
-**LineageController** — deferred until Platform and Wrapper have meaningful object-producing implementations
+**LineageController** — deferred until Platform and Wrapper have meaningful object-producing implementations.
 
-**Pre-conditions (Conductor pull loop):**
-- conductor at 0ccbb2a on branch `session/1-governor-init`
-- All 7 suites green: `go test ./...`
-- SnapshotStore.Update is the population API in internal/permissionservice/store.go
-- PermissionSnapshot GVR: security.ontai.dev/v1alpha1/permissionsnapshots
-- Verification: use existing ReceiptReconciler.verifySignature pattern (Ed25519, SIGNING_PUBLIC_KEY_PATH)
+**Pre-conditions (Platform TalosCluster reconciler):**
+- platform at 7237416 on branch `session/1-governor-init`
+- Read platform-schema.md and platform/platform-design.md in full before any implementation
+- conductor Conductor is substantially complete (pull loop, signing, PermissionService all wired)
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*
