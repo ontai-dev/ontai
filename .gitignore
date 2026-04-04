@@ -13,3 +13,8 @@ ont-lab/
 # OS
 .DS_Store
 Thumbs.db
+
+# Markdown: only README and schema documents are tracked
+*.md
+!README.md
+!*-schema.md
