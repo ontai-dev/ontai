@@ -21,16 +21,22 @@ validation, admission webhook). It is the only operator with a CNPG dependency.
   before being considered enabled. INV-003.
 
 **Deployment boundary:**
-The guardian controller (EPG computation, PermissionSnapshot generation, policy
-validation, gRPC PermissionService) runs only on the management cluster in the
-security-system namespace.
+Guardian is a single binary with two declared deployment roles — see §15 Guardian Role
+Model for the complete contract. Role=management is deployed on the management cluster
+by compiler enable. Role=tenant is optionally deployed on tenant clusters exclusively
+via ClusterPack through Wrapper. Platform never deploys Guardian and never assumes
+Guardian is present on any target cluster.
 
-On target clusters, the security plane responsibilities — admission webhook,
-PermissionSnapshot receipt, local PermissionService, RBAC enforcement — are
-hosted by the conductor Deployment in ont-system. There is no separate guardian
-Deployment on target clusters. The conductor binary incorporates all target cluster
-security plane functions. This is the zero-attack-surface model: one distroless
-binary per cluster, no redundant deployments.
+On target clusters without a Guardian ClusterPack: the security plane responsibilities
+— admission webhook, PermissionSnapshot receipt, local PermissionService, RBAC
+enforcement — are hosted exclusively by the conductor Deployment in ont-system. This
+is the default model for all target clusters.
+
+On target clusters running a Guardian ClusterPack (role=tenant or role=management):
+Guardian runs alongside Conductor. The role determines which controller sets register
+and whether the tenant's security plane is federated with or sovereign from the
+management Guardian. Conductor continues to own the admission webhook and
+PermissionSnapshotReceipt on all target clusters regardless of Guardian presence.
 
 ---
 
@@ -48,26 +54,38 @@ binary per cluster, no redundant deployments.
 
 ---
 
-## 3. Two-Phase Boot
+## 3. Management Cluster Boot Sequence
 
-guardian has a structured boot sequence to resolve the CNPG chicken-and-egg
-problem. This is a named phase in the conductor enable protocol — not a silent
-fallback. This sequence applies only to the management cluster.
+**This section supersedes the former Two-Phase Boot model as of 2026-04-05.**
 
-**Phase 1 — CRD-only mode:**
-guardian starts with in-memory and CRD status persistence only. It provisions:
-its own RBACProfile from the bootstrap RBACPolicy (compiled into git at compile
-time), CNPG's RBAC, cert-manager's RBAC, Kueue's RBAC, metallb's RBAC. All state
-held in CRD status. The conductor enable phase installs these components in this
-window with their RBAC already provisioned by guardian before installation begins.
+Guardian on the management cluster starts after CNPG is already operational.
+Compiler enable phase 0 (00-infrastructure-dependencies) provisions the CNPG operator
+and CNPG Cluster CR before Guardian is deployed — see §16 CNPG Deployment Contract and
+conductor-schema.md §9 for the six-phase enable bundle structure.
 
-**Phase 2 — Database-backed mode:**
-CNPG comes online. guardian detects CNPG readiness, migrates EPG and audit
-state to CNPG, switches to database-backed persistence. All subsequent EPG
-computation and audit logging goes to CNPG.
+**Guardian startup sequence (management cluster, role=management):**
 
-The transition from Phase 1 to Phase 2 is atomic and idempotent. If the management
-cluster is rebuilt, Phase 1 is re-executed and Phase 2 resumes once CNPG is healthy.
+**Step 1 — Migration runner:**
+Before registering any controller, Guardian's startup migration runner connects to the
+CNPG instance and applies all pending schema migrations in order. If CNPG is unreachable
+at startup, Guardian emits a `CNPGUnreachable` condition on its singleton status CR and
+holds in degraded state — all controller reconciliation is suspended, no crash occurs.
+Guardian recovers automatically when CNPG becomes reachable and the migration runner
+completes successfully. This is the only blocking gate before controller registration.
+
+**Step 2 — Bootstrap RBAC provisioning:**
+After the migration runner completes, Guardian provisions its own RBACProfile from the
+bootstrap RBACPolicy (compiled into git at compile time), CNPG's RBAC, cert-manager's
+RBAC, Kueue's RBAC, metallb's RBAC. All state written to CRD status and CNPG. The
+conductor enable phase installs these components in this window with their RBAC already
+provisioned by guardian before installation begins.
+
+**Step 3 — Controller registration:**
+All role-gated controllers register (see §15 for the role=management controller set).
+The admission webhook becomes operational. The bootstrap RBAC window closes.
+
+If the management cluster is rebuilt, all three steps re-execute in order. The migration
+runner is idempotent — it applies only unapplied migrations and is safe to re-run.
 
 ---
 
@@ -387,6 +405,107 @@ not concurrent writes.
 
 ---
 
+## 15. Guardian Role Model
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+Guardian is a single binary with two declared deployment roles. The role is injected as
+the startup environment variable `GUARDIAN_ROLE`. Guardian refuses to start if
+`GUARDIAN_ROLE` is absent or set to any value other than `management` or `tenant`.
+An absent or invalid `GUARDIAN_ROLE` causes an immediate structured exit before any
+controller or gRPC server initialisation.
+
+**Role=management:**
+Deployed on the management cluster exclusively. Provisioned by compiler enable. The
+management cluster Guardian runs with full controller authority: EPG computation,
+PermissionSnapshot generation, policy validation, cross-cluster AuditSink, and
+PermissionService gRPC. It connects to a management-cluster-local CNPG instance
+(provisioned by compiler enable phase 0) for all persistent EPG and audit state.
+No human, operator, or pipeline other than compiler enable may stamp role=management
+on a Guardian Deployment.
+
+**Role=tenant:**
+Deployed on tenant clusters exclusively via ClusterPack through Wrapper. Optional per
+tenant choice. Platform never knows whether a tenant has deployed Guardian, and never
+depends on its presence. The tenant Guardian connects to a tenant-local CNPG instance
+(provisioned as part of the same ClusterPack). The tenant Guardian registers a reduced
+controller set and participates in the cross-cluster audit forwarding chain to the
+management Guardian by default.
+
+**Tenant Guardian running role=management — sovereign mode:**
+A tenant may deploy a Guardian with role=management as part of their ClusterPack. That
+tenant's security plane is fully sovereign: independent CNPG instance, independent
+identity plane, no audit forwarding to the management Guardian, no participation in the
+cross-cluster audit chain. The management cluster Guardian never assumes or infers tenant
+Guardian topology — it has no knowledge of whether any tenant Guardian exists or what
+role it declares. Sovereign status has no effect on the Conductor federation channel: the
+tenant Conductor still connects to the management Conductor for RunnerConfig validation
+regardless of Guardian topology, because the federation channel is a Conductor concern,
+not a Guardian concern. A federated relationship between a sovereign tenant Guardian and
+the management Guardian is established only by an explicit `federated-downstream`
+IdentityProvider CR authored by a human — never by Guardian inference.
+
+**Controller sets registered at startup, gated by role:**
+
+| Controller                  | role=management | role=tenant |
+|-----------------------------|-----------------|-------------|
+| PolicyReconciler            | ✓               | ✓           |
+| ProfileReconciler           | ✓               | ✓           |
+| IdentityProviderReconciler  | ✓               | ✓           |
+| IdentityBindingReconciler   | ✓               | ✓           |
+| AuditSinkReconciler         | ✓               | —           |
+| AuditForwarderController    | —               | ✓           |
+
+PermissionService gRPC runs in both roles. The management Guardian serves authorization
+decisions for the management cluster and all non-sovereign tenants that forward audit
+events to it. The tenant Guardian (role=tenant) serves decisions for its own cluster
+locally — this supplements, but does not replace, the Conductor local PermissionService.
+
+This is a locked invariant. The role gating on controller registration is permanent.
+Adding a controller to a role that does not include it requires a Platform Governor
+constitutional amendment.
+
+---
+
+## 16. CNPG Deployment Contract
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+**Management cluster:**
+The CNPG operator and CNPG Cluster CR are provisioned by compiler enable as a dedicated
+phase 0 of the enable bundle (`00-infrastructure-dependencies`) — before Guardian is
+deployed. See conductor-schema.md §9 for the six-phase enable bundle structure. Guardian's
+startup migration runner (§3 Step 1) connects to CNPG and applies pending schema
+migrations before registering any controller. If CNPG is unreachable at Guardian startup,
+Guardian emits a `CNPGUnreachable` condition on its singleton status CR and holds in
+degraded state — controller reconciliation is suspended, no crash occurs. Guardian
+recovers automatically when CNPG becomes reachable and the migration runner completes.
+
+The CNPG deployment on the management cluster is owned exclusively by compiler enable.
+No operator writes CNPG resources on the management cluster. Human review of the enable
+bundle must verify phase 0 contents before GitOps application.
+
+**Tenant clusters:**
+CNPG on a tenant cluster is provisioned via ClusterPack through Wrapper. It is part of
+the Guardian tenant deployment pack — a pack the tenant opts into by creating the
+appropriate PackExecution. Platform has no knowledge of or dependency on CNPG on any
+tenant cluster. CNPG is invisible to Platform. CNPG is invisible to Conductor unless the
+tenant's Guardian pack explicitly wires CNPG connectivity. Wrapper delivers the pack
+contents; it does not understand or interpret what those contents include.
+
+**Authority boundary:**
+- Management cluster CNPG: owned by compiler enable (phase 0), consumed by Guardian (role=management).
+- Tenant cluster CNPG: owned by the tenant's ClusterPack, consumed by tenant Guardian.
+- No operator other than Guardian has a CNPG dependency. INV-016.
+- Platform never provisions CNPG on any cluster under any circumstance.
+- Conductor never provisions CNPG on any cluster under any circumstance.
+
+**F-P8:** compiler enable phase 0 implementation (adding CNPG operator manifests and CNPG
+Cluster CR to the enable bundle as 00-infrastructure-dependencies output) requires a
+Conductor Engineer session. This is tracked in CONTEXT.md.
+
+---
+
 *security.ontai.dev schema — guardian*
 *Amendments appended below with date and rationale.*
 
@@ -411,3 +530,19 @@ not concurrent writes.
   them. Seam operator RBACProfiles produced by compiler enable as part of bootstrap
   bundle. Third-party components without a Guardian-provisioned RBACProfile may not
   operate in a Guardian-governed cluster.
+
+2026-04-05 — Guardian dual-role model locked. §1 Deployment boundary updated: Guardian
+  is a single binary with two declared roles (management/tenant); role=tenant is optional
+  per tenant via ClusterPack through Wrapper; Platform never deploys Guardian. §3 Two-Phase
+  Boot superseded by §3 Management Cluster Boot Sequence: CNPG is pre-provisioned by
+  compiler enable phase 0; Guardian startup migration runner connects before registering
+  any controller; CNPGUnreachable condition on failure, degraded hold, no crash; three-step
+  startup sequence (migration runner → bootstrap RBAC → controller registration). §15
+  Guardian Role Model added (locked invariant): GUARDIAN_ROLE env var (management/tenant);
+  absent/invalid causes structured exit; tenant role=management = sovereign mode (independent
+  CNPG, no audit forwarding, no management Guardian relationship unless explicit
+  federated-downstream IdentityProvider); management Guardian never assumes tenant topology;
+  controller sets role-gated (management adds AuditSinkReconciler, tenant adds
+  AuditForwarderController); PermissionService gRPC runs in both roles. §16 CNPG Deployment
+  Contract added (locked invariant): management CNPG owned by compiler enable phase 0; tenant
+  CNPG owned by ClusterPack; no other operator has CNPG dependency (INV-016); F-P8 recorded.

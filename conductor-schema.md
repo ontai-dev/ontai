@@ -324,14 +324,41 @@ Forms the management cluster itself. Reads TalosCluster spec and human-provided 
 Installs all Seam CRDs onto the management cluster. Reads the CRD manifest set for all Seam API groups (platform.ontai.dev, security.ontai.dev, infra.ontai.dev, runner.ontai.dev, infrastructure.ontai.dev). Produces a CRD manifest YAML bundle ready for GitOps application. No cluster connection required. Compiler never applies resources.
 
 **Step 3 — `compiler enable`**
-Produces the complete Seam operator deployment manifest bundle as YAML output. The bundle contains:
-- Conductor Deployment in ont-system, **stamped with `role=management`** as a first-class field (see §15 Role Declaration Contract).
-- Guardian Deployment, Platform Deployment, Wrapper Deployment, seam-core Deployment.
-- All RBAC resources for all Seam operator service accounts.
+Produces the complete Seam operator deployment manifest bundle as YAML output. The bundle
+is structured as six sequenced phases applied in ascending order. Each phase carries a
+`phase-meta.yaml` declaring name, order, readinessGate, and applyOrder.
+
+**Six-phase enable bundle structure:**
+
+| Phase | Directory                        | Contents                                                                          | Readiness gate before next phase |
+|-------|----------------------------------|-----------------------------------------------------------------------------------|----------------------------------|
+| 0     | `00-infrastructure-dependencies` | CNPG operator manifests + CNPG Cluster CR for management Guardian                | CNPG Cluster ready               |
+| 1     | `01-guardian-bootstrap`          | Guardian CRDs, bootstrap RBACPolicy, namespace-labels.yaml (seam.ontai.dev/webhook-mode=exempt on seam-system) | Guardian CRDs registered |
+| 2     | `02-guardian-deploy`             | Guardian Deployment, Guardian RBACProfile, admission webhook configuration        | Guardian webhook operational     |
+| 3     | `03-platform-wrapper`            | Platform Deployment, Wrapper Deployment, seam-core Deployment, their RBACProfiles | All three operators healthy      |
+| 4     | `04-conductor`                   | Conductor Deployment in ont-system **stamped with `role=management`** (see §15 Role Declaration Contract), Conductor RBACProfile | Conductor agent ready |
+| 5     | `05-post-bootstrap`              | Remaining cluster-wide resources, Kueue ClusterQueue scaffold, metallb config     | —                                |
+
+Phase 0 is the prerequisite phase that resolves the CNPG dependency before Guardian
+is deployed. Guardian's startup migration runner connects to CNPG before registering
+any controller — phase 0 must reach readiness before phase 1 may begin. See
+guardian-schema.md §16 CNPG Deployment Contract.
+
+Phase 1 namespace-labels.yaml stamps `seam.ontai.dev/webhook-mode=exempt` on
+`kube-system` and `seam-system` as SSA metadata-only patches. This satisfies Guardian's
+CheckBootstrapLabels startup gate before the webhook registers in phase 2. See
+guardian-schema.md §4 Bootstrap RBAC Window.
+
+The full bundle also contains:
+- All RBAC resources for all Seam operator service accounts (distributed across phases by operator).
 - All leader election Lease templates.
 - First-class platform-owned RBACProfile CRs for all Seam operator service accounts — one per operator, Guardian-governed, human-reviewed before GitOps commit.
 
 Compiler never applies resources directly. The GitOps pipeline applies this bundle after human review. No cluster connection required.
+
+**F-P8:** Phase 0 (`00-infrastructure-dependencies`) implementation — adding CNPG operator
+manifests and CNPG Cluster CR to the enable bundle output — requires a Conductor Engineer
+session. See CONTEXT.md F-P8.
 
 **Invariant:** Platform operator is not involved at any step of management cluster bootstrap. Management cluster formation, CRD installation, and operator deployment are all compiler-driven. Platform's role begins when the management cluster is operational and CRDs are registered.
 
@@ -727,6 +754,90 @@ without a Governor constitutional amendment.
 
 ---
 
+## 18. Federation Channel Contract
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+The Conductor agent process on the management cluster exposes two listener ports.
+
+**Internal port:**
+Serves cluster-local callers using cluster-internal certificate authority trust.
+All local components — operators, Guardian, Compiler tools during bootstrap — call
+this port. Environment variable: `INTERNAL_PORT`.
+
+**Federation port:**
+Environment variable: `FEDERATION_PORT`, defaulting to `9091`. Serves tenant
+Conductor connections exclusively. The TLS configuration on the federation port uses
+management CA-issued client certificates with the connecting tenant's cluster ID
+embedded as Subject Alternative Name. The federation port rejects any connection
+that cannot present a valid management CA certificate. No other caller type may
+connect to the federation port.
+
+**Stream model:**
+One persistent bidirectional gRPC stream per connected tenant Conductor. The stream
+is established by the tenant Conductor; the management Conductor accepts it. The
+management side is stateless with respect to connection lifecycle — it does not
+initiate connections and does not maintain expectations about which tenants are
+connected at any given time.
+
+**Typed message envelope:**
+All messages on the stream carry a typed envelope. The following message types form
+the stable contract:
+
+| Message                        | Direction               | Purpose                                                              |
+|--------------------------------|-------------------------|----------------------------------------------------------------------|
+| RunnerConfigValidationRequest  | tenant → management     | Validate RunnerConfig parameters before Job materialisation          |
+| RunnerConfigValidationResponse | management → tenant     | Validation result: approved or rejected with structured reason       |
+| AuditEventBatch                | tenant → management     | Batch of sequenced audit events for management AuditSink             |
+| AuditEventAck                  | management → tenant     | Acknowledgement of received audit batch by sequence number           |
+| RevocationPush                 | management → tenant     | Management-initiated revocation of a PackInstance or PermissionSnapshot |
+| HeartBeat                      | bidirectional           | Liveness signal, sent by both sides at 30-second intervals           |
+
+RevocationPush messages are sent management → tenant without waiting for the tenant
+to initiate. This is the architectural justification for a persistent bidirectional
+stream over individual RPCs: the management side must be able to push revocations
+to tenants without the tenant polling. A stateless request-response model cannot
+satisfy this requirement.
+
+**Heartbeat discipline:**
+Both sides send HeartBeat messages at 30-second intervals. Three consecutive missed
+HeartBeat acknowledgments from a tenant marks that channel degraded in management
+status tracking. Management records the degraded state in RunnerConfig status for
+the affected tenant — the state is observable but not actionable by the management
+side. Reconnect responsibility belongs entirely to the tenant Conductor.
+
+**Tenant Conductor behavior on channel degradation:**
+- Buffers audit events in a local write-ahead buffer backed by a PVC in ont-system.
+- Fails RunnerConfig validation calls closed — no validation is attempted without
+  an active management channel stream.
+- Emits `FederationChannelDegraded` condition on its local RunnerConfig status.
+
+**Tenant Conductor behavior on reconnect:**
+Replays unacknowledged audit events starting from the last acknowledged sequence
+number. The management AuditSink deduplicates received events on sequence number —
+replays are safe and expected. RunnerConfig validation calls resume immediately on
+stream re-establishment.
+
+**Ownership boundary:**
+The federation channel is a Conductor concern exclusively. Guardian on both the
+management cluster and tenant clusters is a consumer and producer of channel
+contents — Guardian produces audit events and receives revocations — but Guardian
+does not own the channel, does not configure it, and does not monitor its health.
+Guardian health and federation channel health are independent.
+
+Tenant Guardian running role=management (sovereign mode) has no federation channel
+relationship with the management Guardian. A sovereign tenant Guardian is fully
+independent — no audit forwarding, no cross-cluster identity federation unless an
+explicit `federated-downstream` IdentityProvider CR is authored by a human. The
+tenant Conductor for a sovereign tenant cluster still connects to the management
+Conductor federation port for RunnerConfig validation — the channel is always
+Conductor-to-Conductor, never Guardian-to-Guardian.
+
+This is a locked invariant. The typed message envelope contract is stable. Adding
+new message types requires a Platform Governor directive before implementation.
+
+---
+
 *runner.ontai.dev schema — conductor repository*
 *Amendments appended below with date and rationale.*
 
@@ -802,3 +913,26 @@ without a Governor constitutional amendment.
   progression. Conductor harvests and records only — never interprets. Boundary is
   permanent and locked. F-P7 added to CONTEXT.md: all existing platform day-2
   reconcilers must migrate from single-capability RunnerConfig to step list model.
+
+2026-04-05 — Two locked Governor directives added. (1) §9 compiler enable bundle
+  restructured to six phases: phase 0 (00-infrastructure-dependencies: CNPG operator
+  manifests + CNPG Cluster CR for management Guardian, readiness gate: CNPG Cluster
+  ready), phase 1 (01-guardian-bootstrap), phases 2-5 are the existing phases
+  (02-guardian-deploy, 03-platform-wrapper, 04-conductor, 05-post-bootstrap). Phase 0
+  resolves the CNPG dependency before Guardian is deployed; Guardian startup migration
+  runner connects to CNPG before registering any controller. F-P8 recorded: phase 0
+  implementation requires a Conductor Engineer session. (2) §18 "Federation Channel
+  Contract" added (locked invariant): management Conductor exposes two ports — internal
+  (cluster-local CA) and federation (FEDERATION_PORT=9091, management CA client certs,
+  cluster ID as SAN, rejects invalid certs). One persistent bidirectional gRPC stream
+  per connected tenant Conductor; management side stateless on connection lifecycle;
+  tenant Conductor owns reconnect. Typed message envelope: RunnerConfigValidationRequest/
+  Response, AuditEventBatch, AuditEventAck, RevocationPush, HeartBeat. RevocationPush
+  is management-initiated — architectural justification for persistent stream over RPCs.
+  Heartbeat: 30s interval; 3 missed ACKs = channel degraded in management RunnerConfig
+  status. Tenant on degradation: WAL PVC buffer in ont-system, validation calls fail
+  closed, FederationChannelDegraded condition. On reconnect: replay from last acked
+  sequence; AuditSink deduplicates. Federation channel is Conductor-Conductor exclusively;
+  Guardian is a consumer/producer, not an owner. Sovereign tenants (role=management
+  Guardian) have no Guardian-to-Guardian federation relationship; Conductor channel
+  remains. Adding message envelope types requires a Governor directive.
