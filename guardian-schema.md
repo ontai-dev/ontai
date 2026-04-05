@@ -116,6 +116,8 @@ library.
 
 ## 6. Third-Party RBAC Ownership
 
+**LOCKED INVARIANT (partial) — Platform Governor directive 2026-04-05: RBACProfile authorship.**
+
 guardian wraps third-party component RBAC — CNPG, cert-manager, Kueue, metallb,
 and future components — into RBACProfiles with ownership annotations.
 
@@ -131,6 +133,22 @@ Any ONT operator joining the stack on the management cluster must, by default, r
 RBAC from guardian before its controller starts. The RBACProfile gate (provisioned=true)
 blocks all operator controllers until guardian has validated and provisioned their
 permission declarations. INV-003.
+
+**RBACProfile authorship — `compiler component`:**
+Guardian's admission webhook enforces what RBACProfiles declare. It never generates
+RBACProfiles and never guesses what a third-party component needs. The authorship
+path for all third-party component RBACProfiles is exclusively `compiler component`:
+the Compiler subcommand that emits RBACProfile CRs from an embedded versioned catalog
+(Cilium, CNPG, Kueue, cert-manager, local-path-provisioner) or from a human-provided
+descriptor for unlisted components. `compiler component` is a prerequisite for any
+third-party component operating in a Guardian-governed cluster. No third-party component
+may operate without a Guardian-provisioned RBACProfile, and no RBACProfile is authored
+at runtime — only at compile time. See conductor-schema.md §16.
+
+**Seam operator RBACProfiles:**
+The first-class platform-owned RBACProfiles for Seam operator service accounts
+(Guardian, Platform, Wrapper, Conductor, seam-core) are produced by `compiler enable`
+as part of the management cluster bootstrap bundle and never modified at runtime.
 
 ---
 
@@ -387,3 +405,9 @@ not concurrent writes.
   the principal assignment. An IdentityBinding without a matching IdentityProvider for
   its identityType is rejected at admission. IdentityProvider is a prerequisite before
   any Controller Engineer session implementing identity trust methods in IdentityBinding.
+2026-04-05 — Section 6 "Third-Party RBAC Ownership" amended with RBACProfile authorship
+  invariant. compiler component (conductor-schema.md §16) is the exclusive authorship
+  path for third-party RBACProfiles. Guardian enforces declarations; it never generates
+  them. Seam operator RBACProfiles produced by compiler enable as part of bootstrap
+  bundle. Third-party components without a Guardian-provisioned RBACProfile may not
+  operate in a Guardian-governed cluster.

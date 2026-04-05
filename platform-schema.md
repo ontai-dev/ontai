@@ -562,6 +562,42 @@ Never writes to security.ontai.dev, infra.ontai.dev, or runner.ontai.dev CRDs.
 
 ---
 
+## 12. Conductor Deployment Contract
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+Platform operator is responsible for deploying Conductor agent mode onto every tenant
+cluster it forms, as part of cluster formation reconciliation. This responsibility is
+exclusive — no other component deploys Conductor to tenant clusters.
+
+**When Platform deploys Conductor to a tenant cluster:**
+After TalosCluster formation reaches the readiness threshold and before marking the
+cluster fully Ready, Platform's TalosClusterReconciler creates a Conductor agent
+Deployment in ont-system on the target cluster. This Deployment is constructed using
+the target cluster's kubeconfig mounted from the tenant's kubeconfig Secret.
+
+**Role stamp requirement:**
+The Conductor Deployment created by Platform for any tenant cluster **must** carry
+`role=tenant` as a first-class field on the Deployment. This is not an annotation,
+not an environment variable, and not a label. It is a named field.
+
+Conductor reads this field at startup to determine which loops to activate. An absent
+or incorrect role causes Conductor to exit with InvariantViolation. Platform is
+solely responsible for correct role stamping. See conductor-schema.md §15.
+
+**Invariants:**
+- Platform creates exactly one Conductor Deployment per tenant cluster, in ont-system
+  on that cluster, using the cluster's kubeconfig Secret.
+- The Deployment is created with role=tenant. Any other value is a programming error.
+- Platform does not deploy Conductor to the management cluster. `compiler enable`
+  is the sole authority for the management cluster Conductor Deployment (role=management).
+- If the Conductor Deployment is deleted from a tenant cluster's ont-system, Platform
+  must recreate it on the next TalosClusterReconciler reconcile cycle.
+- The Conductor image tag used must match the RunnerConfig.agentImage for this cluster.
+  Platform reads agentImage from RunnerConfig before creating the Deployment.
+
+---
+
 *platform.ontai.dev schema — Platform*
 *Amendments:*
 *2026-03-30 — CAPI adopted for target cluster lifecycle. Seam Infrastructure Provider*
@@ -600,3 +636,12 @@ Never writes to security.ontai.dev, infra.ontai.dev, or runner.ontai.dev CRDs.
 *  Local PVC fallback permitted only as visible degraded mode (EtcdBackupLocalFallback*
 *  condition, non-durable status explicit). S3 path: etcd-backup/{cluster-uid}/.*
 *  Conductor never performs S3 destination resolution. Section 11 renumbered from 9.*
+
+*2026-04-05 — Section 12 "Conductor Deployment Contract" added: locked invariant.*
+*  Platform operator is exclusively responsible for deploying Conductor agent mode*
+*  onto every tenant cluster it forms. Deployment created in ont-system on target*
+*  cluster using cluster's kubeconfig Secret. role=tenant must be stamped as a*
+*  first-class field. Absent/incorrect role causes InvariantViolation exit in Conductor.*
+*  Platform does not deploy Conductor to the management cluster — compiler enable owns*
+*  that Deployment (role=management). Platform must recreate Deployment on deletion.*
+*  Conductor image tag must match RunnerConfig.agentImage for the cluster.*

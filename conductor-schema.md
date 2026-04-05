@@ -291,36 +291,51 @@ expiry the ConfigMap is garbage collected.
 
 ## 9. Compile Mode (Compiler binary)
 
-Human invokes: compiler compile [cluster|pack] --input <path> --output <path>
+### Canonical Compiler Command Surface
 
-For cluster compilation:
-1. Read TalosCluster spec and human-provided machineconfig files.
-2. Validate TalosCluster spec against ~/ontai/platform-schema.md rules.
-3. Validate machineconfig structure against the declared Talos version.
-4. SOPS-encrypt talos-secret, machineconfigs, talosconfig using admin's age key.
-5. Write encrypted files to the output path (clusters/{cluster-name}/ in git).
-6. Produce validation report. No cluster connection required.
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
 
-For pack compilation (Compiler invocation mode — not a Kueue Job, not a cluster
-operation):
-1. Read PackBuild spec.
-2. Pull Helm chart via helm goclient. Render with declared values.
-3. Resolve Kustomize overlay via kustomize goclient.
-4. Normalize all inputs to flat Kubernetes manifests.
-5. Validate all resources against target Kubernetes version schemas.
-6. Build execution order from declared dependencies. Fail if acyclic check fails.
-7. Generate minimum necessary RBAC.
-8. Pin all image references to digest.
-9. Compute content-addressed checksum.
-10. Generate provenance record with build identity, timestamp, source digests.
-11. Push ClusterPack artifact to OCI registry.
-12. Write OperationResult with registered ClusterPack version and digest.
-13. Exit.
+The complete and authoritative compiler command surface is:
 
-pack-compile is a Compiler compile mode capability. It is invoked by the human or
-CI/CD pipeline on the workstation. It never runs on any cluster. It never runs as a
-Kueue Job. The ClusterPack OCI artifact and CR YAML it produces are the only outputs
-that reach the cluster, via OCI registry and GitOps respectively.
+| Subcommand    | Purpose                                                          | Cluster connectivity | Output                                          |
+|---------------|------------------------------------------------------------------|----------------------|-------------------------------------------------|
+| `bootstrap`   | Management cluster formation — Talos machineconfigs + bootstrap CRs | No              | CR YAML + encrypted machineconfig files         |
+| `launch`      | Management cluster CRD installation manifest                     | No                   | CRD manifest YAML bundle                        |
+| `enable`      | Seam operator deployment manifest bundle                         | No                   | Operator YAML bundle (Deployments, RBAC, etc.)  |
+| `packbuild`   | ClusterPack OCI artifact + CR YAML                               | No                   | ClusterPack CR YAML + OCI push                  |
+| `maintenance` | MaintenanceBundle CR with pre-resolved scheduling context         | Yes (management)     | MaintenanceBundle CR YAML                       |
+| `component`   | RBACProfile CRs for third-party components                       | Optional (--discover)| RBACProfile CR YAML(s)                          |
+| `domain`      | Reserved — domain CR compilation not yet implemented             | —                    | —                                               |
+
+No other compiler subcommands exist. New subcommands require a Platform Governor directive before implementation.
+
+---
+
+### Management Cluster Bootstrap Sequence Authority
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+The management cluster bootstrap sequence is owned exclusively by the Compiler in three steps. Platform operator has no involvement in management cluster bootstrap. This is a locked invariant.
+
+**Step 1 — `compiler bootstrap`**
+Forms the management cluster itself. Reads TalosCluster spec and human-provided machineconfig inputs. Validates spec against platform-schema.md rules. SOPS-encrypts talos-secret, machineconfigs, and talosconfig using the admin's age key. Writes encrypted files to output path. Produces bootstrap CRs (TalosCluster in mode: bootstrap) as YAML. No cluster connection required. Compiler never applies resources — the GitOps pipeline or operator's kubectl applies the output.
+
+**Step 2 — `compiler launch`**
+Installs all Seam CRDs onto the management cluster. Reads the CRD manifest set for all Seam API groups (platform.ontai.dev, security.ontai.dev, infra.ontai.dev, runner.ontai.dev, infrastructure.ontai.dev). Produces a CRD manifest YAML bundle ready for GitOps application. No cluster connection required. Compiler never applies resources.
+
+**Step 3 — `compiler enable`**
+Produces the complete Seam operator deployment manifest bundle as YAML output. The bundle contains:
+- Conductor Deployment in ont-system, **stamped with `role=management`** as a first-class field (see §15 Role Declaration Contract).
+- Guardian Deployment, Platform Deployment, Wrapper Deployment, seam-core Deployment.
+- All RBAC resources for all Seam operator service accounts.
+- All leader election Lease templates.
+- First-class platform-owned RBACProfile CRs for all Seam operator service accounts — one per operator, Guardian-governed, human-reviewed before GitOps commit.
+
+Compiler never applies resources directly. The GitOps pipeline applies this bundle after human review. No cluster connection required.
+
+**Invariant:** Platform operator is not involved at any step of management cluster bootstrap. Management cluster formation, CRD installation, and operator deployment are all compiler-driven. Platform's role begins when the management cluster is operational and CRDs are registered.
+
+---
 
 ### compiler maintenance
 
@@ -523,6 +538,112 @@ that the produced binary runs cleanly on the distroless/base image before releas
 
 ---
 
+## 15. Role Declaration Contract
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+Conductor reads a role declaration field at startup to determine which loops to
+activate and which responsibilities to assume. The role field is stamped externally
+at Deployment creation time. Conductor does not determine its own role and never
+infers it from cluster state.
+
+**Two valid role values:**
+
+| Role         | Who stamps it          | When                                              |
+|--------------|------------------------|---------------------------------------------------|
+| `management` | `compiler enable`      | At management cluster manifest production time    |
+| `tenant`     | Platform operator      | At tenant cluster Conductor Deployment creation   |
+
+**Role field location:**
+The role declaration is a first-class field on the Conductor Deployment, not an
+environment variable or ConfigMap mount. It is stamped once at Deployment creation
+time and never modified by any controller.
+
+**Management role startup sequence:**
+Conductor with role=management activates all loops from §10 — including PackInstance
+signing, PermissionSnapshot signing, and the full agent mode startup sequence.
+
+**Tenant role startup sequence:**
+Conductor with role=tenant activates the target-cluster-specific loops from §10 —
+PackReceipt, PermissionSnapshotReceipt, admission webhook, PermissionService gRPC,
+drift detection, and PermissionSnapshot pull loop. It does not activate signing loops.
+Signing is management-only. INV-026.
+
+**Invariants:**
+- Conductor with an absent or unrecognized role field exits immediately with
+  InvariantViolation structured exit. This is a hard gate — a Conductor without a
+  valid role declaration is a programming error, not a recoverable condition.
+- No component other than `compiler enable` (management) and Platform operator (tenant)
+  may stamp the role field. Guardian, Wrapper, seam-core, and humans never set this field.
+- Platform operator is exclusively responsible for stamping role=tenant on every Conductor
+  Deployment it creates. See platform-schema.md §12 Conductor Deployment Contract.
+
+---
+
+## 16. compiler component Subcommand
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+`compiler component` emits RBACProfile CRs as YAML output for third-party components
+operating in a Guardian-governed cluster. Guardian's admission webhook enforces what
+RBACProfiles declare — it never generates them and never guesses.
+`compiler component` is a prerequisite for any third-party component operating in a
+Guardian-governed cluster.
+
+**Subcommand signature:**
+```
+compiler component [--component <name>]... [--descriptor <path>] [--discover] [--output <path>]
+```
+
+**Two operating modes:**
+
+### Catalog Mode (no cluster connectivity required)
+
+Compiler ships with a versioned embedded catalog of canonical RBACProfile definitions
+for known ecosystem components. The catalog lives at `internal/catalog/` in the
+conductor repository as a versioned embedded filesystem. The human selects which
+components are in scope via one or more `--component` flags.
+
+Compiler emits the corresponding RBACProfile YAMLs from the embedded catalog,
+stamped and ready for Guardian-governed application. No cluster connectivity is
+required.
+
+**Current catalog entries:**
+
+| Component             | RBACProfile name                     | Description                              |
+|-----------------------|--------------------------------------|------------------------------------------|
+| cilium                | rbac-cilium                          | Cilium CNI agent and operator            |
+| cnpg                  | rbac-cnpg                            | CloudNativePG operator                   |
+| kueue                 | rbac-kueue                           | Kueue batch scheduler                    |
+| cert-manager          | rbac-cert-manager                    | cert-manager controller and webhook      |
+| local-path-provisioner| rbac-local-path-provisioner          | Rancher local-path-provisioner           |
+
+New catalog entries are added via Pull Request to the conductor repository. New
+entries require a canonical RBACProfile definition reviewed by the Platform Governor
+before merge.
+
+### Custom Mode (optional cluster connectivity)
+
+For components not in the catalog, the human provides a component descriptor file
+via `--descriptor <path>`. Compiler renders an RBACProfile scaffold from the descriptor
+for human review before GitOps commit.
+
+The optional `--discover` flag enables cluster connectivity to auto-detect deployed
+third-party resources. Cluster access follows the same resolution order as
+`compiler maintenance` (flag → env var → conventional path).
+
+**Invariants:**
+- `compiler component` is the only path to creating third-party RBACProfiles. No
+  operator generates third-party RBACProfiles at runtime.
+- Guardian's admission webhook enforces RBACProfile declarations but never creates
+  them. The contract direction is: component declares needs → Guardian enforces.
+- The embedded catalog is the versioned source of truth for canonical component
+  RBACProfiles. Catalog version is tied to the compiler release tag.
+- F-P6: compiler component real implementation — catalog scaffold and RBACProfile
+  template rendering — requires a Conductor Engineer session.
+
+---
+
 *runner.ontai.dev schema — conductor repository*
 *Amendments appended below with date and rationale.*
 
@@ -571,3 +692,18 @@ that the produced binary runs cleanly on the distroless/base image before releas
   resolved from flag → env var → conventional path, consistent with launch and enable.
   Fails fast if leader lease absent, nodes invalid, or S3 Secret missing.
   MaintenanceBundle CRD definition deferred to Platform Schema Engineer session (F-P5).
+
+2026-04-05 — Three locked Governor directives added. (1) Management Cluster Bootstrap
+  Sequence Authority added to Section 9: bootstrap/launch/enable owned exclusively by
+  Compiler in three steps; Platform has no involvement; Compiler never applies
+  resources; compiler enable stamps role=management on Conductor Deployment. Canonical
+  Compiler Command Surface table added (bootstrap, launch, enable, packbuild,
+  maintenance, component, domain). (2) Section 15 "Role Declaration Contract" added:
+  Conductor reads role field (management or tenant) stamped externally at Deployment
+  creation; compiler enable stamps management; Platform operator stamps tenant;
+  Conductor never infers its own role; absent/unrecognized role causes InvariantViolation
+  exit. (3) Section 16 "compiler component Subcommand" added: emits RBACProfile CRs
+  for third-party components; catalog mode (embedded versioned catalog: Cilium, CNPG,
+  Kueue, cert-manager, local-path-provisioner) and custom mode (--descriptor flag,
+  optional --discover for cluster auto-detect); catalog at internal/catalog/;
+  F-P6 open finding for implementation.
