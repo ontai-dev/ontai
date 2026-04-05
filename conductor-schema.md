@@ -135,6 +135,17 @@ Key spec fields:
   launch, bootstrap for tenant clusters).
 - operationalHistory: append-only record of every configuration change applied.
   Never deleted, only superseded by newer entries for the same concern.
+- maintenanceTargetNodes: list of node names that are the subject of the operation.
+  Populated by the initiating operator at RunnerConfig creation time. Used by
+  Conductor execute mode for node affinity exclusion when selfOperation is true.
+- operatorLeaderNode: the node currently hosting the leader pod of the initiating
+  operator. Resolved at creation time via the Kubernetes downward API. Used by
+  Conductor execute mode for node affinity exclusion when selfOperation is true.
+- selfOperation: boolean — true when the Job's execution cluster and the target
+  cluster are the same (management cluster self-operations). false for all
+  tenant-targeted operations. Conductor execute mode reads this field to determine
+  whether to apply NotIn node affinity constraints. When false, exclusion logic
+  is skipped entirely.
 
 Per-phase parameter sections:
 - launch: vmConfig, talosInstallerImage, networkConfig, bootstrapTimeout.
@@ -356,7 +367,88 @@ Seam is fully open source with no licensing tier. All clusters are equal. No enf
 
 ---
 
-## 12. Dockerfile Standards
+## 12. Operational Readiness Gates
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+### Gate 1 — Port 50000 Talos API Reachability
+
+Platform operator is the sole owner of Talos apid port 50000 reachability validation
+across both native and CAPI cluster paths. No other operator and no Conductor
+capability handler performs port 50000 validation. This is a locked invariant.
+
+**Native clusters (spec.capi.enabled=false):**
+The gate is triggered by node IP declaration in TalosCluster spec. When a node IP is
+recorded in TalosCluster spec, Platform operator validates reachability to port 50000
+before proceeding with any node-level operation.
+
+**CAPI clusters (spec.capi.enabled=true):**
+The gate is triggered by CAPI Machine reaching provisioned state. Platform operator
+validates port 50000 reachability as part of the SeamInfrastructureMachineReconciler
+provisioning sequence. No other reconciler or operator repeats this check.
+
+**Permanent exclusions:**
+- Screen (future operator) never performs this check. Screen's responsibility ends at
+  infrastructure existence. Port 50000 ownership belongs exclusively to Platform.
+- Guardian, Wrapper, Conductor execute mode, and Conductor agent mode never perform
+  port 50000 validation under any circumstance.
+- Adding port 50000 validation to any component other than Platform operator requires
+  a Platform Governor constitutional amendment.
+
+---
+
+## 13. RunnerConfig Self-Operation Contract
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+The RunnerConfig spec carries three fields as a first-class scheduling contract. These
+fields govern Conductor execute mode node affinity exclusion for management cluster
+self-operations. They are populated exclusively by the initiating operator at
+RunnerConfig creation time.
+
+**The three fields (defined in Section 5):**
+- `maintenanceTargetNodes`: list of node names that are the subject of the operation.
+- `operatorLeaderNode`: the node currently hosting the leader pod of the initiating
+  operator, resolved via the Kubernetes downward API.
+- `selfOperation`: boolean — true when the Job's execution cluster and target cluster
+  are the same (management cluster self-operations); false for all tenant-targeted
+  operations.
+
+**Operator responsibility at RunnerConfig creation:**
+The initiating operator populates all three fields. `operatorLeaderNode` is resolved
+at creation time using the Kubernetes downward API (fieldRef: spec.nodeName on the
+operator's own pod). The operator must not cache this value — it must be resolved
+fresh at each RunnerConfig creation to reflect the current leader pod's node.
+
+**Conductor execute mode contract:**
+When selfOperation is true, Conductor translates maintenanceTargetNodes and
+operatorLeaderNode into Kueue Job node affinity NotIn constraints before submitting
+the Job. This ensures the Job pod does not land on a node that is itself a target
+of the maintenance operation, and does not land on the node hosting the operator's
+leader pod (which would cause a scheduling deadlock if the node were cordoned).
+
+When selfOperation is false, Conductor skips exclusion resolution entirely. Tenant-
+targeted operations are exempt — the Job executes on the management cluster regardless
+of which nodes the remote target cluster is operating on.
+
+**Conductor agent mode recovery path:**
+Conductor agent mode acts as a recovery path only. It detects Jobs that landed on
+maintenance-targeted nodes due to scheduling races (i.e., the NotIn constraint was
+applied but a race between admission and cordoning resulted in incorrect placement)
+and signals rescheduling by annotating the Job pod. It does not proactively schedule
+Jobs. The agent mode recovery path is not a substitute for correct operator-side
+field population.
+
+**Permanent exclusions:**
+- No other component populates these three fields. They are operator-authored at
+  creation time and Conductor-consumed at Job materialisation time.
+- Conductor agent mode does not populate these fields. It reads them.
+- These fields are never modified after RunnerConfig creation. They are immutable
+  for the lifetime of the RunnerConfig instance.
+
+---
+
+## 14. Dockerfile Standards
 
 **Compiler Dockerfile (compile mode, debian):**
 
@@ -413,3 +505,12 @@ that the produced binary runs cleanly on the distroless/base image before releas
   (formerly guardian), Wrapper (formerly wrapper). Capability table updated
   to reference consolidated day-two CRDs: UpgradePolicy, NodeOperation,
   EtcdMaintenance, NodeMaintenance, PKIRotation, ClusterReset, HardeningProfile.
+
+2026-04-05 — Two locked Governor directives added. Section 12 "Operational Readiness
+  Gates": Platform operator is the sole owner of port 50000 Talos API reachability
+  validation across native and CAPI paths; Screen and all other components are
+  permanently excluded. Section 13 "RunnerConfig Self-Operation Contract": three new
+  first-class scheduling fields added to RunnerConfig spec (maintenanceTargetNodes,
+  operatorLeaderNode, selfOperation); Conductor execute mode applies NotIn node
+  affinity constraints when selfOperation=true; skips exclusion when selfOperation=false;
+  agent mode acts as recovery path only. Dockerfile Standards renumbered to Section 14.
