@@ -466,7 +466,91 @@ set provisioned=true.
 
 ---
 
-## 9. Cross-Domain Rules
+## 9. MachineConfig Storage Contract
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+For native and imported Seam clusters (`spec.capi.enabled=false`), Platform operator
+is the sole owner of machineconfig generation and storage. This applies to the
+management cluster and to any cluster onboarded via the import path.
+
+**Secret naming convention:**
+Machineconfigs are stored as Kubernetes Secrets in the management cluster, one Secret
+per node, using the naming convention:
+
+    seam-mc-{cluster-name}-{node-name}
+
+in the `seam-tenant-{cluster-name}` namespace.
+
+**Lifecycle:**
+Platform generates these Secrets at bootstrap time from the TalosCluster and
+TalosControlPlane/TalosWorkerConfig specs. When node configuration changes — for
+example when a HardeningProfile is updated or a machineconfig patch is applied —
+Platform regenerates and reconciles the affected Secrets.
+
+**Design rationale:**
+This mirrors the CAPI bootstrap provider secret pattern intentionally. The CAPI path
+stores machineconfigs as bootstrap data Secrets managed by CABPT. The native path
+stores them as Seam-named Secrets managed by Platform. The operational model is
+consistent regardless of provisioning path: a named Secret per node holds the node's
+current authoritative machineconfig.
+
+No other operator or Conductor capability handler generates or owns these Secrets.
+A machineconfig Secret owned by Platform must never be modified by any other component.
+This invariant has no exceptions and requires a Platform Governor constitutional
+amendment to change.
+
+---
+
+## 10. Etcd Backup Destination Contract
+
+**LOCKED INVARIANT — Platform Governor directive 2026-04-05.**
+
+Platform operator resolves the S3 backup destination at RunnerConfig creation time —
+never deferred to Conductor or the Job. Resolution is deterministic, ordered, and
+fails fast with a structured condition rather than silently proceeding without a
+destination.
+
+**Resolution order (evaluated at RunnerConfig creation time):**
+
+1. **Explicit reference on TalosCluster CR**: if the TalosCluster spec carries an
+   explicit S3 config Secret reference (`spec.etcdBackupS3SecretRef`), Platform uses
+   that Secret. No further lookup is performed.
+
+2. **Platform-wide default Secret**: if no explicit reference is present, Platform
+   looks for a Secret named `seam-etcd-backup-config` in the `seam-system` namespace.
+   If found, it is used as the S3 configuration source.
+
+3. **Absent condition**: if neither the explicit reference nor the platform-wide
+   default Secret exists, Platform sets the condition `EtcdBackupDestinationAbsent`
+   on the EtcdMaintenance CR with `status=True` and does not emit a RunnerConfig.
+   The EtcdMaintenance CR remains in a pending state until a valid Secret is provided.
+   Silent failure is never permitted — the condition must always be set and observable.
+
+**Local PVC fallback (non-durable degraded mode):**
+A local PVC fallback is permitted as a last-resort, non-durable mode only. If the
+operator configuration explicitly enables PVC fallback, Platform sets the condition
+`EtcdBackupLocalFallback` on the EtcdMaintenance CR with `status=True`. The CR status
+must explicitly state: "Backup is non-durable — PVC-backed storage does not survive
+node failure or cluster destruction." PVC fallback is not a substitute for S3. It is
+a visible degraded mode, not a transparent default.
+
+**S3 path structure within the bucket:**
+
+    etcd-backup/{cluster-id}/
+
+where `{cluster-id}` is the TalosCluster UID, not the name. UIDs are immutable and
+globally unique across clusters. This ensures backup paths survive cluster rename and
+remain unambiguous when multiple clusters write to the same bucket.
+
+**Invariant boundary:**
+Conductor and the etcd-backup Job receive the resolved Secret reference via RunnerConfig.
+They perform no S3 destination resolution themselves. A Conductor execute-mode Job that
+independently resolves an S3 destination is an invariant violation.
+
+---
+
+## 11. Cross-Domain Rules
 
 Reads: security.ontai.dev/RBACProfile status (gate check).
 Reads: infra.ontai.dev/ClusterPack (validate Cilium pack reference in TalosCluster).
@@ -505,3 +589,14 @@ Never writes to security.ontai.dev, infra.ontai.dev, or runner.ontai.dev CRDs.
 *  into eight: EtcdMaintenance, NodeMaintenance, PKIRotation, ClusterReset,*
 *  HardeningProfile, UpgradePolicy, NodeOperation, ClusterMaintenance. LicenseKey*
 *  removed — Seam is fully open source with no licensing tier.*
+
+*2026-04-05 — Section 9 "MachineConfig Storage Contract" added: locked invariant.*
+*  Platform is sole owner of machineconfig Secrets for native/imported clusters.*
+*  Naming convention seam-mc-{cluster-name}-{node-name} in seam-tenant-{cluster-name}.*
+*  Mirrors CAPI bootstrap provider pattern. No other component may modify these Secrets.*
+*  Section 10 "Etcd Backup Destination Contract" added: locked invariant.*
+*  S3 resolution hierarchy: explicit TalosCluster ref → seam-etcd-backup-config in*
+*  seam-system → EtcdBackupDestinationAbsent condition (no RunnerConfig emitted).*
+*  Local PVC fallback permitted only as visible degraded mode (EtcdBackupLocalFallback*
+*  condition, non-durable status explicit). S3 path: etcd-backup/{cluster-uid}/.*
+*  Conductor never performs S3 destination resolution. Section 11 renumbered from 9.*

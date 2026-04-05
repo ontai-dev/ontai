@@ -322,6 +322,54 @@ CI/CD pipeline on the workstation. It never runs on any cluster. It never runs a
 Kueue Job. The ClusterPack OCI artifact and CR YAML it produces are the only outputs
 that reach the cluster, via OCI registry and GitOps respectively.
 
+### compiler maintenance
+
+**Subcommand:** `compiler maintenance --operation <type> [--talosconfig <path>] [--kubeconfig <path>] [--output <path>]`
+
+Produces a MaintenanceBundle CR that pre-encodes all scheduling context required for
+a maintenance operation. Platform and Conductor execute without rediscovering any of
+this context from the live cluster at execution time. See F-P5.
+
+**Cluster access resolution:**
+talosconfig and kubeconfig are resolved from three sources in order, consistent with
+how `launch` and `enable` resolve cluster access when operating against a pre-existing
+cluster:
+1. Explicit flag: `--talosconfig <path>`, `--kubeconfig <path>`
+2. Environment variable: `TALOSCONFIG`, `KUBECONFIG`
+3. Conventional path: `./talos/config`, `~/.kube/config`
+
+There is no special connectivity requirement. The Compiler always has management
+cluster access through one of these three sources.
+
+**Pre-encoded context written into the MaintenanceBundle CR:**
+
+- `maintenanceTargetNodes`: the target node set for the operation. Directly populates
+  `RunnerConfig.MaintenanceTargetNodes` when Platform creates the RunnerConfig from
+  this bundle. The node set is validated against the live cluster at compile time —
+  nodes that do not exist cause a compile-time failure.
+
+- `operatorLeaderNode`: the node currently hosting the leader pod of the initiating
+  Platform operator, resolved live from the management cluster's Platform leader
+  election lease (`platform-leader` Lease in `seam-system`). Directly populates
+  `RunnerConfig.OperatorLeaderNode`. Compiler fails fast if the lease does not exist
+  or has no holder — this is a safety gate, not a recoverable condition.
+
+- `s3ConfigSecretRef`: the S3 configuration Secret reference, resolved and validated
+  to exist before the MaintenanceBundle CR is committed. If the Secret is absent,
+  `compiler maintenance` fails fast at compile time with a structured error. A
+  MaintenanceBundle is never committed without a valid, resolvable S3 reference.
+  Resolution follows platform-schema.md §10 (Etcd Backup Destination Contract).
+
+- `operation`: one of `drain`, `upgrade`, `etcd-backup`, or `machineconfig-rotation`.
+  Determines which Conductor capability the resulting RunnerConfig targets.
+
+**MaintenanceBundle CRD:**
+MaintenanceBundle is a new CRD in the `platform.ontai.dev` API group. Its complete
+type definition, spec fields, status conditions, and reconciler implementation are
+deferred to a Platform Schema Engineer session (F-P5). The contract above establishes
+the semantic requirements — the CR carries pre-resolved scheduling context so neither
+Platform nor Conductor need to perform cluster queries at execution time.
+
 ---
 
 ## 10. Agent Mode (Conductor binary)
@@ -514,3 +562,12 @@ that the produced binary runs cleanly on the distroless/base image before releas
   operatorLeaderNode, selfOperation); Conductor execute mode applies NotIn node
   affinity constraints when selfOperation=true; skips exclusion when selfOperation=false;
   agent mode acts as recovery path only. Dockerfile Standards renumbered to Section 14.
+
+2026-04-05 — compiler maintenance subcommand added to Section 9. Produces
+  MaintenanceBundle CR with pre-encoded scheduling context: maintenanceTargetNodes
+  (validated node set), operatorLeaderNode (resolved from platform-leader Lease),
+  s3ConfigSecretRef (validated at compile time per platform-schema.md §10),
+  operation (drain/upgrade/etcd-backup/machineconfig-rotation). Cluster access
+  resolved from flag → env var → conventional path, consistent with launch and enable.
+  Fails fast if leader lease absent, nodes invalid, or S3 Secret missing.
+  MaintenanceBundle CRD definition deferred to Platform Schema Engineer session (F-P5).
