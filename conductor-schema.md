@@ -644,6 +644,89 @@ third-party resources. Cluster access follows the same resolution order as
 
 ---
 
+## 17. RunnerConfig Execution Model
+
+**LOCKED GOVERNOR DECISION — Platform Governor directive 2026-04-05.**
+
+### Multi-Step Intent
+
+A RunnerConfig represents a multi-step operation intent, not a single Job. The spec
+carries a `steps` list where each step declares:
+
+- `name`: unique identifier within this RunnerConfig's step list.
+- `capability`: the named capability identifier Conductor execute mode dispatches.
+- `parameters`: input parameter map passed to the capability at Job materialisation.
+- `dependsOn`: optional reference to a prior step name. The step is not eligible
+  for execution until the referenced step has reached Succeeded state.
+- `haltOnFailure`: boolean. When true, any failure on this step terminates the
+  entire RunnerConfig with terminal condition Failed and no further steps execute.
+
+A RunnerConfig with a single entry in the steps list is the degenerate case of this
+model — not a separate model. All RunnerConfigs use the steps list, even single-step
+operations.
+
+### Step Sequencer Responsibility
+
+Conductor execute mode is the sole authority over step-to-step progression. It
+materialises one Job at a time in declared order. The sequencer:
+
+1. Scans the steps list for the first step that is eligible: its `dependsOn` step
+   (if any) has reached Succeeded, and the step itself has not yet reached a
+   terminal state.
+2. Materialises the Kueue Job for that step using the step's capability and parameter
+   fields.
+3. Monitors the Job for terminal state (Succeeded or Failed).
+4. On Job completion, harvests the structured output from the well-known ConfigMap
+   named after the Job in ont-system.
+5. Writes a `StepResult` entry into RunnerConfig status for that step.
+6. Evaluates terminal conditions and either advances to the next eligible step or
+   writes the terminal RunnerConfig condition.
+
+The owning operator never drives step-to-step progression. The owning operator
+never submits individual Jobs. This boundary is permanent and locked.
+
+### StepResult
+
+Each completed step produces one StepResult entry in RunnerConfig status:
+
+- `stepName`: matches the step name declared in spec.
+- `phase`: lifecycle state — `Pending`, `Running`, `Succeeded`, or `Failed`.
+- `outputRef`: reference to the ConfigMap in ont-system from which the result was
+  harvested. ConfigMap is named after the Job. It is garbage-collected after TTL.
+- `result`: raw JSON payload — the structured OperationResult document from the
+  ConfigMap. Conductor writes this verbatim without semantic interpretation.
+
+### Terminal Conditions
+
+RunnerConfig reaches one of two terminal conditions:
+
+- `Completed`: all steps in the steps list reached Succeeded state.
+- `Failed`: any step reached Failed state with `haltOnFailure: true`, or the final
+  step failed.
+
+Once a terminal condition is written, the RunnerConfig is inert. No further Jobs
+are submitted. The owning operator reads the terminal condition and step results
+from status to perform semantic interpretation and downstream action in its own
+reconciliation loop.
+
+### Boundary Contract
+
+**Conductor harvests and records only.** Conductor never interprets what a step
+result means for the domain. It does not know whether a step failure is retryable.
+It does not know whether a partial completion is acceptable. It writes StepResult
+entries and terminal conditions — nothing more.
+
+**The owning operator interprets only.** The owning operator watches RunnerConfig
+status for the terminal condition. It reads StepResult entries. It decides what the
+results mean and what downstream actions to take. It never submits Jobs directly.
+It never calls into Conductor. The operator–Conductor contract is mediated entirely
+by RunnerConfig spec and status.
+
+This boundary is permanent and locked. No future implementation work may blur it
+without a Governor constitutional amendment.
+
+---
+
 *runner.ontai.dev schema — conductor repository*
 *Amendments appended below with date and rationale.*
 
@@ -707,3 +790,15 @@ third-party resources. Cluster access follows the same resolution order as
   Kueue, cert-manager, local-path-provisioner) and custom mode (--descriptor flag,
   optional --discover for cluster auto-detect); catalog at internal/catalog/;
   F-P6 open finding for implementation.
+
+2026-04-05 — Section 17 "RunnerConfig Execution Model" added as locked Governor
+  decision. RunnerConfig is a multi-step operation intent: spec carries a steps list
+  (name, capability, parameters, dependsOn, haltOnFailure). Conductor execute mode is
+  the sole authority over step-to-step progression — materialises one Job at a time,
+  harvests OperationResult ConfigMap from ont-system on completion, writes StepResult
+  (stepName, phase, outputRef, result payload) into RunnerConfig status. Terminal
+  conditions: Completed (all steps succeeded) and Failed (halt-on-failure semantics).
+  Owning operator watches terminal condition and interprets step results — never drives
+  progression. Conductor harvests and records only — never interprets. Boundary is
+  permanent and locked. F-P7 added to CONTEXT.md: all existing platform day-2
+  reconcilers must migrate from single-capability RunnerConfig to step list model.
