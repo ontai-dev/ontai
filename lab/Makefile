@@ -1,12 +1,11 @@
 # lab/Makefile — top-level targets for ontai lab provisioning.
 #
-# Prerequisites: virsh, qemu-img, talosctl, kubectl, helm, nc
+# Prerequisites: virsh, qemu-img, talosctl, kubectl, nc
 # All scripts are idempotent — safe to re-run.
 #
 # Usage:
 #   make golden                    — create golden images (run once per Talos version)
 #   make cluster-up                — bring up ccs-mgmt (steps 02-05)
-#   make platform-deploy           — deploy Cilium + Kueue on ccs-mgmt (step 06)
 #   make teardown CLUSTER=ccs-mgmt — tear down a cluster
 #   make teardown CLUSTER=ccs-dev  — tear down a cluster
 #   make dev-up                    — bring up ccs-dev (steps 02-05)
@@ -16,7 +15,7 @@ SCRIPTS := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))scripts
 
 # ── Tool check ────────────────────────────────────────────────────────────────
 
-REQUIRED_TOOLS := virsh qemu-img talosctl kubectl helm nc
+REQUIRED_TOOLS := virsh qemu-img talosctl kubectl nc
 
 .PHONY: check-tools
 check-tools:
@@ -41,6 +40,10 @@ golden: check-tools
 # ── cluster-up ────────────────────────────────────────────────────────────────
 # Bring up ccs-mgmt through Kubernetes API availability.
 # Steps: 02-cluster-create → 03-cluster-start → 04-machineconfig-apply → 05-bootstrap
+#
+# After cluster-up completes, run compiler bootstrap, compiler launch, and
+# compiler enable from your workstation to generate the deployment bundle, then
+# apply each phase in order per the compiler enable output directory.
 
 .PHONY: cluster-up
 cluster-up: check-tools
@@ -52,15 +55,6 @@ cluster-up: check-tools
 	@bash "$(SCRIPTS)/04-machineconfig-apply.sh" ccs-mgmt
 	@echo "==> [cluster-up] Bootstrapping ccs-mgmt"
 	@bash "$(SCRIPTS)/05-bootstrap.sh" ccs-mgmt
-
-# ── platform-deploy ───────────────────────────────────────────────────────────
-# Deploy Cilium (two-phase) and Kueue onto ccs-mgmt.
-# Requires cluster-up to have completed successfully.
-
-.PHONY: platform-deploy
-platform-deploy: check-tools
-	@echo "==> [platform-deploy] Deploying Cilium and Kueue on ccs-mgmt"
-	@bash "$(SCRIPTS)/06-platform-deploy.sh" ccs-mgmt
 
 # ── teardown ──────────────────────────────────────────────────────────────────
 # Tear down a cluster. Pass CLUSTER=ccs-mgmt or CLUSTER=ccs-dev.
@@ -101,7 +95,6 @@ help:
 	@echo ""
 	@echo "  make golden                    — create golden images (step 01)"
 	@echo "  make cluster-up                — bring up ccs-mgmt (steps 02-05)"
-	@echo "  make platform-deploy           — deploy Cilium + Kueue on ccs-mgmt (step 06)"
 	@echo "  make teardown CLUSTER=<name>   — tear down ccs-mgmt or ccs-dev (step 07)"
 	@echo "  make dev-up                    — bring up ccs-dev (steps 02-05)"
 	@echo ""
