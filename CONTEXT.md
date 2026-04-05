@@ -6,6 +6,7 @@
 ## 0. Anti-Patterns (FORBIDDEN)
 - Adding Co-Authored-By trailers to commits
 - Pushing the ontai root repository to a git remote — ontai root is intentionally not a git remote repository; do not attempt to push it
+- Creating or assuming a namespace outside the canonical model (seam-system, ont-system, seam-tenant-{cluster-name}) without a Governor directive
 
 ## 1. Platform State
 
@@ -53,7 +54,21 @@
 
 ---
 
-## 4. Next Session
+## 4. Namespace Model (Locked Governor Decision — 2026-04-05)
+
+Three namespaces exist in the Seam platform. No operator may create or assume any other namespace without a Governor directive.
+
+| Namespace | Purpose | Who owns it |
+|-----------|---------|-------------|
+| `seam-system` | Single operator namespace on the management cluster. All Seam operator managers (guardian, platform, wrapper, seam-core) run here. All leader election leases are held here. | All operators |
+| `ont-system` | Conductor agent namespace. Exists on every cluster (management and target). Conductor agent Deployment runs here. Conductor execute-mode Jobs submitted by Wrapper run here on the management cluster. SnapshotStore, signing loop, and pull loop operate from this namespace. | Conductor |
+| `seam-tenant-{cluster-name}` | One per managed cluster. ClusterPack, PackExecution, PackInstance, and all tenant-scoped objects live here. Created exclusively by the Platform operator (CP-INV-004). | Platform (creates); operators (read) |
+
+Inventions such as `security-system`, `platform-system`, `infra-system`, `guardian-system`, or any unnamed variant are forbidden. They have been removed. This model is locked.
+
+---
+
+## 5. Next Session
 
 **Role:** Governor
 **Purpose:** Schedule F-P1 (platform day-2 CRDs) and F-P3 (non-CAPI lifecycle scope verification). F-P2 closed — Compiler is a CR compiler with correct subcommands (bootstrap/launch/enable/packbuild/domain); execution-mode clients (SOPS, Helm, Kustomize) belong to Conductor Execute Mode, not the Compiler.
@@ -75,3 +90,4 @@
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*
+*Section 4 (Namespace Model) locked 2026-04-05 by Governor directive.*
