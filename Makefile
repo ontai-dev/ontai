@@ -1,6 +1,6 @@
-.PHONY: lint lint-docs
+.PHONY: lint lint-docs install-hooks
 
-lint: lint-docs
+lint: lint-docs install-hooks
 
 lint-docs:
 	@echo ">>> lint-docs: verifying no unintended tracked .md files"
@@ -17,3 +17,9 @@ lint-docs:
 		exit 1; \
 	fi
 	@echo "PASS: no Co-Authored-By trailers in commit history"
+
+install-hooks:
+	@echo ">>> install-hooks: installing commit-msg hook"
+	@cp scripts/commit-msg .git/hooks/commit-msg
+	@chmod +x .git/hooks/commit-msg
+	@echo "PASS: commit-msg hook installed at .git/hooks/commit-msg"
