@@ -32,6 +32,7 @@
 | F-P1  | ~~Day-2 CRD types and reconcilers absent in platform~~ CLOSED session/governor — platform f7f797b. All 8 day-2 types (EtcdMaintenance, NodeMaintenance, PKIRotation, ClusterReset, HardeningProfile, UpgradePolicy, NodeOperation, ClusterMaintenance) defined with spec.lineage; all 8 reconcilers implemented; wired into main.go; 12 unit tests green. | Closed |
 | F-P2  | ~~Compiler subcommand model corrected~~ CLOSED session/governor (WS2) — conductor 2efc758. Compiler is a CR compiler: reads human-authored spec files and emits Kubernetes CR YAML only. Correct subcommands: `bootstrap`, `launch`, `enable` (all produce TalosCluster CR YAML), `packbuild` (produces ClusterPack CR YAML), `domain` (reserved). SOPS, Helm, and Kustomize are execution-mode concerns owned by Conductor Execute Mode — not Compiler concerns. Stubs return honest not-implemented errors; actual blockers are CR type integration from platform and wrapper libraries. | Closed |
 | F-P3  | ~~Non-CAPI cluster lifecycle scope unverified~~ CLOSED session/governor — spec.capi.enabled=false is exclusively for management cluster bootstrap (thin Job submitter path). Target clusters always use CAPI. Day-2 node lifecycle (join, expansion, decommission) is handled by NodeOperation and UpgradePolicy CRDs delivered in F-P1. No gap found; no code changes required. | Closed |
+| F-P5  | MaintenanceBundle CRD definition absent — platform.ontai.dev API group. The `compiler maintenance` subcommand (conductor-schema.md §9) produces MaintenanceBundle CRs with pre-encoded scheduling context: maintenanceTargetNodes, operatorLeaderNode (from platform-leader Lease), s3ConfigSecretRef (validated at compile time), operation (drain/upgrade/etcd-backup/machineconfig-rotation). Type definition, spec fields, status conditions, and reconciler implementation deferred to a Platform Schema Engineer session. Semantic contract is locked in conductor-schema.md §9. | No |
 
 ---
 
@@ -79,16 +80,6 @@ Inventions such as `security-system`, `platform-system`, `infra-system`, `guardi
 - `SelfOperation bool` — true for management cluster self-ops; false for tenant ops
 
 Platform operator must be updated to populate all three fields. Wrapper operator (pack-deploy) always sets SelfOperation=false — no changes required there.
-
-**All open F-series findings are now closed:**
-- ~~F-P4~~ CLOSED session/governor — conductor da9e871 (3 Dockerfiles, RunnerConfig self-op fields, compiler implementations)
-- ~~F-P1~~ CLOSED session/governor — platform f7f797b (8 day-2 CRDs + reconcilers)
-- ~~F-P2~~ CLOSED session/governor — conductor 2efc758 (Compiler subcommand model)
-- ~~F-P3~~ CLOSED session/governor — no gap; management bootstrap only; target lifecycle in NodeOperation/UpgradePolicy
-- ~~SealedCausalChain immutability admission webhook~~ CLOSED session/24 — guardian d3b5e74, seam-core 54d4409
-- ~~LineageIndex controller-authorship admission webhook~~ CLOSED session/24 — seam-core 54d4409
-- ~~Guardian CapabilityRBACProvision executor mode~~ CLOSED session/25 — conductor 2e2afa9
-- ~~Wrapper SealedCausalChain spec.lineage embedding~~ CLOSED session/21 (3438aec)
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*
