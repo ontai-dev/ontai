@@ -292,5 +292,126 @@ without explicit Governor scheduling:
 
 ---
 
+## 7. Lineage Provision Standards
+
+### Declaration 1 — core.ontai.dev is a contract and pattern layer exclusively
+
+The `core.ontai.dev` API group is a contract and pattern layer exclusively. It
+defines abstract types and structural contracts that domain layers instantiate. It
+never runs controllers against downstream domain CRs. It never watches, lists, or
+reconciles objects from any domain below it. Seam Core inherits this as a permanent,
+locked boundary: no Seam Core component may implement or instantiate a controller
+at the `core.ontai.dev` layer, and no component at that layer may reference
+`infrastructure.ontai.dev` types. This boundary has no exceptions and requires a
+Platform Governor constitutional amendment to change.
+
+---
+
+### Declaration 2 — infrastructure.ontai.dev is the aggregation boundary for the Seam operator family
+
+Seam Core inherits `DomainLineageIndex` from `core.ontai.dev` and translates it
+into `InfrastructureLineageIndex` under `infrastructure.ontai.dev`. This extended
+type carries Seam-specific lineage fields beyond the abstract contract: cluster
+topology classification, RunnerConfig provenance, and operator domain boundary
+metadata. These extensions are defined here, at the domain instantiation layer,
+not at `core.ontai.dev`.
+
+Seam Core also instantiates the abstract aggregation ODC from `core.ontai.dev`
+as the concrete `InfrastructureLineageController`. This controller manages
+`InfrastructureLineageIndex` CR lifecycle within the Seam operator family. It is
+the sole controller that appends to `spec.descendantRegistry`, evaluates
+`spec.policyBindingStatus`, and reconciles lineage index state. No individual Seam
+Operator implements its own lineage aggregation controller.
+
+**Semantic data flow constraint — permanent:**
+Semantic lineage data produced by Seam operators flows downward only. It originates
+at the operator layer, registers in `InfrastructureLineageIndex` at Seam Core, and
+is evaluated against `InfrastructurePolicy` and `InfrastructureProfile` at Seam Core.
+Semantic data never travels upward to `core.ontai.dev`. The core layer has no
+knowledge of which Seam Operators exist, which clusters they manage, or what
+operational history they have produced. This is a permanent, locked constraint.
+
+---
+
+### Declaration 3 — Community domain pattern: contract and pattern from core, runtime from domain
+
+The community domain pattern is the standard composition model for any operator
+family adopting `DomainLineageIndex`. The `core.ontai.dev` layer provides two
+things: the contract (the abstract type definition) and the pattern (the abstract
+aggregation ODC defining how conforming implementations must behave). The domain
+layer provides everything else: the concrete type instantiation, the concrete
+controller implementation, the domain-specific rationale enumeration, and the
+domain-specific policy and profile CRD bindings.
+
+This is the community free pass: any operator family can participate in structured
+lineage tracking by instantiating `DomainLineageIndex` in their own API group,
+implementing the aggregation ODC contract in their own controller, and defining
+their own rationale vocabulary. They do not need to contribute to `core.ontai.dev`
+or `seam-core` to participate. The abstract contract is sufficient. Seam Core's
+`InfrastructureLineageIndex` and `InfrastructureLineageController` are the first
+community instantiation of this pattern. They are the reference implementation, not
+the only allowed implementation.
+
+---
+
+### Declaration 4 — Seam Core annotation namespace structure
+
+All annotations placed on Seam-managed CRs by Seam Operators follow a two-tier
+namespace structure under the `infrastructure.ontai.dev` prefix.
+
+**Tier 1 — operator-authored annotations:**
+Individual Seam Operators author annotations under the `infrastructure.ontai.dev`
+prefix for their own operational keys. Each operator retains full authorship
+authority over its own keys within this prefix. No cross-operator coordination is
+required for operator-specific annotation keys.
+
+**Tier 2 — governance sub-prefix (reserved):**
+The `governance.infrastructure.ontai.dev` sub-prefix is reserved exclusively for
+cross-cutting annotations written by controllers governed by Seam Core — specifically
+the `InfrastructureLineageController` and any future Seam Core governed controller.
+Individual Seam Operators never write annotations under the
+`governance.infrastructure.ontai.dev` sub-prefix on their own authority. Doing so
+is an invariant violation. Any annotation key under the governance sub-prefix that
+an individual operator needs to consume must be written by the Seam Core governed
+controller and only read by the operator.
+
+This structure ensures that annotations under the governance sub-prefix carry the
+same authorship integrity guarantee as the `InfrastructureLineageIndex` itself:
+they are controller-authored by a single, designated authority, not overwritten by
+arbitrary operators.
+
+---
+
+### Declaration 5 — Reserved LineageSynced condition type
+
+The condition type `LineageSynced` is reserved across all Seam Operator CRD status
+condition sets. No Seam Operator may define a condition of a different type for
+this purpose, and no Seam Operator may repurpose this condition type for a meaning
+other than lineage synchronization status.
+
+**Lifecycle protocol:**
+1. On first observation of a root declaration CR, the responsible reconciler sets
+   `LineageSynced = False` with reason `LineageControllerAbsent` and a message
+   indicating that `InfrastructureLineageController` has not yet processed this object.
+2. The reconciler that owns the root declaration type never updates `LineageSynced`
+   again after this initial write. It is a one-time initialization. The reconciler
+   writes it once; it does not poll or re-evaluate it.
+3. Once `InfrastructureLineageController` is deployed and processes the root
+   declaration, it takes ownership of the `LineageSynced` condition and updates it
+   to `True` with appropriate reason and message. All subsequent updates to
+   `LineageSynced` are made exclusively by `InfrastructureLineageController`.
+4. If `InfrastructureLineageController` is not deployed (e.g., stub phase, pre-Seam
+   Core installation), `LineageSynced` remains `False/LineageControllerAbsent`
+   indefinitely. This is an expected and documented steady state during the stub
+   phase. It is not an error condition requiring operator action.
+
+This protocol ensures that `LineageSynced` is never in an undefined state: it is
+either at its initialized value (written by the reconciler, ownership not yet
+transferred) or at a Seam Core governed value (ownership held by
+`InfrastructureLineageController`). The transition is a one-way ownership transfer.
+It cannot be reversed without a Governor-scheduled migration session.
+
+---
+
 *seam-core-schema — Seam Core infrastructure domain*
 *This document is authored and amended by the Platform Governor and Schema Engineer only.*

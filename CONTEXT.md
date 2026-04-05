@@ -14,7 +14,7 @@
 |--------------|-------------|-------------------------------|-------------------------------------------------------------|
 | conductor    | 2efc758     | WS1: SigningLoop signs PackInstance+PermissionSnapshot CRs with Ed25519 (SIGNING_PRIVATE_KEY_PATH gate, management cluster only, INV-026); WS2: local PermissionService gRPC (SnapshotStore + LocalService + hand-written service descriptor, PERMISSION_SERVICE_ADDR, all clusters); WS3: SnapshotPullLoop — target cluster pulls PermissionSnapshot from management, verifies Ed25519 (SIGNING_PUBLIC_KEY_PATH + MGMT_KUBECONFIG_PATH gates), calls SnapshotStore.Update; DegradedSecurityState on failure; bootstrap window mode (INV-020); session/25: CapabilityRBACProvision — Ed25519 signature verification (INV-026), bootstrap window bypass (INV-020), SigningPublicKey field added to ExecuteClients; session/governor (WS1): Compiler subcommand model corrected — CR compiler (bootstrap/launch/enable/packbuild/domain), SOPS/Helm/Kustomize are Conductor Execute Mode concerns not Compiler concerns (F-P2 closed); 7 suites green | — |
 | guardian     | 68ebe07     | WS1: SealedCausalChain spec.lineage added to RBACPolicy, RBACProfile, IdentityBinding, IdentityProvider, PermissionSet; CRDs regenerated; seam-core dependency wired; WS2: LineageSynced=False/LineageControllerAbsent initialization in all 5 reconcilers; lineage_conditions.go added; WS3 (session/24): lineage_immutability.go + lineage_handler.go + RegisterLineage — rejects spec.lineage UPDATE on all 5 root-declaration kinds; 16 new unit tests green | SealedCausalChain immutability webhook — CLOSED session/24 |
-| platform     | 76accc5     | TalosCluster + SeamInfrastructureCluster/Machine CRD types, all three reconcilers (TalosCluster, SIC, SIM), SIC/SIM CRDs with lineage + controller-gen clean, SIM implements 6-step machineconfig delivery via TalosMachineConfigApplier (only file with talos goclient, CP-INV-001 clean), unit tests green, go build clean | Wrapper ClusterPack/PackExecution/PackInstance reconcilers |
+| platform     | f7f797b     | TalosCluster + SeamInfrastructureCluster/Machine CRD types, all three reconcilers (TalosCluster, SIC, SIM), SIC/SIM CRDs with lineage + controller-gen clean, SIM implements 6-step machineconfig delivery via TalosMachineConfigApplier (only file with talos goclient, CP-INV-001 clean), unit tests green, go build clean; session/governor: all 8 day-2 CRD types (EtcdMaintenance, NodeMaintenance, PKIRotation, ClusterReset, HardeningProfile, UpgradePolicy, NodeOperation, ClusterMaintenance) with spec.lineage; all 8 day-2 reconcilers implemented with CapabilityUnavailable/PendingApproval gates; wired into main.go; 12 new unit tests green (F-P1 closed, F-P3 closed) | Conductor Engineer: three-image Dockerfile scaffolding + compiler real implementations (F-P4) |
 | wrapper      | 6ab6eed     | WS1: ClusterPack/PackExecution/PackInstance CRDs + deepcopy + 3 CRD YAMLs; WS2: ClusterPackReconciler (immutability enforcement, signature transition, SignaturePending requeue), PackExecutionReconciler (4-gate check, Kueue Job submission, OperationResult read); WS3: PackInstanceReconciler (PackReceipt drift/security, DependencyBlock); spec.lineage (SealedCausalChain) embedded in all 3 root-declaration specs, CRD YAMLs regenerated; 17 unit tests green | Governor scheduling for remaining deferred items |
 | seam-core    | ba71b2f     | LineageController complete (be0aaa1); session/24: WS2+WS3 — ILI immutability webhook (spec.rootBinding UPDATE rejected), controller-authorship gate (CREATE/UPDATE allowed only from lineage-controller SA), both wired into cmd/seam-core/main.go; 29 new unit tests green | Governor scheduling for remaining deferred items |
 
@@ -29,9 +29,9 @@
 | F-S3B | KUBEBUILDER_ASSETS must be set manually for envtest runs                       | No (infra note)                        |
 | F-S3C | ~~PermissionRule.Verbs requires typed Verb string~~ CLOSED Session 10 — Verb type added, CRD enum restored | Closed |
 | F-6D  | ~~CapabilityRBACProvision executor-mode confirmed; implementation pending~~ CLOSED session/25 — conductor 2e2afa9 | Closed |
-| F-P1  | Day-2 CRD types and reconcilers absent in platform — EtcdMaintenance, NodeMaintenance, PKIRotation, ClusterReset, HardeningProfile, UpgradePolicy, NodeOperation, ClusterMaintenance types and reconcilers are not implemented. Conductor capability handlers reference these CRDs but no Go types or CRD YAML exist in the platform repo. Requires a Platform Controller Engineer session. | No |
+| F-P1  | ~~Day-2 CRD types and reconcilers absent in platform~~ CLOSED session/governor — platform f7f797b. All 8 day-2 types (EtcdMaintenance, NodeMaintenance, PKIRotation, ClusterReset, HardeningProfile, UpgradePolicy, NodeOperation, ClusterMaintenance) defined with spec.lineage; all 8 reconcilers implemented; wired into main.go; 12 unit tests green. | Closed |
 | F-P2  | ~~Compiler subcommand model corrected~~ CLOSED session/governor (WS2) — conductor 2efc758. Compiler is a CR compiler: reads human-authored spec files and emits Kubernetes CR YAML only. Correct subcommands: `bootstrap`, `launch`, `enable` (all produce TalosCluster CR YAML), `packbuild` (produces ClusterPack CR YAML), `domain` (reserved). SOPS, Helm, and Kustomize are execution-mode concerns owned by Conductor Execute Mode — not Compiler concerns. Stubs return honest not-implemented errors; actual blockers are CR type integration from platform and wrapper libraries. | Closed |
-| F-P3  | Non-CAPI cluster lifecycle scope unverified — spec.capi.enabled=false path was framed around management cluster provisioning in Session 19. Whether it covers the full lifecycle of a natively bootstrapped non-CAPI target cluster including node join, worker expansion, and decommission is unconfirmed. Requires verification against platform-design.md and a Platform Controller Engineer session if gaps are found. | No |
+| F-P3  | ~~Non-CAPI cluster lifecycle scope unverified~~ CLOSED session/governor — spec.capi.enabled=false is exclusively for management cluster bootstrap (thin Job submitter path). Target clusters always use CAPI. Day-2 node lifecycle (join, expansion, decommission) is handled by NodeOperation and UpgradePolicy CRDs delivered in F-P1. No gap found; no code changes required. | Closed |
 
 ---
 
@@ -70,23 +70,17 @@ Inventions such as `security-system`, `platform-system`, `infra-system`, `guardi
 
 ## 5. Next Session
 
-**Role:** Governor
-**Purpose:** Schedule F-P1 (platform day-2 CRDs) and F-P3 (non-CAPI lifecycle scope verification). F-P2 closed — Compiler is a CR compiler with correct subcommands (bootstrap/launch/enable/packbuild/domain); execution-mode clients (SOPS, Helm, Kustomize) belong to Conductor Execute Mode, not the Compiler.
+**Role:** Conductor Engineer
+**Purpose:** F-P4 — three-image Dockerfile scaffolding (Compiler debian image, Conductor distroless image, platform operator distroless image) and compiler real implementations (bootstrap/launch/enable/packbuild subcommands integrating platform and wrapper CR types). Blocked on Go module wiring for platform and wrapper libraries into conductor.
 
-**LineageController — CLOSED.** seam-core be0aaa1 delivers:
-- Full InfrastructureLineageIndex spec (rootBinding, descendantRegistry, policyBindingStatus)
-- controller-gen wiring (Makefile with generate-deepcopy + generate-crd targets)
-- cmd/seam-core/main.go manager entry point (leader election, 9 GVK registrations)
-- LineageReconciler watching all 9 root-declaration GVKs across 3 operators
-- governance.infrastructure.ontai.dev annotation sub-prefix enforcement
-- LineageSynced condition ownership transfer (False/LineageControllerAbsent → True/LineageIndexCreated)
-- 9 unit tests, all green
-
-**Remaining deferred items to schedule:**
-- ~~SealedCausalChain immutability admission webhook (guardian + seam-core)~~ CLOSED session/24 — guardian d3b5e74 (5 kinds), seam-core 54d4409 (ILI rootBinding)
-- ~~LineageIndex controller-authorship admission webhook (seam-core)~~ CLOSED session/24 — seam-core 54d4409 (lineage-controller SA gate)
-- ~~Guardian CapabilityRBACProvision executor mode (conductor)~~ CLOSED session/25 — conductor 2e2afa9
-- ~~Wrapper SealedCausalChain spec.lineage embedding~~ CLOSED — delivered in session 21 (3438aec); confirmed session 23
+**All open F-series findings are now closed:**
+- ~~F-P1~~ CLOSED session/governor — platform f7f797b (8 day-2 CRDs + reconcilers)
+- ~~F-P2~~ CLOSED session/governor — conductor 2efc758 (Compiler subcommand model)
+- ~~F-P3~~ CLOSED session/governor — no gap; management bootstrap only; target lifecycle in NodeOperation/UpgradePolicy
+- ~~SealedCausalChain immutability admission webhook~~ CLOSED session/24 — guardian d3b5e74, seam-core 54d4409
+- ~~LineageIndex controller-authorship admission webhook~~ CLOSED session/24 — seam-core 54d4409
+- ~~Guardian CapabilityRBACProvision executor mode~~ CLOSED session/25 — conductor 2e2afa9
+- ~~Wrapper SealedCausalChain spec.lineage embedding~~ CLOSED session/21 (3438aec)
 
 ---
 *Maintained by the Governor role. Refresh after every Governor session.*

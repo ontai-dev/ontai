@@ -257,5 +257,44 @@ A domain schema that instantiates `DomainLineageIndex` MUST:
 
 ---
 
+## 4. Lineage Provision Standards
+
+### Declaration 1 — core.ontai.dev is a contract and pattern layer exclusively
+
+The `core.ontai.dev` API group is a contract and pattern layer exclusively. It
+defines abstract types and structural contracts that every domain layer instantiates.
+It never runs controllers against downstream domain CRs. It never watches, lists,
+or reconciles objects from any domain below it. This is a permanent, locked boundary
+with no exceptions.
+
+**Scope of core.ontai.dev:**
+- `DomainLineageIndex` — the universal emission schema contract. Any operator
+  family that participates in structured lineage tracking embeds or instantiates
+  this type in their domain API group.
+- The abstract lineage aggregation ODC (Operator Design Contract) — the structural
+  specification that governs how a conforming domain layer must implement its
+  concrete lineage aggregation controller. The ODC is owned here as an abstract
+  definition; the concrete controller is implemented at the domain layer.
+- Abstract field vocabulary shared across all domain instantiations.
+
+**Permanent exclusions from core.ontai.dev — no exceptions:**
+- No reconciliation logic of any kind.
+- No runtime LineageController instantiated at this layer.
+- No CRs from downstream domains (e.g., `infrastructure.ontai.dev`, operator API
+  groups) are ever watched, listed, or reconciled from this layer.
+- No domain-specific enum constraints on rationale fields.
+- No references to domain-specific CRDs.
+- No operator-specific status conditions.
+
+**Why this boundary is permanent:**
+If core.ontai.dev ever references downstream domain types, it introduces a coupling
+dependency that inverts the instantiation hierarchy. Domain layers would no longer
+be independently composable. A new operator family adopting `DomainLineageIndex`
+would inherit a dependency on every other domain's types. The contract layer must
+remain neutral to preserve the portability of the abstract type. This invariant is
+locked and requires a Platform Governor constitutional amendment to change.
+
+---
+
 *domain-core-schema — ONTAI Domain Core Layer 0*
 *This document is authored and amended by the Platform Governor only.*
