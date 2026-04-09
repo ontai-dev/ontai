@@ -427,39 +427,53 @@ on a Guardian Deployment.
 **Role=tenant:**
 Deployed on tenant clusters exclusively via ClusterPack through Wrapper. Optional per
 tenant choice. Platform never knows whether a tenant has deployed Guardian, and never
-depends on its presence. The tenant Guardian connects to a tenant-local CNPG instance
-(provisioned as part of the same ClusterPack). The tenant Guardian registers a reduced
-controller set and participates in the cross-cluster audit forwarding chain to the
-management Guardian by default.
+depends on its presence. The tenant Guardian always connects to a tenant-local CNPG
+instance (provisioned as part of the same ClusterPack). There is no CRD-only mode for
+role=tenant — full persistence parity with role=management is the only supported
+configuration. The tenant Guardian registers a reduced controller set. Audit forwarding
+to the management Guardian is opt-in, controlled exclusively by the
+`GUARDIAN_AUDIT_FORWARD` environment variable (default: `false`). Tenant Guardian is
+sovereign by default.
 
-**Tenant Guardian running role=management — sovereign mode:**
-A tenant may deploy a Guardian with role=management as part of their ClusterPack. That
-tenant's security plane is fully sovereign: independent CNPG instance, independent
-identity plane, no audit forwarding to the management Guardian, no participation in the
-cross-cluster audit chain. The management cluster Guardian never assumes or infers tenant
-Guardian topology — it has no knowledge of whether any tenant Guardian exists or what
-role it declares. Sovereign status has no effect on the Conductor federation channel: the
-tenant Conductor still connects to the management Conductor for RunnerConfig validation
-regardless of Guardian topology, because the federation channel is a Conductor concern,
-not a Guardian concern. A federated relationship between a sovereign tenant Guardian and
-the management Guardian is established only by an explicit `federated-downstream`
-IdentityProvider CR authored by a human — never by Guardian inference.
+**GUARDIAN_AUDIT_FORWARD env var:**
+Controls whether the tenant Guardian forwards audit events to the management Guardian.
+Injected alongside `GUARDIAN_ROLE` in the Guardian Deployment spec. Only valid for
+role=tenant; absent for role=management. Any value other than `true` or `false` causes
+an immediate structured exit before controller initialisation. Valid values:
+
+- `false` (default) — **Sovereign mode.** The tenant Guardian is fully sovereign:
+  independent CNPG instance, independent identity plane, no audit forwarding to the
+  management Guardian, no participation in the cross-cluster audit chain. The management
+  Guardian has no knowledge of and no dependency on any tenant Guardian in this mode.
+- `true` — **Federated mode.** The tenant Guardian forwards audit events to the
+  management Guardian via the Conductor federation channel. Conductor is the transport:
+  the tenant Guardian is the audit producer, the management Guardian is the audit
+  consumer. The management Guardian processes forwarded events through its AuditSink
+  pipeline. The tenant Guardian's AuditForwarderController activates in this mode only.
+
+`GUARDIAN_AUDIT_FORWARD` is a Guardian concern only and has no effect on the Conductor
+federation channel. The tenant Conductor connects to the management Conductor for
+RunnerConfig validation regardless of Guardian topology. A cross-cluster identity trust
+relationship between a tenant Guardian and the management Guardian is established only by
+an explicit `federated-downstream` IdentityProvider CR authored by a human — never by
+Guardian inference.
 
 **Controller sets registered at startup, gated by role:**
 
-| Controller                  | role=management | role=tenant |
-|-----------------------------|-----------------|-------------|
-| PolicyReconciler            | ✓               | ✓           |
-| ProfileReconciler           | ✓               | ✓           |
-| IdentityProviderReconciler  | ✓               | ✓           |
-| IdentityBindingReconciler   | ✓               | ✓           |
-| AuditSinkReconciler         | ✓               | —           |
-| AuditForwarderController    | —               | ✓           |
+| Controller                  | role=management | role=tenant (GUARDIAN_AUDIT_FORWARD=false) | role=tenant (GUARDIAN_AUDIT_FORWARD=true) |
+|-----------------------------|-----------------|-------------------------------------------|------------------------------------------|
+| PolicyReconciler            | ✓               | ✓                                         | ✓                                        |
+| ProfileReconciler           | ✓               | ✓                                         | ✓                                        |
+| IdentityProviderReconciler  | ✓               | ✓                                         | ✓                                        |
+| IdentityBindingReconciler   | ✓               | ✓                                         | ✓                                        |
+| AuditSinkReconciler         | ✓               | —                                         | —                                        |
+| AuditForwarderController    | —               | —                                         | ✓                                        |
 
 PermissionService gRPC runs in both roles. The management Guardian serves authorization
-decisions for the management cluster and all non-sovereign tenants that forward audit
-events to it. The tenant Guardian (role=tenant) serves decisions for its own cluster
-locally — this supplements, but does not replace, the Conductor local PermissionService.
+decisions for the management cluster and all tenant Guardians operating in federated mode
+(GUARDIAN_AUDIT_FORWARD=true) that forward audit events to it. The tenant Guardian
+(role=tenant) serves decisions for its own cluster locally — this supplements, but does
+not replace, the Conductor local PermissionService.
 
 This is a locked invariant. The role gating on controller registration is permanent.
 Adding a controller to a role that does not include it requires a Platform Governor
@@ -546,3 +560,17 @@ Conductor Engineer session. This is tracked in CONTEXT.md.
   AuditForwarderController); PermissionService gRPC runs in both roles. §16 CNPG Deployment
   Contract added (locked invariant): management CNPG owned by compiler enable phase 0; tenant
   CNPG owned by ClusterPack; no other operator has CNPG dependency (INV-016); F-P8 recorded.
+
+2026-04-09 — G-BL-11: Tenant Guardian CNPG and audit forwarding model amended. §15
+  Role=tenant updated: tenant Guardian always connects to tenant-local CNPG (no CRD-only
+  mode; full persistence parity with role=management). Audit forwarding changed from
+  default-on to opt-in: GUARDIAN_AUDIT_FORWARD env var (default: false) is the sole
+  control. GUARDIAN_AUDIT_FORWARD=false = sovereign mode (independent CNPG, independent
+  identity plane, no forwarding; the default). GUARDIAN_AUDIT_FORWARD=true = federated
+  mode (tenant Guardian forwards audit events to management Guardian via Conductor
+  federation channel; Conductor is the transport, tenant is the producer, management is
+  the consumer). Sovereign mode is no longer tied to role=management on a tenant cluster
+  — it is the default state of every role=tenant Guardian. Controller set table expanded
+  to three columns reflecting the GUARDIAN_AUDIT_FORWARD axis: AuditForwarderController
+  activates only when GUARDIAN_AUDIT_FORWARD=true. PermissionService paragraph updated
+  to reference federated-mode tenants rather than "non-sovereign" tenants.
