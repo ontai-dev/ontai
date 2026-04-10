@@ -139,7 +139,7 @@ outputDir: filesystem path where the runner writes the ClusterPack CR YAML outpu
 
 ### ClusterPack
 
-Scope: Namespaced — infra-system
+Scope: Namespaced — seam-tenant-{cluster-name}
 Short name: cp
 Lives in: OCI registry (artifact), git (CR YAML), management cluster (applied via GitOps).
 
@@ -158,6 +158,10 @@ Key spec fields:
 - lifecyclePolicies: resource retention rules for upgrade and delete operations.
 - provenance: build identity, timestamp, Helm chart digest, Kustomize overlay
   digest, compiler version, compilation timestamp.
+- targetClusters: list of cluster names (strings) to which this ClusterPack
+  should be delivered. The ClusterPackReconciler creates one RunnerConfig per
+  entry in seam-tenant-{clusterName}. ClusterAssignment is removed — pack-to-cluster
+  binding is declared directly here.
 
 ClusterPack spec never contains: Helm templates, Kustomize overlays, variable
 references, runtime decision logic, or values from valuesSecretRef. Their presence
@@ -178,7 +182,7 @@ version. The signing loop is the only process that can advance this state.
 
 ### PackExecution
 
-Scope: Namespaced — infra-system
+Scope: Namespaced — seam-tenant-{cluster-name}
 Short name: pe
 Named capability: pack-deploy
 
@@ -206,7 +210,7 @@ Status conditions: Pending, PackSignaturePending, Running, Succeeded, Failed.
 
 ### PackInstance
 
-Scope: Namespaced — infra-system
+Scope: Namespaced — seam-tenant-{cluster-name}
 Short name: pi
 
 Tracks currently deployed state of a specific pack on a specific target cluster.
@@ -314,13 +318,27 @@ via a new PackExecution — the agent never auto-remediates.
 
 Reads: security.ontai.dev/PermissionSnapshot delivery status before admitting
 PackExecution. Does not write to security.ontai.dev.
-Reads: platform.ontai.dev/ClusterAssignment to determine which ClusterPack version
-is bound to which cluster. Does not write to platform.ontai.dev.
+ClusterAssignment is removed. Pack-to-cluster binding is declared directly in
+ClusterPack.spec.targetClusters. Wrapper does not read from platform.ontai.dev.
 Reads: runner.ontai.dev/RunnerConfig status (capability confirmation).
 Writes: runner.ontai.dev/RunnerConfig (generates from ClusterPack/PackExecution
   context via shared runner library — no PackBuild controller).
 Writes: infra.ontai.dev resources on management cluster.
 Writes: PackReceipt on target clusters via conductor.
+
+Pack delivery ownership chain (locked):
+- ClusterPack: human/GitOps authored. Immutable after creation.
+- RunnerConfig: created by ClusterPackReconciler, one per targetClusters entry,
+  in seam-tenant-{clusterName}, with labels platform.ontai.dev/cluster and
+  infra.ontai.dev/pack.
+- PackExecution: created by management cluster Conductor agent from RunnerConfig
+  (not by Wrapper). Conductor watches RunnerConfigs labeled infra.ontai.dev/pack
+  and creates one PackExecution per RunnerConfig that lacks one.
+- PackInstance: created by Wrapper PackExecutionReconciler after observing that
+  the pack-deploy Job succeeded (OperationResult ConfigMap present and Succeeded).
+  Namespace: seam-tenant-{clusterRef}. Label: infra.ontai.dev/pack.
+- PackReceipt: created by Conductor agent on the target cluster after verifying
+  the PackInstance signature and applying the manifests.
 
 Note: The signing loop is an conductor responsibility. The Wrapper controller
 does not sign ClusterPacks. It reads the Signed status and blocks PackExecution
@@ -336,3 +354,9 @@ until signing is complete.
 *  pack-deploy Jobs use conductor (distroless). No execution seam with compile mode.*
 *  PackReceipt.signatureVerified field added. SecurityViolation condition added.*
 *  PackExecution.PackSignaturePending gate condition added.*
+*2026-04-10 — Namespace model locked: ClusterPack, PackExecution, PackInstance all live*
+*  in seam-tenant-{cluster-name}, not infra-system. ClusterAssignment removed.*
+*  ClusterPack.spec.targetClusters added — pack-to-cluster binding declared directly.*
+*  Pack delivery ownership chain locked (Section 9): ClusterPack (human/GitOps),*
+*  RunnerConfig (ClusterPackReconciler), PackExecution (Conductor agent from RunnerConfig),*
+*  PackInstance (Wrapper after Job success), PackReceipt (target Conductor).*
