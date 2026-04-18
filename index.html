@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ontai.dev - Operator Native Thinking</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #F8F6FF;
+    color: #333333;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  a { color: #7B5EC0; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---- HEADER ---- */
+  .site-header {
+    background: #fff;
+    border-bottom: 1px solid #D9B8FF;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .site-header .brand {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .site-header .logo {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #7B5EC0;
+    letter-spacing: -0.01em;
+  }
+
+  .site-header .tagline {
+    font-size: 0.78rem;
+    color: #888;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .site-nav {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+  }
+
+  .site-nav a {
+    color: #555;
+    font-weight: 500;
+  }
+
+  .site-nav a:hover {
+    color: #7B5EC0;
+    text-decoration: none;
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    background: linear-gradient(160deg, #EDE8F5 0%, #F8F6FF 60%);
+    border-bottom: 1px solid #D9B8FF;
+    padding: 5rem 1.5rem 4rem;
+    text-align: center;
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    color: #222;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    max-width: 780px;
+    margin: 0 auto 1.25rem;
+  }
+
+  .hero .sub {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: #555;
+    max-width: 600px;
+    margin: 0 auto 2.25rem;
+    line-height: 1.65;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.7rem 1.5rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn:hover { opacity: 0.85; text-decoration: none; }
+
+  .btn-primary {
+    background: #7B5EC0;
+    color: #fff;
+  }
+
+  .btn-outline {
+    background: #fff;
+    color: #7B5EC0;
+    border: 2px solid #7B5EC0;
+  }
+
+  /* ---- SECTIONS ---- */
+  .section {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.02em;
+  }
+
+  .section-rule {
+    width: 3rem;
+    height: 3px;
+    background: #7B5EC0;
+    margin-bottom: 2rem;
+    border-radius: 2px;
+  }
+
+  /* ---- PROBLEM CARDS ---- */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #D9B8FF;
+    border-radius: 10px;
+    padding: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #7B5EC0;
+    margin-bottom: 0.6rem;
+  }
+
+  .card p {
+    font-size: 0.92rem;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  /* ---- ANSWER SECTION ---- */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  @media (max-width: 680px) {
+    .two-col { grid-template-columns: 1fr; gap: 1.75rem; }
+  }
+
+  .prose p {
+    font-size: 1rem;
+    color: #444;
+    line-height: 1.75;
+    margin-bottom: 1rem;
+  }
+
+  .prose p:last-child { margin-bottom: 0; }
+
+  .feature-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.97rem;
+  }
+
+  .feature-list .bullet {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #7B5EC0;
+    margin-top: 0.45em;
+    flex-shrink: 0;
+  }
+
+  .feature-list strong {
+    color: #7B5EC0;
+  }
+
+  /* ---- SCHEMA SECTION ---- */
+  .schema-section {
+    background: #EDE8F5;
+    border-top: 1px solid #D9B8FF;
+    border-bottom: 1px solid #D9B8FF;
+  }
+
+  .schema-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem;
+    text-align: center;
+  }
+
+  .schema-inner .section-title { text-align: center; }
+
+  .schema-inner .section-rule { margin: 0.4rem auto 1.5rem; }
+
+  .schema-stat {
+    font-size: clamp(1.2rem, 3vw, 1.7rem);
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1.75rem;
+  }
+
+  .schema-stat span { color: #7B5EC0; }
+
+  .layer-badges {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  .layer-badge {
+    background: #fff;
+    border: 1px solid #D9B8FF;
+    border-radius: 20px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #7B5EC0;
+  }
+
+  .layer-badge .count {
+    font-weight: 400;
+    color: #888;
+    margin-left: 0.2rem;
+  }
+
+  .code-line {
+    display: inline-block;
+    background: #fff;
+    border: 1px solid #D9B8FF;
+    border-radius: 6px;
+    padding: 0.55rem 1.1rem;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.88rem;
+    color: #7B5EC0;
+    margin-bottom: 0.9rem;
+    word-break: break-all;
+  }
+
+  .schema-meta {
+    font-size: 0.82rem;
+    color: #888;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ---- OPERATORS GRID ---- */
+  .ops-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.1rem;
+  }
+
+  .op-card {
+    background: #fff;
+    border: 1px solid #D9B8FF;
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem;
+  }
+
+  .op-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #7B5EC0;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .op-card p {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.55;
+  }
+
+  .roadmap-note {
+    margin-top: 1.25rem;
+    font-size: 0.85rem;
+    color: #888;
+  }
+
+  /* ---- DOCS SECTION ---- */
+  .docs-section {
+    background: #fff;
+    border-top: 1px solid #D9B8FF;
+    border-bottom: 1px solid #D9B8FF;
+  }
+
+  .doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .doc-item {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid #EDE8F5;
+  }
+
+  .doc-item:last-child { border-bottom: none; }
+
+  .doc-item a {
+    font-weight: 600;
+    font-size: 0.97rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .doc-desc {
+    font-size: 0.88rem;
+    color: #666;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 600px) {
+    .doc-item { flex-direction: column; gap: 0.2rem; }
+    .doc-item a { white-space: normal; }
+  }
+
+  /* ---- FOOTER ---- */
+  .site-footer {
+    background: #fff;
+    border-top: 1px solid #D9B8FF;
+    padding: 2rem 1.5rem;
+  }
+
+  .footer-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.85rem;
+  }
+
+  .footer-left { color: #555; }
+
+  .footer-center {
+    display: flex;
+    gap: 1.25rem;
+  }
+
+  .footer-center a { color: #7B5EC0; font-weight: 500; }
+
+  .footer-right {
+    text-align: right;
+    color: #aaa;
+  }
+
+  .footer-right .future {
+    display: block;
+    font-size: 0.78rem;
+    margin-top: 0.15rem;
+    color: #bbb;
+  }
+
+  @media (max-width: 640px) {
+    .site-header { flex-direction: column; align-items: flex-start; }
+    .footer-inner { flex-direction: column; align-items: flex-start; }
+    .footer-right { text-align: left; }
+  }
+
+  /* ---- SECTION DIVIDERS ---- */
+  .section-alt {
+    background: #fff;
+    border-top: 1px solid #D9B8FF;
+    border-bottom: 1px solid #D9B8FF;
+  }
+
+  .section-alt .section { padding: 4rem 1.5rem; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="brand">
+    <span class="logo">ontai.dev</span>
+    <span class="tagline">Operator Native Thinking</span>
+  </div>
+  <nav class="site-nav">
+    <a href="docs/index.md">Founding Document</a>
+    <a href="https://schema.ontai.dev">Schema</a>
+    <a href="https://github.com/ontai-dev">GitHub</a>
+    <a href="docs/playbooks/cluster-is-the-documentation.md">Playbooks</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>The cluster is the documentation.</h1>
+  <p class="sub">
+    Not a representation. Not a mirror. The thing itself.
+    With an API that makes the organization queryable.
+  </p>
+  <div class="btn-group">
+    <a class="btn btn-primary" href="docs/index.md">Read the Founding Document</a>
+    <a class="btn btn-outline" href="https://schema.ontai.dev/v1alpha1/index.json">Import the Schema</a>
+  </div>
+</section>
+
+<!-- THE PROBLEM -->
+<div class="section-alt">
+  <div class="section">
+    <h2 class="section-title">The Problem</h2>
+    <div class="section-rule"></div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-title">Documentation rots</div>
+        <p>
+          The moment you publish it, it drifts. Every wiki page, every architecture
+          diagram, every runbook is already describing a system that has moved on.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Operators are islands</div>
+        <p>
+          Thousands of Kubernetes operators exist. None of them share a semantic
+          contract surface. No common language. No lineage. No way to compose
+          governance across domain boundaries.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">AI cannot help an unstructured environment</div>
+        <p>
+          AI in production operations requires semantic structure, causal memory,
+          and an enforced approval boundary. Most platforms have none of these.
+          ONT builds all three.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- THE ANSWER -->
+<div class="section">
+  <h2 class="section-title">What ONT Does</h2>
+  <div class="section-rule"></div>
+  <div class="two-col">
+
+    <div class="prose">
+      <p>
+        ONT is a living documentation system first. Infrastructure governance
+        is the consequence, not the purpose.
+      </p>
+      <p>
+        When every organizational decision is a CRD, every policy a versioned
+        resource, every contract a reconciled object, the cluster holds the
+        organizational truth with an API that any human, operator, or AI agent
+        can query at any moment.
+      </p>
+    </div>
+
+    <ul class="feature-list">
+      <li>
+        <span class="bullet"></span>
+        <span><strong>Queryable:</strong> ask the cluster what is true right now</span>
+      </li>
+      <li>
+        <span class="bullet"></span>
+        <span><strong>Diffable:</strong> ask what changed and when</span>
+      </li>
+      <li>
+        <span class="bullet"></span>
+        <span><strong>Auditable:</strong> ask who declared it and why</span>
+      </li>
+      <li>
+        <span class="bullet"></span>
+        <span><strong>Living:</strong> reflects runtime reality, not someone's last memory</span>
+      </li>
+    </ul>
+
+  </div>
+</div>
+
+<!-- THE SCHEMA -->
+<section class="schema-section">
+  <div class="schema-inner">
+    <h2 class="section-title">The ONT Schema Standard</h2>
+    <div class="section-rule"></div>
+
+    <p class="schema-stat">
+      <span>27</span> schemas. <span>4</span> layers. <span>1</span> importable standard.
+    </p>
+
+    <div class="layer-badges">
+      <span class="layer-badge">shared <span class="count">(6)</span></span>
+      <span class="layer-badge">domain-core <span class="count">(9)</span></span>
+      <span class="layer-badge">seam-core <span class="count">(3)</span></span>
+      <span class="layer-badge">app-core <span class="count">(9)</span></span>
+    </div>
+
+    <div class="code-line">https://schema.ontai.dev/v1alpha1/index.json</div>
+
+    <p class="schema-meta">Apache License 2.0. Alpha stability.</p>
+
+    <a class="btn btn-primary" href="https://schema.ontai.dev">Browse the Schema</a>
+  </div>
+</section>
+
+<!-- THE OPERATORS -->
+<div class="section">
+  <h2 class="section-title">The Seam Operator Family</h2>
+  <div class="section-rule"></div>
+
+  <div class="ops-grid">
+
+    <div class="op-card">
+      <div class="op-name">Guardian</div>
+      <p>
+        Trust root and security substrate. Owns RBAC governance,
+        PermissionSnapshot computation, and the audit sink.
+      </p>
+    </div>
+
+    <div class="op-card">
+      <div class="op-name">Platform</div>
+      <p>
+        Cluster lifecycle authority. Imports and bootstraps Talos Linux
+        clusters. Auto-onboards tenant clusters.
+      </p>
+    </div>
+
+    <div class="op-card">
+      <div class="op-name">Wrapper</div>
+      <p>
+        Pack delivery engine. OCI artifact lifecycle from ClusterPack
+        signing through PackInstance creation.
+      </p>
+    </div>
+
+    <div class="op-card">
+      <div class="op-name">Conductor</div>
+      <p>
+        Execution intelligence. Two binaries: Compiler (never deployed)
+        and Conductor agent (distroless, everywhere).
+      </p>
+    </div>
+
+    <div class="op-card">
+      <div class="op-name">seam-core</div>
+      <p>
+        Lineage and semantic DNS controller. Maintains the
+        InfrastructureLineageIndex and the DSNS zone.
+      </p>
+    </div>
+
+    <div class="op-card">
+      <div class="op-name">domain-core</div>
+      <p>
+        Domain primitive declarations. The nine abstract primitives
+        every ONT domain inherits from.
+      </p>
+    </div>
+
+  </div>
+
+  <p class="roadmap-note">Screen and ONTAR are on the roadmap.</p>
+</div>
+
+<!-- DOCUMENTATION -->
+<section class="docs-section">
+  <div class="section">
+    <h2 class="section-title">Documentation</h2>
+    <div class="section-rule"></div>
+
+    <div class="doc-list">
+
+      <div class="doc-item">
+        <a href="docs/index.md">Founding Document</a>
+        <span class="doc-desc">
+          The complete ONT thesis. Preamble through closing.
+        </span>
+      </div>
+
+      <div class="doc-item">
+        <a href="docs/playbooks/cluster-is-the-documentation.md">The Cluster Is the Documentation</a>
+        <span class="doc-desc">
+          Why documentation rots and what changes when the cluster holds truth.
+        </span>
+      </div>
+
+      <div class="doc-item">
+        <a href="docs/playbooks/brownfield.md">Brownfield Adoption Playbook</a>
+        <span class="doc-desc">
+          Four stages for teams with running systems and no CRDs.
+        </span>
+      </div>
+
+      <div class="doc-item">
+        <a href="docs/playbooks/validation-framework.md">Operator Validation Framework</a>
+        <span class="doc-desc">
+          How to know your operator correctly encodes domain knowledge.
+        </span>
+      </div>
+
+      <div class="doc-item">
+        <a href="docs/playbooks/vortex-retrieval-interface.md">Vortex Retrieval Interface</a>
+        <span class="doc-desc">
+          The three queries that make accumulated governance memory queryable.
+        </span>
+      </div>
+
+      <div class="doc-item">
+        <a href="docs/decisions/ontar.md">ONTAR Decision Record</a>
+        <span class="doc-desc">
+          The execution boundary specification.
+        </span>
+      </div>
+
+      <div class="doc-item">
+        <a href="docs/assets/ont-architecture.pdf">Architecture PDF</a>
+        <span class="doc-desc">
+          The full ONT platform architecture document.
+        </span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span class="footer-left">ontai.dev | Open source, Apache License 2.0</span>
+    <nav class="footer-center">
+      <a href="https://github.com/ontai-dev">GitHub</a>
+      <a href="https://schema.ontai.dev">Schema</a>
+      <a href="docs/index.md">Founding Document</a>
+    </nav>
+    <div class="footer-right">
+      <span style="color:#ccc;">ontave.dev | Enterprise layer</span>
+      <span class="future">Coming when the company is real.</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
