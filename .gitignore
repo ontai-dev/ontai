@@ -21,8 +21,13 @@ lab/
 .DS_Store
 Thumbs.db
 
-# Markdown: only README and schema documents are tracked
+# Markdown: tracked files
 *.md
 !README.md
 !*-schema.md
+!CONTEXT.md
+!BACKLOG.md
+!PROGRESS.md
+!GIT_TRACKING.md
+!docs/**
 guardian-db-credentials.yaml
