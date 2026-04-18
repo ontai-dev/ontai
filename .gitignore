@@ -18,3 +18,4 @@ Thumbs.db
 *.md
 !README.md
 !*-schema.md
+guardian-db-credentials.yaml
