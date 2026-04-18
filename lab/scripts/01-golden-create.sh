@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
-# lab/scripts/01-golden-create.sh — create the golden cluster VMs, boot to
-# Talos maintenance mode, capture standalone QCOW2 golden images.
-#
-# The golden cluster is a dedicated 5-node QEMU cluster whose sole purpose is
-# to reach Talos maintenance mode (squashfs rootfs on disk, port 50000
-# listening, zero identity) and be frozen as named QCOW2 images.
+# lab/scripts/01-golden-create.sh — create the golden cluster VMs, install
+# Talos to disk, wipe identity, and freeze as standalone QCOW2 golden images.
 #
 # Boot sequence:
-#   1. VM boots from ISO — Talos installer writes squashfs rootfs to /dev/vda
-#   2. VM reboots into maintenance mode from disk — port 50000 becomes available
-#   3. We wait for 50000, then power off gracefully
-#   4. Convert working disk to standalone golden image (no backing-file chain)
-#   5. Record sha256 checksums
+#   1. VM boots from ISO — Talos is in maintenance mode (port 50000 open)
+#   2. apply-config --insecure triggers installer → writes squashfs to /dev/vda → reboots
+#   3. VM reboots into maintenance mode from disk — port 50000 open again
+#   4. talosctl reset wipes STATE+EPHEMERAL (machine config removed, zero identity)
+#   5. VM reboots back into maintenance mode — TYPE=unknown, STAGE=Maintenance
+#   6. Power off gracefully
+#   7. Convert working disk to standalone golden image (no backing-file chain)
+#   8. Record sha256 checksums
 #
 # All MACs, IPs, IPv6 addresses, and TAP names are hard-coded from the
 # deterministic table in lab/CLAUDE.md — never generated at runtime.
@@ -26,7 +25,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/common.sh"
 
-check_tools virsh qemu-img nc sha256sum
+check_tools virsh qemu-img nc sha256sum talosctl
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -35,8 +34,14 @@ WORK_DIR="/var/lib/libvirt/images/ontai"
 GOLDEN_DIR="/var/lib/libvirt/images/ontai/golden"
 IFACE="talos-br0"
 
-# All golden VMs use QCOW2 (linked-clone exception for golden cluster).
-# CP: 50 GB  Worker: 20 GB
+TALOS_VERSION="v1.9.3"
+KUBERNETES_VERSION="1.32.3"
+INSTALL_IMAGE="ghcr.io/siderolabs/installer:${TALOS_VERSION}"
+INSTALL_DISK="/dev/vda"
+
+# Temporary machine configs — generated fresh each run, discarded after reset
+GOLDEN_CONFIG_DIR="/tmp/golden-config-$$"
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Deterministic table — lab/CLAUDE.md §Deterministic MAC Address Table
 # cluster byte 04 for golden
@@ -52,15 +57,13 @@ declare -A NODE_MAC=(
 )
 
 declare -A NODE_IP=(
-  [golden-cp1]="10.20.0.31"
-  [golden-cp2]="10.20.0.32"
-  [golden-cp3]="10.20.0.33"
-  [golden-w1]="10.20.0.34"
-  [golden-w2]="10.20.0.35"
+  [golden-cp1]="10.20.0.101"
+  [golden-cp2]="10.20.0.102"
+  [golden-cp3]="10.20.0.103"
+  [golden-w1]="10.20.0.117"
+  [golden-w2]="10.20.0.118"
 )
 
-# Pre-computed EUI-64 IPv6 link-local addresses (never derived at runtime).
-# MAC 52:54:00:04:0A:NN → first byte XOR 02 = 50; insert ff:fe → 5054:ff:fe04:aNn
 declare -A NODE_IPV6=(
   [golden-cp1]="fe80::5054:ff:fe04:a01"
   [golden-cp2]="fe80::5054:ff:fe04:a02"
@@ -77,7 +80,6 @@ declare -A NODE_TAP=(
   [golden-w2]="tap-0-35"
 )
 
-# Disk sizes: CP nodes 50 GB, workers 20 GB
 declare -A NODE_DISK_SIZE=(
   [golden-cp1]="50G"
   [golden-cp2]="50G"
@@ -86,14 +88,29 @@ declare -A NODE_DISK_SIZE=(
   [golden-w2]="20G"
 )
 
-# All golden nodes: 2048 MB / 2 vCPU — only need to reach maintenance mode
+declare -A NODE_ROLE=(
+  [golden-cp1]="controlplane"
+  [golden-cp2]="controlplane"
+  [golden-cp3]="controlplane"
+  [golden-w1]="worker"
+  [golden-w2]="worker"
+)
+
 RAM_MB=2048
 VCPUS=2
+
+# ── Cleanup on exit ───────────────────────────────────────────────────────────
+
+cleanup() {
+  rm -rf "$GOLDEN_CONFIG_DIR"
+}
+trap cleanup EXIT
 
 # ── Preflight checks ──────────────────────────────────────────────────────────
 
 [ -f "$ISO" ] || fail_fast "Talos ISO not found at ${ISO}"
 mkdir -p "$GOLDEN_DIR"
+mkdir -p "$GOLDEN_CONFIG_DIR"
 
 # ── Phase 1: Create disks and define VMs ──────────────────────────────────────
 
@@ -213,60 +230,139 @@ DOMXML
   log_info "${node} defined"
 done
 
-# ── Phase 2: Start VMs and wait for port 50000 ────────────────────────────────
+# ── Phase 2: Generate temporary machine configs ───────────────────────────────
 
-log_info "=== Phase 2: start golden VMs and wait for Talos maintenance mode ==="
+log_info "=== Phase 2: generate temporary machine configs ==="
+
+# Use cp1 IP as the dummy endpoint — golden configs are only used to trigger
+# the installer and are wiped before image conversion. The endpoint value
+# is irrelevant since no cluster is ever bootstrapped from golden images.
+FIRST_CP_IP="${NODE_IP[golden-cp1]}"
+
+talosctl gen config golden-install "https://${FIRST_CP_IP}:6443" \
+  --talos-version "${TALOS_VERSION}" \
+  --kubernetes-version "${KUBERNETES_VERSION}" \
+  --install-image "${INSTALL_IMAGE}" \
+  --install-disk "${INSTALL_DISK}" \
+  --output "${GOLDEN_CONFIG_DIR}"
+
+log_info "Machine configs generated at ${GOLDEN_CONFIG_DIR}"
+
+# ── Phase 3: Start VMs and wait for ISO maintenance mode ──────────────────────
+
+log_info "=== Phase 3: start golden VMs and wait for ISO maintenance mode ==="
 
 for node in "${NODES[@]}"; do
   state="$(vm_state "$node")"
   if [ "$state" = "running" ]; then
     log_info "${node} is already running"
-  elif [ "$state" = "shut off" ]; then
-    log_info "Starting ${node}"
-    virsh start "$node"
   else
-    log_info "${node} state=${state} — attempting start"
+    log_info "Starting ${node}"
     virsh start "$node" || true
   fi
 done
 
-# Wait for port 50000 on each node's IPv6 link-local address.
-# Timeout 15 minutes to allow for ISO boot, squashfs install, reboot cycle.
+# Wait for ISO maintenance mode — port 50000 answering from the ISO itself
 for node in "${NODES[@]}"; do
-  ipv6="${NODE_IPV6[$node]}%${IFACE}"
-  wait_port_open "$ipv6" 50000 900 10
-  log_info "${node} (${ipv6}) is in Talos maintenance mode"
+  ip="${NODE_IP[$node]}"
+  wait_port_open "$ip" 50000 300 5
+  log_info "${node} (${ip}) ISO maintenance mode confirmed"
 done
 
-# ── Phase 3: Graceful shutdown ────────────────────────────────────────────────
+# ── Phase 4: Apply configs to trigger installation ────────────────────────────
 
-log_info "=== Phase 3: gracefully shut down all golden VMs ==="
+log_info "=== Phase 4: apply machine configs to trigger Talos installation ==="
+
+for node in "${NODES[@]}"; do
+  ip="${NODE_IP[$node]}"
+  role="${NODE_ROLE[$node]}"
+
+  if [ "$role" = "controlplane" ]; then
+    config_file="${GOLDEN_CONFIG_DIR}/controlplane.yaml"
+  else
+    config_file="${GOLDEN_CONFIG_DIR}/worker.yaml"
+  fi
+
+  log_info "Applying ${role} config to ${node} (${ip})"
+  talosctl apply-config --insecure --nodes "$ip" --file "$config_file"
+done
+
+log_info "Configs applied — nodes are installing Talos to disk and will reboot"
+
+# ── Phase 5: Wait for post-install disk maintenance mode ─────────────────────
+
+log_info "=== Phase 5: wait for post-install maintenance mode (disk boot) ==="
+
+# Nodes reboot after install — allow time for the reboot cycle before polling
+log_info "Sleeping 30s to allow install + reboot cycle to begin..."
+sleep 30
+
+for node in "${NODES[@]}"; do
+  ip="${NODE_IP[$node]}"
+  # Timeout 600s — install + reboot can take up to 3 minutes per node
+  wait_port_open "$ip" 50000 600 10
+  log_info "${node} (${ip}) post-install maintenance mode confirmed"
+done
+
+# ── Phase 6: Reset nodes to wipe machine config (zero identity) ───────────────
+
+log_info "=== Phase 6: reset nodes to wipe STATE+EPHEMERAL (zero identity) ==="
+
+TALOSCONFIG="${GOLDEN_CONFIG_DIR}/talosconfig"
+
+for node in "${NODES[@]}"; do
+  ip="${NODE_IP[$node]}"
+  log_info "Resetting ${node} (${ip}) — wiping STATE and EPHEMERAL"
+  talosctl reset \
+    --talosconfig "$TALOSCONFIG" \
+    --endpoints "$ip" \
+    --nodes "$ip" \
+    --graceful=false \
+    --reboot \
+    --system-labels-to-wipe STATE \
+    --system-labels-to-wipe EPHEMERAL
+done
+
+log_info "Reset commands issued — nodes are rebooting to zero-identity maintenance mode"
+
+# ── Phase 7: Wait for zero-identity maintenance mode ─────────────────────────
+
+log_info "=== Phase 7: wait for zero-identity maintenance mode ==="
+
+log_info "Sleeping 30s to allow reset + reboot cycle to begin..."
+sleep 30
+
+for node in "${NODES[@]}"; do
+  ip="${NODE_IP[$node]}"
+  wait_port_open "$ip" 50000 300 5
+  log_info "${node} (${ip}) zero-identity maintenance mode confirmed"
+done
+
+# ── Phase 8: Graceful shutdown ────────────────────────────────────────────────
+
+log_info "=== Phase 8: shut down all golden VMs ==="
 
 for node in "${NODES[@]}"; do
   if [ "$(vm_state "$node")" = "running" ]; then
     log_info "Shutting down ${node}"
-    virsh shutdown "$node"
+    virsh destroy "$node"
   else
-    log_info "${node} is not running — skipping shutdown"
+    log_info "${node} is not running — skipping"
   fi
 done
 
-for node in "${NODES[@]}"; do
-  wait_vm_shutoff "$node" 120
-done
+log_info "All golden VMs shut off"
 
-log_info "All golden VMs are shut off"
+# ── Phase 9: Convert working disks to standalone golden images ────────────────
 
-# ── Phase 4: Convert working disks to standalone golden images ────────────────
-
-log_info "=== Phase 4: convert working disks to standalone golden QCOW2 images ==="
+log_info "=== Phase 9: convert working disks to standalone golden QCOW2 images ==="
 
 for node in "${NODES[@]}"; do
   work_disk="${WORK_DIR}/${node}-work.qcow2"
   golden_img="${GOLDEN_DIR}/${node}-v1.qcow2"
 
   if [ -f "$golden_img" ]; then
-    log_info "${golden_img} already exists — skipping conversion (delete to recreate)"
+    log_info "${golden_img} already exists — skipping (delete to recreate)"
     continue
   fi
 
@@ -276,18 +372,22 @@ for node in "${NODES[@]}"; do
   qemu-img convert -O qcow2 -p "$work_disk" "$golden_img"
   sudo chown libvirt-qemu:kvm "$golden_img" 2>/dev/null || true
   sudo chmod 664 "$golden_img" 2>/dev/null || true
-  log_info "${node} golden image written: ${golden_img}"
+
+  actual_size=$(qemu-img info "$golden_img" | grep '^disk size:' | awk '{print $3}')
+  log_info "${node} golden image written: ${golden_img} (disk size: ${actual_size})"
 done
 
-# ── Phase 5: Record checksums ─────────────────────────────────────────────────
+# ── Phase 10: Record checksums ────────────────────────────────────────────────
 
-log_info "=== Phase 5: recording sha256 checksums ==="
+log_info "=== Phase 10: recording sha256 checksums ==="
 
 CHECKSUMS_FILE="${GOLDEN_DIR}/CHECKSUMS"
 {
-  echo "# Seam Platform — Golden Image Checksums"
+  echo "# ONT Lab — Golden Image Checksums"
   echo "# Generated: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-  echo "# Talos version: v1.9.3"
+  echo "# Talos version: ${TALOS_VERSION}"
+  echo "# Kubernetes version: v${KUBERNETES_VERSION}"
+  echo "# Stage: Maintenance (zero identity, STATE+EPHEMERAL wiped)"
   echo "#"
   for node in "${NODES[@]}"; do
     golden_img="${GOLDEN_DIR}/${node}-v1.qcow2"
@@ -304,6 +404,7 @@ cat "$CHECKSUMS_FILE"
 
 log_info ""
 log_info "=== Golden image creation complete ==="
+log_info "Talos ${TALOS_VERSION} / Kubernetes v${KUBERNETES_VERSION}"
 log_info "Golden images: ${GOLDEN_DIR}/"
 for node in "${NODES[@]}"; do
   log_info "  ${node}-v1.qcow2"

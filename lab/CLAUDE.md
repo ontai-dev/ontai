@@ -194,34 +194,85 @@ Generic Cilium values will NOT work on Talos. Use the exact flags below.
 ### Required Helm values for Talos clusters (all flags are mandatory)
 
 ```
+# Fix: Host must match your actual Lab VIP
+k8sServiceHost: 10.20.0.10
+k8sServicePort: 6443
+kubeProxyReplacement: true
+
+# Native routing for L2 adjacent nodes
 routingMode: native
-bpf.masquerade: "true"
-l2announcements.enabled: "true"
-MTU: "1450"
-ipv4NativeRoutingCIDR: 10.244.0.0/16
-kubeProxyReplacement: "true"
-k8sServiceHost: <cluster-VIP>        # e.g. 10.20.0.10 for ccs-mgmt
-k8sServicePort: "6443"
-cni.exclusive: "false"
-nodeinit.enabled: "false"
-cgroup.autoMount.enabled: "false"
-cgroup.hostRoot: /sys/fs/cgroup
-securityContext.capabilities.ciliumAgent:
-  - CHOWN
-  - KILL
-  - NET_ADMIN
-  - NET_RAW
-  - IPC_LOCK
-  - SYS_ADMIN
-  - SYS_RESOURCE
-  - DAC_OVERRIDE
-  - FOWNER
-  - SETGID
-  - SETUID
-securityContext.capabilities.cleanCiliumState:
-  - NET_ADMIN
-  - SYS_ADMIN
-  - SYS_RESOURCE
+autoDirectNodeRoutes: true
+ipv4NativeRoutingCIDR: "10.244.0.0/16"
+
+# CRITICAL for QEMU/Talos: Cilium must know which interface to own
+# This prevents it from binding to the 10.0.x.x DHCP interface
+devices: 
+  - enp1s0
+directRoutingDevice: enp1s0
+
+bpf:
+  masquerade: true
+
+# Match your physical bridge MTU
+mtu: 1500
+
+# Required for Kube-Proxy replacement to report healthy to Talos
+kubeProxyReplacementHealthzBindAddr: "0.0.0.0:10256"
+
+ipam:
+  mode: "cluster-pool"
+  operator:
+    clusterPoolIPv4PodCIDRList:
+      - "10.244.0.0/16"
+    clusterPoolIPv4MaskSize: 24
+
+operator:
+  replicas: 2
+  # Ensure operator can run on control planes if workers aren't ready
+  tolerations:
+    - operator: Exists
+
+# Talos Specifics
+nodeinit:
+  enabled: false
+
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: "/sys/fs/cgroup"
+
+securityContext:
+  capabilities:
+    ciliumAgent:
+      - CHOWN
+      - KILL
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    cleanCiliumState:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+
+################ MetalLB Replacement ##########################
+
+l2announcements:
+  enabled: true
+
+externalIPs:
+  enabled: true
+
+# This is the "Native IPAM" for LoadBalancers
+# We enable the controller; the pools are defined via CRDs later
+loadBalancer:
+  l7:
+    backend: disabled
 ```
 
 k8sServiceHost and k8sServicePort tell Cilium to reach the API server via the

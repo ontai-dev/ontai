@@ -766,7 +766,7 @@ All local components — operators, Guardian, Compiler tools during bootstrap �
 this port. Environment variable: `INTERNAL_PORT`.
 
 **Federation port:**
-Environment variable: `FEDERATION_PORT`, defaulting to `9091`. Serves tenant
+Environment variable: `FEDERATION_PORT`, defaulting to `9443`. Serves tenant
 Conductor connections exclusively. The TLS configuration on the federation port uses
 management CA-issued client certificates with the connecting tenant's cluster ID
 embedded as Subject Alternative Name. The federation port rejects any connection
@@ -923,7 +923,7 @@ new message types requires a Platform Governor directive before implementation.
   runner connects to CNPG before registering any controller. F-P8 recorded: phase 0
   implementation requires a Conductor Engineer session. (2) §18 "Federation Channel
   Contract" added (locked invariant): management Conductor exposes two ports — internal
-  (cluster-local CA) and federation (FEDERATION_PORT=9091, management CA client certs,
+  (cluster-local CA) and federation (FEDERATION_PORT=9443, management CA client certs,
   cluster ID as SAN, rejects invalid certs). One persistent bidirectional gRPC stream
   per connected tenant Conductor; management side stateless on connection lifecycle;
   tenant Conductor owns reconnect. Typed message envelope: RunnerConfigValidationRequest/

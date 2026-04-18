@@ -171,7 +171,7 @@ for node in "${NODES[@]}"; do
   log_info "Applying config to ${node} (${ipv6}%${IFACE})"
 
   # Primary: talosctl with %25-encoded zone ID (RFC 6874 / talosctl convention)
-  ipv6_endpoint="[${ipv6}%25${IFACE}]"
+  ipv6_endpoint="${ipv6}%25${IFACE}"
 
   if talosctl apply-config --insecure \
       --nodes   "$ipv6_endpoint" \
