@@ -4,11 +4,18 @@ AGENTS.md
 
 # Nested component repositories — each has its own git history
 conductor/
+domain-core/
 guardian/
 platform/
 wrapper/
 seam-core/
 ont-lab/
+
+# Lab infrastructure files — not committed
+lab/
+
+# Credentials and keys
+*.pem
 
 # OS
 .DS_Store
