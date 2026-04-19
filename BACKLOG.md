@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
-**Last updated:** April 18, 2026
-**Branch:** session/1-governor-init (all repos)
+**Last updated:** April 19, 2026
+**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian)
 
 Priority: High / Medium / Low
 
@@ -11,7 +11,6 @@ Priority: High / Medium / Low
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| SEAM-CORE-BL-LINEAGE | seam-core | LineageSynced=False on PermissionSnapshot and PackInstance. LineageController not indexing all GVKs. Blocker for Vortex retrieval interface. |
 | TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Required for alpha. |
 
 ---
@@ -96,3 +95,4 @@ Priority: High / Medium / Low
 | CONDUCTOR-CAPABILITY-REWATCH | Conductor republishes capabilities when RunnerConfig recreated. | 2c55a3b |
 | CNPG-BOOTSTRAP-ANNOTATION-SWEEP | SSA wiped system ClusterRoles. Fixed with MergePatch. | 1da7e64 |
 | CI-SCRIPT | enable-ccs-mgmt.sh committed to conductor/scripts/. Dry-run verified. | 2026-04-19 |
+| SEAM-CORE-BL-LINEAGE | PackInstance test added (seam-core 52de8d3). PermissionSnapshot LineageSynced init removed (guardian c36ffd3). Regression guards added both repos. | 2026-04-19 |
