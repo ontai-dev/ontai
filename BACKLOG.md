@@ -38,6 +38,7 @@ Priority: High / Medium / Low
 | G-BL-SNAPSHOT-ALIAS | guardian | snapshot-management should cover ccs-mgmt for management cluster. Eliminates redundant snapshot-ccs-mgmt. |
 | G-BL-IDP-POLLING | guardian | IdentityProviderReconciler must poll OIDC provider for group membership changes and record identitybinding.drift_detected. Requires Keycloak or Dex in lab. |
 | G-BL-SELF-AUDIT-MISSING | guardian | rbacprofile.provisioned and rbac.would_deny not in audit trail. Investigate LazyAuditWriter event dropping. |
+| GUARDIAN-BL-ENVTEST-FAIL | guardian | Integration and webhook envtest suite fails pre-existing before session/2. Not introduced by lineage fix. Requires dedicated investigation session. |
 
 ---
 
