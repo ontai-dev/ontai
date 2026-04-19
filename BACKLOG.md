@@ -11,7 +11,6 @@ Priority: High / Medium / Low
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| CI-SCRIPT | conductor | enable-ccs-mgmt.sh not committed. Platform is not reproducible. Blocker for alpha release. |
 | SEAM-CORE-BL-LINEAGE | seam-core | LineageSynced=False on PermissionSnapshot and PackInstance. LineageController not indexing all GVKs. Blocker for Vortex retrieval interface. |
 | TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Required for alpha. |
 
@@ -96,3 +95,4 @@ Priority: High / Medium / Low
 | EPG-AUTO-REFRESH | PermissionSnapshot auto-refreshes when stale via EPG watch. | 22e7c75 |
 | CONDUCTOR-CAPABILITY-REWATCH | Conductor republishes capabilities when RunnerConfig recreated. | 2c55a3b |
 | CNPG-BOOTSTRAP-ANNOTATION-SWEEP | SSA wiped system ClusterRoles. Fixed with MergePatch. | 1da7e64 |
+| CI-SCRIPT | enable-ccs-mgmt.sh committed to conductor/scripts/. Dry-run verified. | 2026-04-19 |

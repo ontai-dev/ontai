@@ -125,7 +125,7 @@ Schema docs have been moved from ontai root into each operator repo:
 | ontai root repo public at ontai-dev/ontai on GitHub | Done |
 | ontai.dev GitHub Pages site live (index.html + docs/) | Done |
 | schema.ontai.dev redesigned landing page live | Done |
-| enable-ccs-mgmt.sh CI script committed | PENDING |
+| enable-ccs-mgmt.sh CI script committed to conductor/scripts/ | Done |
 | All 6 operator repos made public on ontai-dev GitHub | PENDING |
 | Community announcement | PENDING |
 
