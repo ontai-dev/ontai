@@ -807,37 +807,37 @@
         <div class="op-header"><div class="op-dot" style="background:#7B5EC0;"></div><div class="op-name">Guardian</div></div>
         <div class="op-group">security.ontai.dev</div>
         <div class="op-desc">Trust root and security substrate. RBAC governance, PermissionSnapshot computation and distribution, identity resolution, and the CNPG audit sink. Every operator is admitted through Guardian before it may operate.</div>
-        <span class="op-status status-live">Live on ccs-mgmt</span>
+        <span class="op-status status-live">Live on Management Cluster</span>
       </div>
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#0288D1;"></div><div class="op-name">Platform</div></div>
         <div class="op-group">platform.ontai.dev</div>
         <div class="op-desc">Cluster lifecycle authority. Imports and bootstraps Talos Linux clusters. Manages CAPI-driven provisioning. Auto-onboards tenant clusters into the governance layer with zero manual steps.</div>
-        <span class="op-status status-live">Live on ccs-mgmt</span>
+        <span class="op-status status-live">Live on Management Cluster</span>
       </div>
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#00897B;"></div><div class="op-name">Wrapper</div></div>
         <div class="op-group">infra.ontai.dev</div>
         <div class="op-desc">Pack delivery engine. Manages OCI artifact packs from ClusterPack signing through four sequential gates to PackInstance creation and DNS registration. No ephemeral intermediates.</div>
-        <span class="op-status status-live">Live on ccs-mgmt</span>
+        <span class="op-status status-live">Live on Management Cluster</span>
       </div>
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#C07A1A;"></div><div class="op-name">Conductor</div></div>
         <div class="op-group">runner.ontai.dev</div>
         <div class="op-desc">Execution intelligence. Two binaries with a hard architectural boundary: Compiler (workstation tool, never deployed) and Conductor agent (distroless, deployed everywhere). The Compiler never deploys. The agent never compiles.</div>
-        <span class="op-status status-live">Live on ccs-mgmt</span>
+        <span class="op-status status-live">Live on Management Cluster</span>
       </div>
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#6D28D9;"></div><div class="op-name">seam-core</div></div>
         <div class="op-group">infrastructure.ontai.dev</div>
         <div class="op-desc">Lineage and semantic DNS controller. Maintains InfrastructureLineageIndex across all operator GVKs, owns SeamMembership CRD, and operates the DSNS zone that makes infrastructure topology resolvable by name.</div>
-        <span class="op-status status-live">Live on ccs-mgmt</span>
+        <span class="op-status status-live">Live on Management Cluster</span>
       </div>
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#1B5E20;"></div><div class="op-name">domain-core</div></div>
         <div class="op-group">core.ontai.dev</div>
         <div class="op-desc">Domain primitive declarations. Nine abstract CRDs every ONT domain inherits from: DomainIdentity through DomainSemanticNameService. Application operators read these. They never write them.</div>
-        <span class="op-status status-live">Live on ccs-mgmt</span>
+        <span class="op-status status-live">Live on Management Cluster</span>
       </div>
     </div>
     <p style="margin-top:24px;font-size:13px;color:var(--ink3);text-align:center;">
