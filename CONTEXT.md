@@ -1,6 +1,6 @@
 # ONT Platform: Session Context
 
-**Last updated:** April 18, 2026
+**Last updated:** April 19, 2026
 **Branch:** session/1-governor-init (all repos)
 **Author:** Krishna (ontave / ontave@ontave.dev)
 
@@ -18,7 +18,7 @@ any contributor or Claude Code session must read before beginning work.
 
 | Repo | Description | Latest Commit | Status |
 |------|-------------|---------------|--------|
-| ontai | Root monorepo, no git remote | local only | Active |
+| ontai | Root monorepo, GitHub Pages site | main | Active |
 | conductor | Compiler + Conductor agent | session/1-governor-init | Published |
 | guardian | Trust root, RBAC, audit sink | session/1-governor-init | Published |
 | platform | Cluster lifecycle authority | session/1-governor-init | Published |
@@ -122,9 +122,11 @@ Schema docs have been moved from ontai root into each operator repo:
 | All 6 repos: README, LICENSE, CONTRIBUTING | Done |
 | cmd directories renamed (ont-security to guardian, etc) | Done |
 | Founding document updated with living documentation reframing | Done |
+| ontai root repo public at ontai-dev/ontai on GitHub | Done |
+| ontai.dev GitHub Pages site live (index.html + docs/) | Done |
+| schema.ontai.dev redesigned landing page live | Done |
 | enable-ccs-mgmt.sh CI script committed | PENDING |
-| All 6 repos made public on ontai-dev GitHub | PENDING |
-| ontai.dev GitHub Pages site live | PENDING |
+| All 6 operator repos made public on ontai-dev GitHub | PENDING |
 | Community announcement | PENDING |
 
 ---
