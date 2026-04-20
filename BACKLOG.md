@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
 **Last updated:** April 21, 2026
-**Branch:** session/11-pre-cluster-backlog-clearance (open, not pushed)
+**Branch:** session/11 MERGED (platform 1829bbd, guardian 255645b)
 
 Priority: High / Medium / Low
 

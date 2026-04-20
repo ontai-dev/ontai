@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Current state:** session/11-pre-cluster-backlog-clearance IN PROGRESS (platform f7a310c, guardian c0c41fb -- not pushed). session/10d MERGED (platform PR #10, seam-core PR #8, wrapper PR #6 all merged to main 2026-04-20).
+**Current state:** session/11 MERGED (platform PR #11 1829bbd, guardian PR #9 255645b, merged to main 2026-04-21). session/10d MERGED.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -59,7 +59,7 @@ All 5 repos green: platform, guardian, seam-core, wrapper, conductor.
 
 **WS8:** BACKLOG and PROGRESS updated (this entry).
 
-**WS9:** STOP -- waiting for Governor push authorization.
+**WS9:** Governor merge session completed. PRs squash-merged. All branches deleted. All repos on clean main.
 
 ---
 
