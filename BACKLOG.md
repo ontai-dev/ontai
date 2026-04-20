@@ -60,7 +60,7 @@ Priority: High / Medium / Low
 | PackReceipt | conductor | Conductor agent on tenant cluster creating PackReceipt. Never deployed on tenant. |
 | Drift detection | conductor | PackInstance Drifted condition when manifests diverge from PackReceipt. |
 | Federation channel | conductor | Audit forwarding from tenant conductor to management guardian. Implemented, never tested. |
-| CAPI path | platform | SeamInfrastructureCluster and SeamInfrastructureMachine lifecycle. Never tested. |
+| CAPI path live | platform | SeamInfrastructureCluster and SeamInfrastructureMachine lifecycle on live cluster. Offline integration tests added session/5. Live verification requires TENANT-CLUSTER-E2E. |
 | IdentityBinding | guardian | IdentityProvider and IdentityBinding e2e with Keycloak or Dex. |
 | SeamMembership live | seam-core/guardian | SeamMembership CRs admitted by guardian on live cluster. Compiler emits them in phase 01. Never verified on lab. |
 
@@ -76,7 +76,7 @@ Priority: High / Medium / Low
 | ONTAR-SPEC | Formalize PermissionSnapshot pod contract schema in seam-core/docs/ontar-spec.md. After alpha release and first production fintech operator. |
 | SCREEN | VirtCluster and VirtMachine CRDs. CAPI path to QEMU/KVM via libvirt and KubeVirt. |
 | SERVICEMONITOR | Prometheus ServiceMonitor CRDs for all five operators. Deferred to post-e2e observability session. |
-| CAPI-E2E-TESTS | e2e tests for SeamInfrastructureCluster/Machine lifecycle against live cluster. |
+| CAPI-E2E-TESTS | e2e tests for SeamInfrastructureCluster/Machine lifecycle against live cluster. Offline integration tests completed session/5. Live cluster stubs remain in test/integration/capi/capi_lifecycle_test.go. Promote when TENANT-CLUSTER-E2E closes. |
 
 ---
 

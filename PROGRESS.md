@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Current state:** session/4-webhook-hardening-and-compiler-fixes PRs open (guardian, conductor, platform).
+**Current state:** session/5-envtest-capi-day2 complete. PRs pending: conductor, platform, seam-core. session/4 PRs still open.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -70,11 +70,49 @@ Two Governor directives codified in CLAUDE.md:
 | G-BL-CNPG-POOLER-AUTH | guardian | Connect to rw service not pooler. md5 hash caching issue. |
 | GUARDIAN-BL-ENVTEST-FAIL | guardian | Integration/webhook envtest fails pre-existing. Investigation needed. |
 
+### session/5-envtest-capi-day2 (conductor, platform, seam-core)
+
+PRs pending as of 2026-04-20. Six workstreams completed:
+
+**WS2 -- Compiler output conformance tests (conductor):**
+Three fixture files (mgmt-import, tenant-import, tenant-capi) and four table-driven tests
+verifying TalosCluster YAML round-trip and CAPI block nil-suppression (C-34). Tests in
+cmd/compiler/compile_bootstrap_variants_test.go. Commit includes CAPIInput struct extension
+with ControlPlane, Workers, CiliumPackRef nested fields.
+
+**WS3 -- CAPI lifecycle integration tests (platform):**
+test/integration/capi/capi_lifecycle_test.go. Six tests covering CAPI provisioning path,
+idempotency, SIM NoCAPIMachine, BootstrapDataNotReady, deletion finalizer, and Conductor
+deployment stub. All CAPI objects as unstructured (no CAPI CRDs in go.mod).
+
+**WS4 -- Management cluster day2 integration tests (platform):**
+test/integration/day2/mgmt_day2_test.go. Nine tests: S3 hierarchy (4 scenarios),
+NodeMaintenance 4-step credential-rotate, PKIRotation, ClusterReset gate (blocked + approved),
+operator restart recovery. Uses fake client with defaultS3Secret and perOpS3Secret helpers.
+
+**WS5 -- Tenant day2 integration tests (platform):**
+test/integration/day2/tenant_day2_test.go. Three tests: ImportMode and CAPIMode backup
+(both use direct RunnerConfig), S3 absent in tenant namespace.
+
+**WS6 -- CAPI day2 integration tests (platform):**
+test/integration/day2/capi_day2_test.go. Three tests: UpgradePolicy CAPI path (CAPI Cluster
+pre-created in seam-tenant ns), ClusterMaintenance Paused condition (fixed clock), NodeOperation
+non-CAPI path. Key fixes: UpgradeType required, reconcileCAPIPause no-op without CAPI Cluster.
+
+**WS7 -- seam-core LineageController all-GVKs integration tests (seam-core):**
+test/integration/lineage/all_gvks_test.go. Forty sub-tests (4 tests x 9 GVKs + count).
+Covers ILI creation, RootBinding fields (Kind/Name/UID/ObservedGeneration), LineageSynced
+transition, ILI naming format, and GVK count invariant. All pass.
+
+**Conductor integration envtest:** Pre-existing failure unchanged (requires etcd binary).
+All unit tests pass across conductor, platform, seam-core.
+
 ---
 
 ## Next Session Candidates
 
 1. Merge session/4 PRs (guardian #5, conductor #3, platform #4, ontai #1).
-2. ontai-schema PR for any fields added by session/4 (Schema-First contract).
-3. GUARDIAN-BL-ENVTEST-FAIL investigation.
-4. TENANT-CLUSTER-E2E -- ccs-dev onboarding.
+2. Merge session/5 PRs (conductor, platform, seam-core).
+3. ontai-schema PR for any fields added by sessions 4-5 (Schema-First contract).
+4. GUARDIAN-BL-ENVTEST-FAIL investigation.
+5. TENANT-CLUSTER-E2E -- ccs-dev onboarding.
