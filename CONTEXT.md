@@ -1,7 +1,7 @@
 # ONT Platform: Session Context
 
-**Last updated:** April 19, 2026
-**Branch:** session/1-governor-init (all repos)
+**Last updated:** April 20, 2026
+**Branch:** session/1-governor-init (all repos); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform) -- PRs open
 **Author:** Krishna (ontave / ontave@ontave.dev)
 
 ---
@@ -36,11 +36,17 @@ any contributor or Claude Code session must read before beginning work.
 These decisions are locked. No engineer session may reverse them without
 an explicit Governor directive.
 
-**Two-binary model (conductor repo):**
-Compiler is debian-slim, compile-only, never deployed. Subcommands:
-bootstrap, launch, enable, packbuild, maintenance, component, domain.
-Conductor is distroless Go only, execute+agent mode, deployed in ont-system.
-No shell, no scripts ever.
+**Three-image Conductor model (conductor repo, locked April 2026):**
+Compiler: debian-slim. GitOps pipeline only. Never deployed to cluster.
+Conductor execute mode: debian-slim. Requires shell environment for SOPS,
+Helm, and Kustomize. Runs as short-lived Kueue-managed Jobs on the management
+cluster only. Target clusters never run execute-mode Jobs.
+Conductor agent mode: distroless Go only. Deployed to ont-system on every
+cluster. No shell. No scripts. Ever.
+The execute image must never be distroless. The agent image must never be
+debian-slim. These are architectural invariants, not preferences.
+
+Compiler subcommands: bootstrap, launch, enable, packbuild, maintenance, component, domain.
 
 **Namespace model (locked):**
 seam-system: all Seam operator managers, leader election leases.
@@ -57,6 +63,17 @@ TalosCluster deletion is the only event that deletes the RunnerConfig.
 DomainRelationship (domain-core) to RBACProfile.domainIdentityRef (guardian)
 to InfrastructureLineageIndex.domainRef (seam-core) to SeamMembership
 (seam-core CRD, guardian reconciler) to PermissionSnapshot (guardian).
+
+**Schema-First Development Contract (locked April 2026):**
+ontai-schema is the authoritative source for all CRD field definitions.
+Go type implementations in operator repos are implementations of the schema,
+not the source of it.
+- Schema changes go to ontai-schema first, before any operator repo implementation.
+- Each operator repo CI validates CRD YAML against schema.ontai.dev before merge.
+- Implementation PRs adding fields absent from the schema are blocked until the
+  schema PR merges first.
+This closes the gap between the ONT governance claim (schema is the contract) and
+how ONT develops. ONT eats its own cooking at the schema layer from this point forward.
 
 **ONTAR:** Future specification only. NOT IMPLEMENTED. Never present as a
 current capability in any document.

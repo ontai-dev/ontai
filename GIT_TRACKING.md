@@ -82,3 +82,10 @@ No pushes to remote until Platform Governor authorizes.
 | wrapper      | 9cf394c | session/40 WS4: e2e stubs — packexecution_test, packinstance_drift_test (10 It blocks, all skip); each with pre-condition comment block |
 | conductor    | 4fbbffd | session/40 WS4: e2e stubs — signing_loop_test, packinstance_pull_loop_test, snapshot_pull_loop_test (15 It blocks, all skip); each with pre-condition comment block |
 | seam-core    | bbcc042 | session/40 WS4: e2e stubs — lineage_controller_test, lineage_synced_test (9 It blocks, all skip); each with pre-condition comment block; all 4 suites green |
+| ontai root   | 9fcb543 | session/4: CLAUDE.md Section 16 -- Context Compaction Safety Protocol (Governor directive) |
+| ontai root   | 153f31a | session/4: CLAUDE.md Section 17 -- e2e CI Contract and Skip-Reason Standard (Governor directive) |
+| guardian     | 16c85f4 | session/4: G-BL-CR-IMMUTABILITY -- operator-authorship guard (operator_cr_guard.go, handler, server wiring, webhook config, 10 unit tests, 6 e2e stubs) |
+| conductor    | a2eada4 | session/4: C-COREDNS-PATCH -- remove INV-001-violating shell script from compiler, phase 05 meta updated, 2 new unit tests, 3 e2e stubs |
+| conductor    | a0a4c53 | session/4: C-KUEUE-WEBHOOK -- move webhook scoping to Phase 00 in enable-ccs-mgmt.sh, 1 new unit test, 3 e2e stubs |
+| platform     | 7f70533 | session/4: C-34 -- TalosClusterSpec.CAPI changed to *CAPIConfig, CAPIEnabled() helper, deepcopy + controller + test fixes |
+| conductor    | f7c66ad | session/4: C-34 -- remove explicit CAPIConfig{Enabled:false} from management cluster builders, regression test |

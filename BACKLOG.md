@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
-**Last updated:** April 19, 2026
-**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian)
+**Last updated:** April 20, 2026
+**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform)
 
 Priority: High / Medium / Low
 
@@ -20,10 +20,10 @@ Priority: High / Medium / Low
 | ID | Component | Description |
 |----|-----------|-------------|
 | PLATFORM-BL-TENANT-GC | platform | TalosCluster deletion should cascade to seam-tenant namespace via ownerReference Kubernetes GC. |
-| G-BL-CR-IMMUTABILITY | guardian | Guardian webhook must block human patches on operator-created CRs: PackInstance, RunnerConfig, PermissionSnapshot, PackExecution. |
+| G-BL-CR-IMMUTABILITY | guardian | CLOSED 2026-04-20 (session/4). operator-authorship guard implemented; 10 unit tests + 6 e2e stubs. guardian commit 16c85f4. |
 | G-BL-CNPG-POOLER-AUTH | guardian | Connect to rw service not pooler to avoid md5 hash caching on guardian restart. Engineer session drafted. |
-| C-COREDNS-PATCH | compiler | coredns-dsns-patch.sh must be run manually after phase 05. Needs integration into CI script. |
-| C-KUEUE-WEBHOOK | compiler | Kueue mutating webhook scoping must be automated after deployment. Needs CI script. |
+| C-COREDNS-PATCH | compiler | CLOSED 2026-04-20 (session/4). INV-001-violating shell script removed from compiler; phase 05 meta updated; CI script step 7a handles patch inline. conductor commit a2eada4. 3 e2e stubs. |
+| C-KUEUE-WEBHOOK | compiler | CLOSED 2026-04-20 (session/4). Webhook scoping moved to Phase 00 immediately after kueue-controller.yaml; wait_crd guard added. conductor commit a0a4c53. 3 e2e stubs. |
 
 ---
 
@@ -48,7 +48,7 @@ Priority: High / Medium / Low
 |----|-----------|-------------|
 | CONDUCTOR-BL-EXECUTION-ORDER | conductor | Staged manifest apply confirmed implemented. Verify with multi-manifest pack test. |
 | WRAPPER-BL-PACKINSTANCE-VERSION-DOUBLE-V | wrapper | Ready condition message says vv0.1.2 double v prefix. Fixed in 51fd2ec. Verify. |
-| C-34 | compiler | capi.controlPlane: {} noise in TalosCluster CR when capi.enabled=false. |
+| C-34 | compiler | CLOSED 2026-04-20 (session/4). *CAPIConfig pointer change in platform API; CAPIEnabled() helper; nil suppresses capi block entirely. platform commit 7f70533, conductor commit f7c66ad. |
 | CONDUCTOR-BL-RESULT-CM-TTL | conductor | OperationResult ConfigMap TTL. Fixed in 6d31b77. Verify GC happening. |
 
 ---
