@@ -2,12 +2,12 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | session/1-governor-init | e1d06cf     | active                    |
-| conductor    | session/1-governor-init | 4fbbffd     | active                    |
-| guardian     | session/1-governor-init | 34437c0     | active                    |
-| platform     | session/1-governor-init | 2264170     | active                    |
-| wrapper      | session/1-governor-init | 9cf394c     | active                    |
-| seam-core    | session/1-governor-init | bbcc042     | active                    |
+| ontai        | session/7-ci-pipelines  | c8cf65f     | PR #2 open                |
+| conductor    | session/7-ci-pipelines  | a5c4a53     | PR #6 open                |
+| guardian     | session/7-ci-pipelines  | 6088d51     | PR #7 open                |
+| platform     | session/7-ci-pipelines  | 35ea97d     | PR #6 open                |
+| wrapper      | session/7-ci-pipelines  | 123f16e     | PR #4 open                |
+| seam-core    | session/7-ci-pipelines  | 801917f     | PR #5 open                |
 | domain-core  | session/1-governor-init | f01ca65     | active                    |
 
 ## Branch Convention

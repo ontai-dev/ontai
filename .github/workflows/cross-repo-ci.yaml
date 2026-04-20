@@ -1,0 +1,271 @@
+name: Cross-Repo CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"
+
+jobs:
+  seam-core:
+    name: seam-core
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout seam-core
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/seam-core
+          path: seam-core
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: seam-core/go.mod
+          cache: true
+
+      - name: Build
+        working-directory: seam-core
+        run: make build
+
+      - name: Unit tests
+        working-directory: seam-core
+        run: make test-unit
+
+      - name: Integration tests
+        working-directory: seam-core
+        run: make test-integration
+
+  guardian:
+    name: guardian
+    needs: seam-core
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout guardian
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/guardian
+          path: guardian
+
+      - name: Checkout seam-core (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/seam-core
+          path: seam-core
+
+      - name: Checkout conductor (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/conductor
+          path: conductor
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: guardian/go.mod
+          cache: true
+
+      - name: Install envtest binaries
+        working-directory: guardian
+        run: |
+          go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+          ENVTEST_BIN=$(setup-envtest use --bin-dir /tmp/envtest-bins --print path 1.35.0)
+          echo "KUBEBUILDER_ASSETS=${ENVTEST_BIN}" >> "$GITHUB_ENV"
+
+      - name: Build
+        working-directory: guardian
+        run: make build
+
+      - name: Unit tests
+        working-directory: guardian
+        run: make test-unit
+
+      - name: Integration tests
+        working-directory: guardian
+        run: make test-integration
+
+  platform:
+    name: platform
+    needs: [seam-core, guardian]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout platform
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/platform
+          path: platform
+
+      - name: Checkout seam-core (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/seam-core
+          path: seam-core
+
+      - name: Checkout conductor (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/conductor
+          path: conductor
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: platform/go.mod
+          cache: true
+
+      - name: Install envtest binaries
+        working-directory: platform
+        run: |
+          go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+          ENVTEST_BIN=$(setup-envtest use --bin-dir /tmp/envtest-bins --print path 1.35.0)
+          echo "KUBEBUILDER_ASSETS=${ENVTEST_BIN}" >> "$GITHUB_ENV"
+
+      - name: Build
+        working-directory: platform
+        run: make build
+
+      - name: Unit tests
+        working-directory: platform
+        run: make test-unit
+
+      - name: Integration tests
+        working-directory: platform
+        run: make test-integration
+
+  wrapper:
+    name: wrapper
+    needs: [seam-core, guardian]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout wrapper
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/wrapper
+          path: wrapper
+
+      - name: Checkout seam-core (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/seam-core
+          path: seam-core
+
+      - name: Checkout conductor (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/conductor
+          path: conductor
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: wrapper/go.mod
+          cache: true
+
+      - name: Install envtest binaries
+        working-directory: wrapper
+        run: |
+          go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+          ENVTEST_BIN=$(setup-envtest use --bin-dir /tmp/envtest-bins --print path 1.35.0)
+          echo "KUBEBUILDER_ASSETS=${ENVTEST_BIN}" >> "$GITHUB_ENV"
+
+      - name: Build
+        working-directory: wrapper
+        run: make build
+
+      - name: Unit tests
+        working-directory: wrapper
+        run: make test-unit
+
+      - name: Integration tests
+        working-directory: wrapper
+        run: make test-integration
+
+  conductor:
+    name: conductor
+    needs: [seam-core, platform, wrapper]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout conductor
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/conductor
+          path: conductor
+
+      - name: Checkout guardian (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/guardian
+          path: guardian
+
+      - name: Checkout platform (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/platform
+          path: platform
+
+      - name: Checkout seam-core (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/seam-core
+          path: seam-core
+
+      - name: Checkout wrapper (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/wrapper
+          path: wrapper
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: conductor/go.mod
+          cache: true
+
+      - name: Install envtest binaries
+        working-directory: conductor
+        run: |
+          go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+          ENVTEST_BIN=$(setup-envtest use --bin-dir /tmp/envtest-bins --print path 1.35.0)
+          echo "KUBEBUILDER_ASSETS=${ENVTEST_BIN}" >> "$GITHUB_ENV"
+
+      - name: Build
+        working-directory: conductor
+        run: make build
+
+      - name: Unit tests
+        working-directory: conductor
+        run: make test-unit
+
+      - name: Integration tests
+        working-directory: conductor
+        run: make test-integration
+
+  summary:
+    name: Summary
+    needs: [seam-core, guardian, platform, wrapper, conductor]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Post cross-repo summary
+        run: |
+          echo "### Cross-Repo CI Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Repo | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| seam-core | ${{ needs.seam-core.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| guardian | ${{ needs.guardian.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| platform | ${{ needs.platform.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| wrapper | ${{ needs.wrapper.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| conductor | ${{ needs.conductor.result }} |" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open issue on failure
+        if: >
+          needs.seam-core.result == 'failure' ||
+          needs.guardian.result == 'failure' ||
+          needs.platform.result == 'failure' ||
+          needs.wrapper.result == 'failure' ||
+          needs.conductor.result == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --repo ontai-dev/ontai \
+            --title "Cross-repo CI failure $(date -u +%Y-%m-%d)" \
+            --body "Cross-repo CI failed. Check the workflow run for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

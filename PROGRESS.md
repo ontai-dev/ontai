@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Current state:** session/4-webhook-hardening-and-compiler-fixes PRs open (guardian, conductor, platform).
+**Current state:** session/7-ci-pipelines in progress (all repos). session/4 PRs still open.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -59,6 +59,64 @@ Two Governor directives codified in CLAUDE.md:
 - Section 16: Context Compaction Safety Protocol
 - Section 17: e2e CI Contract and Skip-Reason Standard
 
+### session/7-ci-pipelines (all repos, in progress)
+
+CI infrastructure only. No operator reconciler changes.
+
+**WS1:** All 6 repos branched to session/7-ci-pipelines.
+
+**WS2 -- Makefile targets (all 5 operator repos):**
+Added test-unit, test-integration, test-all targets uniformly. Existing targets unchanged.
+platform and seam-core test-integration exits 0 (no integration tests). conductor, guardian,
+wrapper test-integration runs envtest suite via KUBEBUILDER_ASSETS.
+
+**RunnerConfig json tag fix (conductor):**
+RunnerConfigSpec and nested types (RunnerConfigStep, PhaseConfig, OperationalHistoryEntry,
+RunnerConfigStepResult, ConfigMapRef, SecretRef, RunnerConfigStatus) had no json tags.
+Go marshaled with UpperCase keys; CRD schema expects camelCase. All 4 conductor integration
+tests were failing with Required value (clusterRef, runnerImage). Fixed by adding json tags
+to all struct fields. All 4 tests now pass.
+
+**GUARDIAN-BL-ENVTEST-FAIL resolved:**
+Three root causes found and fixed:
+
+1. RBACPolicyReconciler finalizer + GenerationChangedPredicate: the finalizer addition returns
+   early and the subsequent metadata-only Update does not trigger another reconcile (generation
+   unchanged). Fix: do not return early after adding finalizer; continue reconcile in same pass.
+   guardian/internal/controller/rbacpolicy_controller.go.
+
+2. EPGReconciler OperatorNamespace not set in test setup (epg_reconciler_test.go):
+   SSA patch targeted namespace "" which does not exist. Fix: set OperatorNamespace=testNamespace
+   in both epg and controller suite TestMain.
+
+3. IdentityProviderReconciler OIDC reachability check races 10s timeout against 10s test poll:
+   Fix: inject failFastHTTPClient in controller suite TestMain. OIDC check fails immediately
+   allowing status patch before test timeout.
+
+All guardian integration suites now pass: controller (27 tests), epg (1 test), lineage (3 tests),
+webhook (cached).
+
+**WS3-WS5 -- GitHub Actions per-repo ci.yaml:**
+conductor, guardian, platform, wrapper, seam-core each have .github/workflows/ci.yaml.
+Steps: checkout, setup-go, build, lint (golangci-lint direct), test-unit, envtest install
+(where applicable), test-integration, e2e (skip count to GITHUB_STEP_SUMMARY), upload artifacts
+on failure.
+
+**WS6 -- Cross-repo CI (.github/workflows/cross-repo-ci.yaml in ontai root):**
+Triggers: workflow_dispatch and daily 02:00 UTC. Dependency order: seam-core -> guardian ->
+platform+wrapper -> conductor. Summary job posts results table to GITHUB_STEP_SUMMARY and opens
+GitHub issue on any failure.
+
+**WS7:** All 6 YAML files validated with python3 yaml.safe_load.
+
+**WS8:** Local smoke tests passed:
+- conductor: build, test-unit, test-integration, e2e all exit 0.
+- guardian: build, test-unit, test-integration (50s), e2e all exit 0.
+
+**WS9:** PROGRESS.md, BACKLOG.md, GIT_TRACKING.md updated.
+
+**WS10:** PRs raised: conductor #6, guardian #7, platform #6, wrapper #4, seam-core #5, ontai #2.
+
 ---
 
 ## Open Backlog (High Priority)
@@ -68,13 +126,13 @@ Two Governor directives codified in CLAUDE.md:
 | TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Required for alpha. |
 | PLATFORM-BL-TENANT-GC | platform | TalosCluster deletion should cascade to seam-tenant namespace. |
 | G-BL-CNPG-POOLER-AUTH | guardian | Connect to rw service not pooler. md5 hash caching issue. |
-| GUARDIAN-BL-ENVTEST-FAIL | guardian | Integration/webhook envtest fails pre-existing. Investigation needed. |
+| GUARDIAN-BL-ENVTEST-FAIL | guardian | CLOSED 2026-04-20 (session/7). Three root causes fixed: RBACPolicy finalizer early-return, EPGReconciler OperatorNamespace not set in test, OIDC HTTP timeout race. All suites green. |
 
 ---
 
 ## Next Session Candidates
 
-1. Merge session/4 PRs (guardian #5, conductor #3, platform #4, ontai #1).
-2. ontai-schema PR for any fields added by session/4 (Schema-First contract).
-3. GUARDIAN-BL-ENVTEST-FAIL investigation.
+1. WS10: Push session/7-ci-pipelines branches and raise PRs (conductor, guardian, platform, wrapper, seam-core, ontai root).
+2. Merge session/4 PRs (guardian #5, conductor #3, platform #4, ontai #1).
+3. ontai-schema PR for any fields added by session/4 (Schema-First contract).
 4. TENANT-CLUSTER-E2E -- ccs-dev onboarding.
