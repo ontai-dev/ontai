@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Current state:** session/4-webhook-hardening-and-compiler-fixes PRs open (guardian, conductor, platform).
+**Current state:** session/6-integration-envtest-gaps complete (guardian, conductor). GUARDIAN-BL-ENVTEST-FAIL closed.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -59,6 +59,49 @@ Two Governor directives codified in CLAUDE.md:
 - Section 16: Context Compaction Safety Protocol
 - Section 17: e2e CI Contract and Skip-Reason Standard
 
+### session/6-integration-envtest-gaps (guardian, conductor)
+
+Closed GUARDIAN-BL-ENVTEST-FAIL. Three root causes found and fixed:
+
+**Root cause 1 -- RBACPolicyReconciler Requeue=true missing (rbacpolicy_controller.go):**
+After adding the finalizer, the reconciler returned ctrl.Result{}, nil. GenerationChangedPredicate
+filtered the subsequent metadata-only Update event (finalizer addition does not bump generation),
+so the second reconcile that sets status conditions never ran. Fix: changed to ctrl.Result{Requeue: true}.
+
+**Root cause 2 -- IdentityProviderReconciler HTTP timeout in envtest (rbacpolicy_controller_test.go TestMain):**
+IdentityProviderReconciler registered without HTTPClient field, causing real OIDC HTTP calls
+to https://accounts.example.com/.well-known/openid-configuration that block for oidcReachabilityTimeout
+(10s). Deferred status patch only fires after HTTP returns; 10s poll expired first.
+Fix: added alwaysReachableHTTPDoer test double injected in TestMain.
+
+**Root cause 3 -- EPGReconciler OperatorNamespace empty in epg integration suite:**
+EPGReconciler registered without OperatorNamespace, defaulting to "". All SSA patches targeted
+namespace "", causing "server could not find the requested resource".
+Fix: set OperatorNamespace: testNamespace in epg TestMain registration.
+
+**Root cause 4 -- lineage integration probe PermissionSet missing required spec.permissions:**
+waitForLineageWebhookActive created a probe PermissionSet without spec.permissions (a required
+field per CRD validation). Webhook probe create panicked.
+Fix: added a minimal PermissionRule to the probe object.
+
+All four guardian integration suites now pass: controller (50s), epg (7s), lineage (6s), webhook (5s).
+
+New conductor integration tests added:
+
+**WS2 -- WAL integration tests (test/integration/federation/wal_integration_test.go):**
+5 tests: WriteAndReplay, PartialAck, ErrWALFull callback, Compact, ConcurrentWrites.
+
+**WS3 -- Federation stream tests (test/integration/federation/stream_integration_test.go):**
+4 tests: HeartBeat ACK, AuditEventBatch ACK, ClusterID from cert SAN, WAL replay on reconnect.
+
+**WS4 -- Signing loop tests (test/integration/signing/signing_integration_test.go):**
+5 tests: SigningLoop signs + stores Secret, idempotent on stale signature, PackInstancePullLoop
+valid signature creates PackReceipt, tampered signature PackReceipt verified=false,
+SnapshotPullLoop invalid signature patches DegradedSecurityState.
+
+CI gap recorded as CONDUCTOR-BL-INTEGRATION-CI: conductor and guardian Makefile test targets
+do not include integration suites; requires dedicated test-integration target addition.
+
 ---
 
 ## Open Backlog (High Priority)
@@ -68,7 +111,6 @@ Two Governor directives codified in CLAUDE.md:
 | TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Required for alpha. |
 | PLATFORM-BL-TENANT-GC | platform | TalosCluster deletion should cascade to seam-tenant namespace. |
 | G-BL-CNPG-POOLER-AUTH | guardian | Connect to rw service not pooler. md5 hash caching issue. |
-| GUARDIAN-BL-ENVTEST-FAIL | guardian | Integration/webhook envtest fails pre-existing. Investigation needed. |
 
 ---
 
@@ -76,5 +118,5 @@ Two Governor directives codified in CLAUDE.md:
 
 1. Merge session/4 PRs (guardian #5, conductor #3, platform #4, ontai #1).
 2. ontai-schema PR for any fields added by session/4 (Schema-First contract).
-3. GUARDIAN-BL-ENVTEST-FAIL investigation.
-4. TENANT-CLUSTER-E2E -- ccs-dev onboarding.
+3. TENANT-CLUSTER-E2E -- ccs-dev onboarding.
+4. Add test-integration Makefile targets in conductor and guardian (CONDUCTOR-BL-INTEGRATION-CI).

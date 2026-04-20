@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
 **Last updated:** April 20, 2026
-**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform)
+**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform); session/6-integration-envtest-gaps (guardian, conductor)
 
 Priority: High / Medium / Low
 
@@ -38,7 +38,8 @@ Priority: High / Medium / Low
 | G-BL-SNAPSHOT-ALIAS | guardian | snapshot-management should cover ccs-mgmt for management cluster. Eliminates redundant snapshot-ccs-mgmt. |
 | G-BL-IDP-POLLING | guardian | IdentityProviderReconciler must poll OIDC provider for group membership changes and record identitybinding.drift_detected. Requires Keycloak or Dex in lab. |
 | G-BL-SELF-AUDIT-MISSING | guardian | rbacprofile.provisioned and rbac.would_deny not in audit trail. Investigate LazyAuditWriter event dropping. |
-| GUARDIAN-BL-ENVTEST-FAIL | guardian | Integration and webhook envtest suite fails pre-existing before session/2. Not introduced by lineage fix. Requires dedicated investigation session. |
+| CONDUCTOR-BL-INTEGRATION-CI | conductor, guardian | Makefile test targets in conductor and guardian do not include integration suites. Need test-integration target with KUBEBUILDER_ASSETS for CI. |
+| GUARDIAN-BL-ENVTEST-FAIL | guardian | CLOSED 2026-04-20 (session/6). Four root causes fixed: Requeue=true in rbacpolicy_controller; alwaysReachableHTTPDoer in controller TestMain; OperatorNamespace in epg TestMain; probe PermissionSet missing spec.permissions. All 4 suites green. |
 
 ---
 
@@ -97,3 +98,4 @@ Priority: High / Medium / Low
 | CNPG-BOOTSTRAP-ANNOTATION-SWEEP | SSA wiped system ClusterRoles. Fixed with MergePatch. | 1da7e64 |
 | CI-SCRIPT | enable-ccs-mgmt.sh committed to conductor/scripts/. Dry-run verified. | 2026-04-19 |
 | SEAM-CORE-BL-LINEAGE | PackInstance test added (seam-core 52de8d3). PermissionSnapshot LineageSynced init removed (guardian c36ffd3). Regression guards added both repos. | 2026-04-19 |
+| GUARDIAN-BL-ENVTEST-FAIL | 4 root causes fixed in session/6. All guardian integration suites green (controller, epg, lineage, webhook). Conductor WAL+stream+signing integration tests added. | 2026-04-20 |
