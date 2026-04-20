@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Current state:** session/10c MERGED (platform PR #9 -> main, 2026-04-20). session/10+10b PRs open (platform #8, conductor #7, seam-core #7). session/9b-corrections merged. session/9 complete. session/8 merged.
+**Current state:** session/10d-tenant-onboarding-blockers in progress (platform, seam-core, wrapper branched; commits ready, not yet pushed). session/10c MERGED (platform PR #9 -> main, 2026-04-20). session/10+10b PRs merged. session/9b-corrections merged.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -79,6 +79,97 @@ WS7: PROGRESS.md and BACKLOG.md updated.
 Artefacts delivered:
 - platform main: 6 reconcilers on Job-based pattern, CapabilityEntry struct with Version field,
   CAPI provisioning unit tests (5), integration tests updated, lint clean, all suites green.
+
+---
+
+### session/10d-tenant-onboarding-blockers (platform, seam-core, wrapper -- commits ready, not pushed)
+
+**Role:** Controller Engineer.
+
+**WS1:** session/10, session/10b PRs already merged to main -- confirmed via git log. No action needed.
+
+**WS2:** All four repos (platform, seam-core, wrapper, guardian) branched to
+session/10d-tenant-onboarding-blockers. Baseline unit tests green.
+
+**WS3 -- SeamInfrastructureMachineReconciler audit (platform-design.md §3.1 six-step spec):**
+All 6 steps confirmed COMPLETE:
+1. Read CAPI Machine (via OwnerReference lookup) -- COMPLETE
+2. Read bootstrap Secret (dataSecretName from Machine.Status.Bootstrap) -- COMPLETE
+3. Apply via Talos maintenance API port 50000 -- COMPLETE (injectable MachineConfigApplier interface)
+4. Poll IsOutOfMaintenance -- COMPLETE (MachineConfigApplied condition gates this)
+5. Set providerID talos://{clusterName}/{ip} -- COMPLETE
+6. Set status.ready=true -- COMPLETE
+
+**WS4 -- Gap audit (read-only before any code):**
+
+| Check | Component | Result |
+|-------|-----------|--------|
+| BPF params in TalosConfigTemplate | platform | NOT CORRECT: bpf_jit_harden=1 (must be 0); kernel.unprivileged_bpf_disabled absent (must be 0) |
+| SetDescendantLabels on bootstrap RunnerConfig | platform | NOT WIRED |
+| SetDescendantLabels on PackInstance | wrapper | NOT WIRED |
+| SetDescendantLabels on PermissionSnapshot | guardian | DEFERRED -- architectural question (no single root per snapshot) |
+| HardeningProfileRef in TalosClusterSpec | platform | ABSENT -- TalosClusterSpec has no HardeningProfileRef field; Decision 11 requires schema PR first |
+| Tenant namespace ordering | platform | seam-tenant namespace created by TalosClusterReconciler before CAPI objects -- CORRECT |
+| IndexName function in seam-core pkg/lineage | seam-core | ABSENT -- private lineageIndexName not exported; operators cannot compute ILI names |
+| PackInstance in DerivedObjectGVKs | seam-core | ABSENT -- DescendantReconciler only watches RunnerConfig |
+
+**WS5 -- Gaps filled:**
+
+platform `internal/controller/taloscluster_helpers.go`:
+- BPF fix: `net.core.bpf_jit_harden` changed from "1" to "0"; `kernel.unprivileged_bpf_disabled: "0"` added.
+- SetDescendantLabels wired on bootstrap RunnerConfig in `ensureBootstrapRunnerConfig`:
+  `lineage.SetDescendantLabels(rc, lineage.IndexName("TalosCluster", tc.Name), "platform", lineage.ConductorAssignment)`
+
+seam-core `pkg/lineage/descendant.go`:
+- Added `IndexName(kind, name string) string` export (formula: `strings.ToLower(kind) + "-" + name`).
+
+seam-core `internal/controller/descendant_reconciler.go`:
+- Added PackInstance GVK (`{Group: "infra.ontai.dev", Version: "v1alpha1", Kind: "PackInstance"}`) to DerivedObjectGVKs.
+
+wrapper `internal/controller/packexecution_reconciler.go`:
+- SetDescendantLabels wired before PackInstance Create:
+  `lineage.SetDescendantLabels(pi, lineage.IndexName("PackExecution", pe.Name), "wrapper", lineage.PackExecution)`
+
+Deferred (require Governor decision):
+- HardeningProfile merge: TalosClusterSpec has no HardeningProfileRef. Decision 11 requires schema PR before implementation. New BACKLOG: PLATFORM-BL-HARDENINGPROFILE-MERGE.
+- Guardian PermissionSnapshot wiring: EPGController upserts one snapshot per cluster over all RBACProfiles/policies; no single root RBACPolicy per snapshot. New BACKLOG: GUARDIAN-BL-PERMISSIONSNAPSHOT-WIRING.
+- ILI cross-namespace lookup: Platform RC is in ont-system, TalosCluster ILI is in seam-system. DescendantReconciler uses obj.GetNamespace() for lookup; labels are set but reconciler cannot immediately resolve cross-ns ILI. New BACKLOG: PLATFORM-BL-ILI-CROSS-NS.
+
+**WS6 -- Unit tests:**
+
+platform `test/unit/controller/seaminfrastructuremachine_reconciler_test.go`:
+5 new tests added:
+1. TestSIMReconcile_BootstrapDataSecretNameAbsent
+2. TestSIMReconcile_ApplyCalledWithCorrectAddressPortConfig (captureApplier helper)
+3. TestSIMReconcile_MachineConfigApplied_SkipsApply
+4. TestSIMReconcile_ReadyAfterOutOfMaintenance
+5. TestSIMReconcile_IsOutOfMaintenanceError
+
+captureApplier struct added to capture Talos API call args without network.
+
+**WS7 -- Compiler ccs-dev dry-run:**
+Input: mode=import, role=tenant, namespace=seam-tenant-ccs-dev, importExistingCluster=true (talosconfig-only path).
+Output verified:
+- spec.mode=import -- PASS
+- spec.role=tenant -- PASS
+- namespace=seam-tenant-ccs-dev -- PASS
+- spec.capi.enabled=false -- PASS
+- spec.capi.controlPlane: {} -- FINDING: pre-built binary emits empty controlPlane block; current types define ControlPlane as *CAPIControlPlaneConfig with omitempty (fix present, binary predates it). Non-blocking.
+
+**WS8 -- Full suite pass (all 5 repos):**
+- platform: go build CLEAN, go vet CLEAN, make test-unit PASS
+- seam-core: go build CLEAN, go vet CLEAN, make test-unit PASS
+- wrapper: go build CLEAN, go vet CLEAN, make test-unit PASS
+- guardian: make test-unit PASS (no changes)
+- conductor: make test-unit PASS (no changes)
+
+**WS9:** PROGRESS.md and BACKLOG.md updated (this entry).
+**WS11:** STOP. Waiting for Governor push authorization.
+
+Commits ready (not pushed):
+- platform: d57429e (BPF fix, SetDescendantLabels wiring, 5 SIM tests)
+- seam-core: 51bbce3 (IndexName export, PackInstance GVK)
+- wrapper: 6c6afee (PackInstance SetDescendantLabels wiring)
 
 ---
 
