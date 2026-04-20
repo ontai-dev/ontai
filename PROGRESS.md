@@ -1,13 +1,13 @@
 # ONT Platform Progress
 
-**Current state:** session/10c in progress (platform). session/10+10b PRs open (platform #8, conductor #7, seam-core #7). session/9b-corrections merged. session/9 complete. session/8 merged.
+**Current state:** session/10c MERGED (platform PR #9 -> main, 2026-04-20). session/10+10b PRs open (platform #8, conductor #7, seam-core #7). session/9b-corrections merged. session/9 complete. session/8 merged.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
 
-### session/10c (platform, in progress -- WS11 STOP pending Governor push authorization)
+### session/10c (platform, MERGED -- PR #9 merged to main 2026-04-20)
 
 **Architecture correction:** 6 operational reconcilers (EtcdMaintenance, NodeMaintenance,
 PKIRotation, ClusterReset, UpgradePolicy, NodeOperation) rewrote from incorrect per-operation
@@ -44,6 +44,41 @@ No changes needed to ensureBootstrapRunnerConfig.
 WS9: PROGRESS.md updated (this entry).
 WS10: Full suite pass -- go build, go vet, go test all green.
 WS11: STOP. Waiting for Governor push authorization.
+
+**session/10c continuation (Controller Engineer role, 2026-04-20):**
+
+WS1: Pushed session/10c-runnerconfig-correction, PR #9 raised.
+
+WS2 -- CAPI path audit (read-only, 6 checks):
+1. TalosClusterReconciler CAPI path (reconcileCAPIPath) -- IMPLEMENTED (10-step).
+2. SeamInfrastructureCluster created in seam-tenant namespace -- IMPLEMENTED.
+3. CAPI Cluster created with correct infrastructureRef/controlPlaneRef -- IMPLEMENTED.
+4. TalosControlPlane with replicas/version -- IMPLEMENTED.
+5. CiliumPending condition when CAPI cluster reaches Running -- IMPLEMENTED.
+6. Unit tests for CAPI path -- PARTIALLY IMPLEMENTED (machine reachability + Conductor tests existed; provisioning object creation tests absent).
+
+WS3: Gap: no unit tests for SeamInfrastructureCluster, CAPI Cluster, TalosControlPlane,
+MachineDeployment creation, or CiliumPending transition.
+
+WS4 -- CAPI path unit tests (new file taloscluster_capi_provisioning_test.go):
+5 tests added: SeamInfrastructureCluster creation, CAPI Cluster infrastructureRef,
+TalosControlPlane replicas/version, CiliumPending condition on Running, MachineDeployment
+per worker pool. All pass.
+
+WS5 -- CI diagnosis and fixes (3 rounds):
+- Round 1: lint FAIL -- 3 unused RunnerConfig helper functions removed from operational_job_base.go.
+- Round 2: integration test FAIL -- etcdmaintenance_test.go rewrote from ORC to Job assertions,
+  added cluster RunnerConfig setup via buildClusterRC helper.
+- Round 3: integration test FAIL -- CapabilityEntry missing required Version field per CRD schema.
+  Added Version string to CapabilityEntry struct, updated all test helpers. CI GREEN.
+
+WS6: PR #9 merged to main. Commit 4fbc2068.
+
+WS7: PROGRESS.md and BACKLOG.md updated.
+
+Artefacts delivered:
+- platform main: 6 reconcilers on Job-based pattern, CapabilityEntry struct with Version field,
+  CAPI provisioning unit tests (5), integration tests updated, lint clean, all suites green.
 
 ---
 

@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
 **Last updated:** April 20, 2026
-**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform); session/7-ci-pipelines (all repos); session/8-acceptance-contracts (platform, wrapper, guardian, seam-core); session/9-pre-cluster-verify (ontai root); session/10-platform-operational-reconcilers (platform, conductor, seam-core)
+**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform); session/7-ci-pipelines (all repos); session/8-acceptance-contracts (platform, wrapper, guardian, seam-core); session/9-pre-cluster-verify (ontai root); session/10-platform-operational-reconcilers (platform, conductor, seam-core); session/10c (platform, merged)
 
 Priority: High / Medium / Low
 
@@ -63,7 +63,7 @@ Priority: High / Medium / Low
 | PackReceipt | conductor | Conductor agent on tenant cluster creating PackReceipt. Never deployed on tenant. |
 | Drift detection | conductor | PackInstance Drifted condition when manifests diverge from PackReceipt. |
 | Federation channel | conductor | Audit forwarding from tenant conductor to management guardian. Implemented, never tested. |
-| CAPI path | platform | SeamInfrastructureCluster and SeamInfrastructureMachine lifecycle. Never tested. |
+| CAPI path | platform | SeamInfrastructureCluster and SeamInfrastructureMachine lifecycle. Unit tests for CAPI provisioning path added (session/10c). e2e on live cluster pending TENANT-CLUSTER-E2E. |
 | IdentityBinding | guardian | IdentityProvider and IdentityBinding e2e with Keycloak or Dex. |
 | SeamMembership live | seam-core/guardian | SeamMembership CRs admitted by guardian on live cluster. Compiler emits them in phase 01. Never verified on lab. |
 
