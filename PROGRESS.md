@@ -1,11 +1,56 @@
 # ONT Platform Progress
 
-**Current state:** session/9b-corrections merged. session/9 complete. session/8 merged.
+**Current state:** session/10-platform-operational-reconcilers in progress (WS14 next). session/9b-corrections merged. session/9 complete. session/8 merged.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
+
+### session/10-platform-operational-reconcilers (platform, conductor, in progress)
+
+WS1-WS2: Branched platform and conductor to session/10. WS2 audit confirmed all 7 day-2
+reconcilers PRESENT AND COMPLETE. No reconciler implementation needed from scratch.
+
+Critical gap found: conductor CapabilityEtcdMaintenance = "etcd-maintenance" mismatched
+conductor-schema.md §6 ("etcd-defrag") and platform reconciler (capabilityEtcdDefrag).
+
+**WS11 (conductor) -- CapabilityEtcdDefrag naming fix:**
+Renamed CapabilityEtcdMaintenance to CapabilityEtcdDefrag in constants.go.
+Updated stubs.go registration, platform_etcd.go handler references, and 3 test files.
+Conductor unit tests green. Commit 4e52c9c.
+
+**WS3 -- EtcdMaintenance:**
+Added PVCFallbackEnabled bool field to EtcdMaintenanceSpec. Updated reconciler to set
+EtcdBackupLocalFallback condition when PVCFallbackEnabled=true and no S3 configured.
+Added 3 unit tests: restore RunnerConfig, PVC fallback, idempotent after Ready=True.
+Created test/integration/day2/ suite and etcdmaintenance_test.go (2 envtest tests).
+Created test/e2e/day2/ suite and etcdmaintenance_e2e_test.go (6 stubs). Updated Makefile.
+Platform commit cd38ebd.
+
+**WS4-WS10 -- Remaining reconciler unit tests and HardeningProfile Valid condition:**
+- NodeMaintenance: 3 new tests (hardening-apply step, credential-rotate step, idempotent).
+- PKIRotation: 3 new tests (in-progress, complete, failed).
+- ClusterReset: 2 new tests (RunnerConfig complete, RunnerConfig failed).
+- ClusterMaintenance: 1 new test (blockOutsideWindows=true sets ConductorJobGateBlocked).
+- UpgradePolicy: 3 new tests (kube-upgrade RunnerConfig, CAPI path CAPIDelegated, failed).
+- NodeOperation: 2 new tests (reboot RunnerConfig, failed).
+- HardeningProfile: added ConditionTypeHardeningProfileValid/ReasonHardeningProfileValid/
+  ReasonHardeningProfileInvalid constants to API types. Added validateHardeningProfileSpec()
+  to reconciler. 3 new tests (valid, empty-patch invalid, empty-spec valid).
+All 21 new unit tests pass. Platform commit 7f5da7d.
+
+**WS12 -- AC-DAY2 e2e stubs:**
+Created 6 per-reconciler e2e stub files in test/e2e/day2/ (NodeMaintenance, PKIRotation,
+ClusterReset, UpgradePolicy, NodeOperation, ClusterMaintenance) plus day2_contracts_test.go
+in test/e2e/. All stubs skip until TENANT-CLUSTER-E2E closed. AC-DAY2 contract documented.
+
+**Test count summary:**
+- Unit tests added: 21 (platform); 0 net change (conductor refactors only)
+- Integration test files: 1 new suite + 1 test file (2 tests, skip without KUBEBUILDER_ASSETS)
+- e2e stubs added: 7 new files, 32 stubs total (all skip until TENANT-CLUSTER-E2E)
+
+---
 
 ### session/9b-corrections (ontai root, merged to main)
 
