@@ -1,11 +1,67 @@
 # ONT Platform Progress
 
-**Current state:** session/10d MERGED (platform PR #10, seam-core PR #8, wrapper PR #6 all merged to main 2026-04-20). session/10c MERGED. session/10+10b PRs merged. session/9b-corrections merged.
+**Current state:** session/11-pre-cluster-backlog-clearance IN PROGRESS (platform f7a310c, guardian c0c41fb -- not pushed). session/10d MERGED (platform PR #10, seam-core PR #8, wrapper PR #6 all merged to main 2026-04-20).
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
+
+### session/11-pre-cluster-backlog-clearance (platform, guardian -- in progress, not pushed)
+
+**Role:** Controller Engineer.
+
+**WS1:** All 5 repos (platform, conductor, guardian, seam-core, wrapper) branched to
+session/11-pre-cluster-backlog-clearance from clean main.
+
+**WS2 -- PLATFORM-BL-CAPI-DERIVED-LINEAGE (CLOSED):**
+SetDescendantLabels wired on all 4 CAPI-derived objects in taloscluster_helpers.go:
+- `ensureSeamInfrastructureCluster`: SeamInfrastructureCluster gets ClusterProvision labels.
+- `ensureCAPICluster`: CAPI Cluster gets ClusterProvision labels.
+- `ensureTalosControlPlane`: TalosControlPlane gets ClusterProvision labels.
+- `ensureWorkerPool` (MachineDeployment): per-pool MachineDeployment gets ClusterProvision labels.
+All 4 pass `tc.Namespace` as `iliNamespace` so the DescendantReconciler can resolve the
+ILI cross-namespace (TalosCluster is in seam-system, CAPI objects are in seam-tenant-{name}).
+4 unit tests in `test/unit/controller/capi_lineage_test.go`.
+
+**WS3 -- PLATFORM-BL-TENANT-GC (CLOSED):**
+Finalizer `platform.ontai.dev/tenant-namespace-cleanup` added to CAPI-enabled TalosCluster.
+`ensureTenantNamespaceCleanupFinalizer` wired at Step 0 of `reconcileCAPIPath`.
+`handleTalosClusterDeletion` extended to delete `seam-tenant-{name}` namespace and remove the
+finalizer. Cross-namespace ownerReferences are not supported by Kubernetes GC; a finalizer is
+the correct mechanism. 4 unit tests in `test/unit/controller/taloscluster_gc_test.go`.
+
+platform commit: f7a310c
+
+**WS4 -- GUARDIAN-BL-RBAC-INTAKE (CLOSED):**
+`RBACIntakeHandler` implemented in `internal/webhook/rbac_intake_handler.go`.
+POST `/rbac-intake` endpoint registered via `AdmissionWebhookServer.RegisterRBACIntake`.
+Handler stamps `ontai.dev/rbac-owner=guardian` on each submitted RBAC resource and applies
+via SSA (`client.Apply`, field manager `guardian-rbac-intake`). Idempotent on Helm re-apply.
+5 unit tests in `test/unit/webhook/rbac_intake_test.go`: annotation stamping, wrapped count,
+empty list, invalid JSON, method guard.
+
+guardian commit: c0c41fb
+
+**WS5 -- CapabilityRBACProvision (no action):**
+`rbac-provision` capability already fully implemented in `internal/capability/guardian.go`
+from prior sessions. Unit tests exist in `test/unit/capability/guardian_test.go`. No gaps.
+
+**WS6 -- Seven day2 conductor capabilities (no action):**
+All 7 capabilities already fully implemented:
+- etcd-backup, etcd-defrag, etcd-restore: `platform_etcd.go`.
+- node-patch, node-scale-up, node-decommission, node-reboot: `platform_node.go`.
+- pki-rotate, credential-rotate, hardening-apply, cluster-reset: `platform_cluster.go`.
+Full unit tests exist. No stubs remain.
+
+**WS7 -- Full suite pass:**
+All 5 repos green: platform, guardian, seam-core, wrapper, conductor.
+
+**WS8:** BACKLOG and PROGRESS updated (this entry).
+
+**WS9:** STOP -- waiting for Governor push authorization.
+
+---
 
 ### session/10c (platform, MERGED -- PR #9 merged to main 2026-04-20)
 

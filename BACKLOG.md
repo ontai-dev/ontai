@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
-**Last updated:** April 20, 2026
-**Branch:** session/10d MERGED (platform c0d3cab, seam-core ca40489, wrapper 84da6af)
+**Last updated:** April 21, 2026
+**Branch:** session/11-pre-cluster-backlog-clearance (open, not pushed)
 
 Priority: High / Medium / Low
 
@@ -19,7 +19,7 @@ Priority: High / Medium / Low
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| PLATFORM-BL-TENANT-GC | platform | TalosCluster deletion should cascade to seam-tenant namespace via ownerReference Kubernetes GC. |
+| PLATFORM-BL-TENANT-GC | platform | CLOSED 2026-04-21 (session/11). Finalizer platform.ontai.dev/tenant-namespace-cleanup added to CAPI-enabled TalosCluster. Deletes seam-tenant-{name} on deletion. 4 unit tests. platform f7a310c. |
 | G-BL-CR-IMMUTABILITY | guardian | CLOSED 2026-04-20 (session/4). operator-authorship guard implemented; 10 unit tests + 6 e2e stubs. guardian commit 16c85f4. |
 | G-BL-CNPG-POOLER-AUTH | guardian | Connect to rw service not pooler to avoid md5 hash caching on guardian restart. Engineer session drafted. |
 | C-COREDNS-PATCH | compiler | CLOSED 2026-04-20 (session/4). INV-001-violating shell script removed from compiler; phase 05 meta updated; CI script step 7a handles patch inline. conductor commit a2eada4. 3 e2e stubs. |
@@ -90,6 +90,8 @@ Priority: High / Medium / Low
 
 | ID | Description | Closed |
 |----|-------------|--------|
+| PLATFORM-BL-CAPI-DERIVED-LINEAGE | SetDescendantLabels wired on SeamInfrastructureCluster, CAPI Cluster, TalosControlPlane, MachineDeployment. ClusterProvision rationale. root-ili-namespace label enables cross-ns ILI lookup. 4 unit tests. platform f7a310c. | 2026-04-21 |
+| GUARDIAN-BL-RBAC-INTAKE | POST /rbac-intake handler implemented. Compiler enable submits third-party RBAC resources; Guardian stamps ontai.dev/rbac-owner=guardian via SSA. 5 unit tests. guardian c0c41fb. | 2026-04-21 |
 | ARCH-BL-RUNNERCONFIG-UNIFICATION | Ephemeral pack-delivery RunnerConfig eliminated. ClusterPackReconciler creates PackExecution directly. | session commit 51fd2ec |
 | F-P9 | DSNS controller implementation in seam-core. | session/44+45 |
 | F-P8 | Compiler enable phase 0 CNPG implementation. | session/43 |
