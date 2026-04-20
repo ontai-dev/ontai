@@ -2,13 +2,13 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | session/7-ci-pipelines  | c8cf65f     | PR #2 open                |
-| conductor    | session/7-ci-pipelines  | a5c4a53     | PR #6 open                |
-| guardian     | session/7-ci-pipelines  | 6088d51     | PR #7 open                |
-| platform     | session/7-ci-pipelines  | 35ea97d     | PR #6 open                |
-| wrapper      | session/7-ci-pipelines  | 123f16e     | PR #4 open                |
-| seam-core    | session/7-ci-pipelines  | 801917f     | PR #5 open                |
-| domain-core  | session/1-governor-init | f01ca65     | active                    |
+| ontai        | main                                        | 2295045     | active (tracking)         |
+| conductor    | session/10-platform-operational-reconcilers | 4e52c9c     | unpushed                  |
+| guardian     | session/7-ci-pipelines                      | 6088d51     | PR #7 open                |
+| platform     | session/10-platform-operational-reconcilers | 7f5da7d     | unpushed                  |
+| wrapper      | session/7-ci-pipelines                      | 123f16e     | PR #4 open                |
+| seam-core    | session/10-platform-operational-reconcilers | 8312ad7     | unpushed                  |
+| domain-core  | session/1-governor-init                     | f01ca65     | active                    |
 
 ## Branch Convention
 session/{N}-{role}-{description} for all work branches.

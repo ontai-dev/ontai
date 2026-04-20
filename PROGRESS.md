@@ -1,11 +1,101 @@
 # ONT Platform Progress
 
-**Current state:** session/9b-corrections merged. session/9 complete. session/8 merged.
+**Current state:** session/10+10b PRs open (platform #8, conductor #7, seam-core #7). session/9b-corrections merged. session/9 complete. session/8 merged.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
+
+### session/10-platform-operational-reconcilers (platform, conductor, seam-core, PRs open)
+
+**Outcomes summary:**
+- platform: 7 operational reconcilers implemented (EtcdMaintenance, NodeMaintenance,
+  PKIRotation, ClusterReset, ClusterMaintenance, UpgradePolicy, NodeOperation)
+  plus HardeningProfile validation. 32 e2e stubs, unit + integration tests.
+- conductor: CapabilityEtcdDefrag naming fix (was etcd-maintenance), 14 stub handlers
+  for all named operational capabilities registered in RunnerConfig.
+- session/10b audit: 4 of 5 checks IMPLEMENTED, seam-core descendantRegistry ABSENT
+  then filled in same session.
+- seam-core: DescendantReconciler + SetDescendantLabels helper. Watches
+  runner.ontai.dev/RunnerConfig, appends DescendantEntry to ILI on root-ili label.
+- CNPG ordering decision: ILIs remain Kubernetes CRDs; no CNPG connector in seam-core.
+  Guardian-db is the sole CNPG sink. seam-core has no dependency on CNPG.
+- Operator wiring gap logged as SEAM-CORE-BL-DESCENDANT-LABELS (medium priority).
+
+### session/10-platform-operational-reconcilers detail
+
+WS1-WS2: Branched platform and conductor to session/10. WS2 audit confirmed all 7 day-2
+reconcilers PRESENT AND COMPLETE. No reconciler implementation needed from scratch.
+
+Critical gap found: conductor CapabilityEtcdMaintenance = "etcd-maintenance" mismatched
+conductor-schema.md §6 ("etcd-defrag") and platform reconciler (capabilityEtcdDefrag).
+
+**WS11 (conductor) -- CapabilityEtcdDefrag naming fix:**
+Renamed CapabilityEtcdMaintenance to CapabilityEtcdDefrag in constants.go.
+Updated stubs.go registration, platform_etcd.go handler references, and 3 test files.
+Conductor unit tests green. Commit 4e52c9c.
+
+**WS3 -- EtcdMaintenance:**
+Added PVCFallbackEnabled bool field to EtcdMaintenanceSpec. Updated reconciler to set
+EtcdBackupLocalFallback condition when PVCFallbackEnabled=true and no S3 configured.
+Added 3 unit tests: restore RunnerConfig, PVC fallback, idempotent after Ready=True.
+Created test/integration/day2/ suite and etcdmaintenance_test.go (2 envtest tests).
+Created test/e2e/day2/ suite and etcdmaintenance_e2e_test.go (6 stubs). Updated Makefile.
+Platform commit cd38ebd.
+
+**WS4-WS10 -- Remaining reconciler unit tests and HardeningProfile Valid condition:**
+- NodeMaintenance: 3 new tests (hardening-apply step, credential-rotate step, idempotent).
+- PKIRotation: 3 new tests (in-progress, complete, failed).
+- ClusterReset: 2 new tests (RunnerConfig complete, RunnerConfig failed).
+- ClusterMaintenance: 1 new test (blockOutsideWindows=true sets ConductorJobGateBlocked).
+- UpgradePolicy: 3 new tests (kube-upgrade RunnerConfig, CAPI path CAPIDelegated, failed).
+- NodeOperation: 2 new tests (reboot RunnerConfig, failed).
+- HardeningProfile: added ConditionTypeHardeningProfileValid/ReasonHardeningProfileValid/
+  ReasonHardeningProfileInvalid constants to API types. Added validateHardeningProfileSpec()
+  to reconciler. 3 new tests (valid, empty-patch invalid, empty-spec valid).
+All 21 new unit tests pass. Platform commit 7f5da7d.
+
+**WS12 -- AC-DAY2 e2e stubs:**
+Created 6 per-reconciler e2e stub files in test/e2e/day2/ (NodeMaintenance, PKIRotation,
+ClusterReset, UpgradePolicy, NodeOperation, ClusterMaintenance) plus day2_contracts_test.go
+in test/e2e/. All stubs skip until TENANT-CLUSTER-E2E closed. AC-DAY2 contract documented.
+
+**Test count summary (session/10 through session/10b):**
+- Unit tests added: 21 (platform); 0 net change (conductor refactors only); 3 (seam-core)
+- Integration test files: 1 new suite + 1 test file (2 tests, skip without KUBEBUILDER_ASSETS)
+- e2e stubs added: 7 new files, 32 stubs total (all skip until TENANT-CLUSTER-E2E)
+
+**session/10b WS2 audit (read-only):**
+All 5 checks verified across platform, wrapper, conductor, guardian, seam-core:
+
+| Check | Component | Result |
+|-------|-----------|--------|
+| 1 | Wrapper PackInstance drift + SecurityViolation | IMPLEMENTED |
+| 2 | Conductor local PermissionService (gRPC) | IMPLEMENTED |
+| 3 | seam-core descendantRegistry append | ABSENT -- filled in WS3 |
+| 4 | Guardian PermissionService gRPC server | IMPLEMENTED |
+| 5 | Conductor PackReceipt creation on tenant cluster | IMPLEMENTED |
+
+**session/10b WS3 -- seam-core DescendantReconciler (fills check 3 gap):**
+Added DescendantReconciler in internal/controller/descendant_reconciler.go. Watches
+DerivedObjectGVKs (starting with runner.ontai.dev/RunnerConfig). When a derived object
+carries label infrastructure.ontai.dev/root-ili, appends a DescendantEntry to the named
+ILI's DescendantRegistry. Idempotent: UID guard prevents duplicates. Registered in main.go
+alongside LineageReconciler loop.
+Added SetDescendantLabels helper in pkg/lineage/descendant.go for operators to set the
+three required labels (root-ili, seam-operator, creation-rationale) at derived object
+creation time.
+3 unit tests (append entry, idempotent, no-op without label). seam-core commit 8312ad7.
+
+WS4 cross-repo field reference verified during WS2: wrapper gate 3 reads Fresh condition
+type from PermissionSnapshot as unstructured -- matches guardian API. No mismatch.
+
+**WS5 full suite pass:**
+All five repos (platform, conductor, wrapper, guardian, seam-core): make test-unit green.
+No regressions.
+
+---
 
 ### session/9b-corrections (ontai root, merged to main)
 
