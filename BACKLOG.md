@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
 **Last updated:** April 20, 2026
-**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform); session/7-ci-pipelines (all repos); session/8-acceptance-contracts (platform, wrapper, guardian, seam-core)
+**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform); session/7-ci-pipelines (all repos); session/8-acceptance-contracts (platform, wrapper, guardian, seam-core); session/9-pre-cluster-verify (ontai root)
 
 Priority: High / Medium / Low
 
