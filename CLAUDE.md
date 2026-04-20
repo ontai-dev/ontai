@@ -44,7 +44,7 @@ one declared schema controller. No other components exist in v1.
 | Wrapper      | wrapper      | infra.ontai.dev      | Pack compile and delivery                 |
 | Guardian     | guardian     | security.ontai.dev   | RBAC plane, all clusters                  |
 | Compiler     | conductor    | runner.ontai.dev     | Compile-time intelligence, debian binary  |
-| Conductor    | conductor    | runner.ontai.dev     | Runtime intelligence, distroless binary   |
+| Conductor    | conductor    | runner.ontai.dev     | Runtime intelligence, execute=debian-slim, agent=distroless |
 | Seam Core    | seam-core    | infrastructure.ontai.dev | Cross-operator CRD definitions, declared |
 
 **Compiler and Conductor share the same repository** (conductor). They share all
@@ -73,11 +73,12 @@ short-lived tool, never a long-running Deployment.
 Kueue Jobs) and all agent-mode control loops live in the Conductor binary. Conductor
 is the only binary deployed as a running Deployment on any cluster in the Seam stack.
 
-**All images running on any cluster are distroless.** This is the zero-attack-surface
-principle. Every operator controller, every Conductor instance, every executor Job
-uses a distroless image. The only non-distroless image in the Seam stack is Compiler,
-which runs exclusively on the operator's workstation or in a compile-phase pipeline
-and is never deployed to any cluster.
+**Agent-mode images are distroless.** Every operator controller Deployment and every
+Conductor agent Deployment uses a distroless image. This is the zero-attack-surface
+principle for long-lived workloads. Execute-mode Kueue Jobs use debian-slim because
+SOPS, Helm, and Kustomize require a shell environment. Compiler is debian-slim and
+is never deployed to any cluster. The distroless invariant applies to all long-lived
+Deployments, not to short-lived execute-mode Jobs.
 
 **RunnerConfig is operator-generated at runtime.** When TalosCluster or PackBuild
 lands on the management cluster, the relevant operator generates RunnerConfig from
@@ -120,22 +121,30 @@ Never deployed as a Deployment. Never runs in execute or agent mode. Owns: boots
 launch sequence, enable phase operator installation, pack compilation, cluster secret
 generation, Helm rendering, Kustomize resolution, SOPS encryption.
 
-**Conductor** — execute and agent modes only. Distroless image. Deployed as a
-long-running Deployment in ont-system on the management cluster and every target
-cluster. Also stamped into Kueue Job specs for all named operational capabilities.
-Compile mode attempted on Conductor causes an immediate InvariantViolation exit.
+**Conductor execute mode** — short-lived Kueue Job pods on the management cluster.
+Debian-slim image. Requires shell environment for SOPS, Helm, and Kustomize.
+Target clusters never run execute-mode Jobs.
+
+**Conductor agent mode** — long-running Deployment in ont-system on every cluster.
+Distroless Go only. No shell. No scripts. Ever. Also carries the agent mode capability
+manifest declaration on startup.
+
+Compile mode attempted on either Conductor image causes an immediate InvariantViolation exit.
 
 **Shared codebase:** pkg/runnerlib and all internal modules except the compile-mode
 client wrappers (Helm renderer, Kustomize resolver, SOPS handler) which are
 Compiler exclusive and are excluded from the Conductor build via Go build tags.
 
-**Three modes — no other modes exist:**
+**Three modes -- no other modes exist:**
 
-| Mode     | Binary    | Invocation              | Duration    | Image       |
-|----------|-----------|-------------------------|-------------|-------------|
-| compile  | Compiler  | Direct CLI invocation   | Short-lived | Debian      |
-| execute  | Conductor | Kueue Job pod           | Short-lived | Distroless  |
-| agent    | Conductor | Deployment in ont-system| Long-lived  | Distroless  |
+| Mode     | Binary    | Invocation              | Duration    | Image         |
+|----------|-----------|-------------------------|-------------|---------------|
+| compile  | Compiler  | Direct CLI invocation   | Short-lived | Debian-slim   |
+| execute  | Conductor | Kueue Job pod           | Short-lived | Debian-slim   |
+| agent    | Conductor | Deployment in ont-system| Long-lived  | Distroless    |
+
+The execute image must never be distroless. The agent image must never be debian-slim.
+These are architectural invariants, not preferences.
 
 Execute mode Jobs run exclusively on the management cluster. Target clusters never
 run execute-mode Jobs. All cluster operations are performed remotely by management
@@ -263,9 +272,10 @@ INV-020 — The bootstrap RBAC window is a named, documented phase. It closes
   the management cluster.
 INV-021 — Screen is a future operator. No implementation work proceeds until
   a formal Architecture Decision Record is approved by the Platform Governor.
-INV-022 — All images deployed to any cluster in the Seam stack are distroless.
-  The only non-distroless image in the Seam stack is Compiler, which is never
-  deployed to any cluster. No exceptions.
+INV-022 — All long-lived Deployment images (operator controllers, Conductor agent)
+  are distroless. Execute-mode Kueue Job images are debian-slim (SOPS, Helm, and
+  Kustomize require a shell environment). Compiler is debian-slim and is never
+  deployed to any cluster. The distroless invariant applies to Deployments only.
 INV-023 — Conductor binary supports only execute and agent modes. Compile mode
   attempted on Conductor causes an immediate InvariantViolation structured exit
   before any other initialization proceeds.
@@ -453,6 +463,27 @@ kro is positioned as a resource composition engine two layers below Guardian and
 Conductor. ONT operators may use kro internally. kro is not a competitor. Cedar
 is the strongest candidate for policy expression inside Guardian EPG inputs.
 Neither competes with ONT's governance layer.
+
+**Decision 11 — Schema-First Development Contract (locked April 2026).**
+ontai-schema is the authoritative source for all CRD field definitions. The Go
+type implementations in each operator repo are implementations of the schema, not
+the source of it. Three enforcement rules:
+1. Schema changes go to ontai-schema first, before any operator repo implementation.
+2. Each operator repo CI validates CRD YAML against schema.ontai.dev before merge.
+3. Implementation PRs adding fields absent from the schema are blocked until the
+   schema PR merges first.
+This closes the gap between the ONT governance claim (schema is the contract) and
+how ONT develops. ONT eats its own cooking at the schema layer from this point forward.
+
+**Decision 12 — Three-image Conductor model (locked April 2026).**
+Compiler: debian-slim. GitOps pipeline only. Never deployed to cluster.
+Conductor execute mode: debian-slim. Requires shell environment for SOPS, Helm,
+and Kustomize. Runs as short-lived Kueue-managed Jobs on the management cluster only.
+Conductor agent mode: distroless Go only. Deployed to ont-system on every cluster.
+No shell. No scripts. Ever.
+The execute image must never be distroless. The agent image must never be debian-slim.
+These are architectural invariants, not preferences. Existing implementations are
+grandfathered but must align on next touch.
 
 ---
 
