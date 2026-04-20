@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
 **Last updated:** April 20, 2026
-**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform); session/7-ci-pipelines (all repos); session/8-acceptance-contracts (platform, wrapper, guardian, seam-core); session/9-pre-cluster-verify (ontai root); session/10-platform-operational-reconcilers (platform, conductor)
+**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform); session/7-ci-pipelines (all repos); session/8-acceptance-contracts (platform, wrapper, guardian, seam-core); session/9-pre-cluster-verify (ontai root); session/10-platform-operational-reconcilers (platform, conductor, seam-core)
 
 Priority: High / Medium / Low
 
@@ -40,6 +40,7 @@ Priority: High / Medium / Low
 | G-BL-SELF-AUDIT-MISSING | guardian | rbacprofile.provisioned and rbac.would_deny not in audit trail. Investigate LazyAuditWriter event dropping. |
 | GUARDIAN-BL-ENVTEST-FAIL | guardian | CLOSED 2026-04-20 (session/7). Three root causes fixed: RBACPolicy finalizer early-return, EPGReconciler OperatorNamespace unset, OIDC HTTP timeout race. All guardian integration suites green. |
 | WRAPPER-BL-ENVTEST-GC | wrapper | TestPackInstance_OwnerRefCascade_DeletedWhenPackExecutionDeleted requires kube-controller-manager GC controller. envtest starts API server and etcd only; GC controller is not started. Test must run against a real cluster. Promote when cluster e2e suite is established (TENANT-CLUSTER-E2E). |
+| SEAM-CORE-BL-DESCENDANT-LABELS | platform, wrapper, guardian | Operators must call lineage.SetDescendantLabels on RunnerConfig and other derived objects at creation time so DescendantReconciler can append entries to the ILI DescendantRegistry. DescendantReconciler implemented (seam-core 8312ad7); operator label wiring is the remaining step. |
 
 ---
 

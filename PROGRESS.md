@@ -1,13 +1,13 @@
 # ONT Platform Progress
 
-**Current state:** session/10-platform-operational-reconcilers in progress (WS14 next). session/9b-corrections merged. session/9 complete. session/8 merged.
+**Current state:** session/10-platform-operational-reconcilers in progress (WS7 next: STOP before push/PR). session/9b-corrections merged. session/9 complete. session/8 merged.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
 
-### session/10-platform-operational-reconcilers (platform, conductor, in progress)
+### session/10-platform-operational-reconcilers (platform, conductor, seam-core, in progress)
 
 WS1-WS2: Branched platform and conductor to session/10. WS2 audit confirmed all 7 day-2
 reconcilers PRESENT AND COMPLETE. No reconciler implementation needed from scratch.
@@ -45,10 +45,39 @@ Created 6 per-reconciler e2e stub files in test/e2e/day2/ (NodeMaintenance, PKIR
 ClusterReset, UpgradePolicy, NodeOperation, ClusterMaintenance) plus day2_contracts_test.go
 in test/e2e/. All stubs skip until TENANT-CLUSTER-E2E closed. AC-DAY2 contract documented.
 
-**Test count summary:**
-- Unit tests added: 21 (platform); 0 net change (conductor refactors only)
+**Test count summary (session/10 through session/10b):**
+- Unit tests added: 21 (platform); 0 net change (conductor refactors only); 3 (seam-core)
 - Integration test files: 1 new suite + 1 test file (2 tests, skip without KUBEBUILDER_ASSETS)
 - e2e stubs added: 7 new files, 32 stubs total (all skip until TENANT-CLUSTER-E2E)
+
+**session/10b WS2 audit (read-only):**
+All 5 checks verified across platform, wrapper, conductor, guardian, seam-core:
+
+| Check | Component | Result |
+|-------|-----------|--------|
+| 1 | Wrapper PackInstance drift + SecurityViolation | IMPLEMENTED |
+| 2 | Conductor local PermissionService (gRPC) | IMPLEMENTED |
+| 3 | seam-core descendantRegistry append | ABSENT -- filled in WS3 |
+| 4 | Guardian PermissionService gRPC server | IMPLEMENTED |
+| 5 | Conductor PackReceipt creation on tenant cluster | IMPLEMENTED |
+
+**session/10b WS3 -- seam-core DescendantReconciler (fills check 3 gap):**
+Added DescendantReconciler in internal/controller/descendant_reconciler.go. Watches
+DerivedObjectGVKs (starting with runner.ontai.dev/RunnerConfig). When a derived object
+carries label infrastructure.ontai.dev/root-ili, appends a DescendantEntry to the named
+ILI's DescendantRegistry. Idempotent: UID guard prevents duplicates. Registered in main.go
+alongside LineageReconciler loop.
+Added SetDescendantLabels helper in pkg/lineage/descendant.go for operators to set the
+three required labels (root-ili, seam-operator, creation-rationale) at derived object
+creation time.
+3 unit tests (append entry, idempotent, no-op without label). seam-core commit 8312ad7.
+
+WS4 cross-repo field reference verified during WS2: wrapper gate 3 reads Fresh condition
+type from PermissionSnapshot as unstructured -- matches guardian API. No mismatch.
+
+**WS5 full suite pass:**
+All five repos (platform, conductor, wrapper, guardian, seam-core): make test-unit green.
+No regressions.
 
 ---
 
