@@ -14,6 +14,13 @@ ont-lab/
 # Lab infrastructure files — not committed
 lab/
 
+# Claude project context — never committed
+.claude/
+
+# Architecture working documents — generated files, not version-controlled here
+ONT-Seam-Architecture.pptx
+build_pptx.py
+
 # Credentials and keys
 *.pem
 
