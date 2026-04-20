@@ -45,6 +45,18 @@ jobs:
           repository: ontai-dev/guardian
           path: guardian
 
+      - name: Checkout seam-core (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/seam-core
+          path: seam-core
+
+      - name: Checkout conductor (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/conductor
+          path: conductor
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -52,6 +64,7 @@ jobs:
           cache: true
 
       - name: Install envtest binaries
+        working-directory: guardian
         run: |
           go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
           ENVTEST_BIN=$(setup-envtest use --bin-dir /tmp/envtest-bins --print path 1.35.0)
@@ -80,6 +93,18 @@ jobs:
           repository: ontai-dev/platform
           path: platform
 
+      - name: Checkout seam-core (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/seam-core
+          path: seam-core
+
+      - name: Checkout conductor (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/conductor
+          path: conductor
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -87,6 +112,7 @@ jobs:
           cache: true
 
       - name: Install envtest binaries
+        working-directory: platform
         run: |
           go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
           ENVTEST_BIN=$(setup-envtest use --bin-dir /tmp/envtest-bins --print path 1.35.0)
@@ -115,6 +141,18 @@ jobs:
           repository: ontai-dev/wrapper
           path: wrapper
 
+      - name: Checkout seam-core (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/seam-core
+          path: seam-core
+
+      - name: Checkout conductor (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/conductor
+          path: conductor
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -122,6 +160,7 @@ jobs:
           cache: true
 
       - name: Install envtest binaries
+        working-directory: wrapper
         run: |
           go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
           ENVTEST_BIN=$(setup-envtest use --bin-dir /tmp/envtest-bins --print path 1.35.0)
@@ -150,6 +189,30 @@ jobs:
           repository: ontai-dev/conductor
           path: conductor
 
+      - name: Checkout guardian (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/guardian
+          path: guardian
+
+      - name: Checkout platform (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/platform
+          path: platform
+
+      - name: Checkout seam-core (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/seam-core
+          path: seam-core
+
+      - name: Checkout wrapper (replace dep)
+        uses: actions/checkout@v4
+        with:
+          repository: ontai-dev/wrapper
+          path: wrapper
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -157,6 +220,7 @@ jobs:
           cache: true
 
       - name: Install envtest binaries
+        working-directory: conductor
         run: |
           go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
           ENVTEST_BIN=$(setup-envtest use --bin-dir /tmp/envtest-bins --print path 1.35.0)
