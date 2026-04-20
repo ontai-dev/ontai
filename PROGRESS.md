@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Current state:** session/7-ci-pipelines in progress (all repos). session/4 PRs still open.
+**Current state:** session/8-acceptance-contracts in progress. session/7 merged. session/4 PRs closed.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -117,6 +117,49 @@ GitHub issue on any failure.
 
 **WS10:** PRs raised: conductor #6, guardian #7, platform #6, wrapper #4, seam-core #5, ontai #2.
 
+### session/8-acceptance-contracts (platform, wrapper, guardian, seam-core, in progress)
+
+Acceptance contract tests (AC-1 through AC-5) and run-acceptance.sh runner.
+
+**AC-1 -- Management cluster import (platform):**
+Five unit tests in platform/test/unit/controller/taloscluster_import_test.go covering:
+origin=imported, Ready=True, exactly one RunnerConfig in ont-system, no Job submitted,
+second reconcile idempotent, LineageSynced=False/LineageControllerAbsent on first pass.
+Five e2e stubs in platform/test/e2e/ac1_mgmt_import_test.go skip until MGMT_KUBECONFIG.
+platform commit d4e7f26.
+
+**AC-2 -- ClusterPack deploy gate chain (wrapper + guardian):**
+Wrapper: five unit tests (packexecution_gates_test.go): gate 1 unsigned, gate 2 revoked,
+gate 3 stale snapshot, gate 4 RBAC unprovisioned, all-gates-pass Job submission. Seven e2e
+stubs (ac2_clusterpack_deploy_test.go) skip until TENANT-CLUSTER-E2E closed.
+Guardian: five unit tests (epg_stale_predicate_test.go): permissionSnapshotStaleFilter
+passes Fresh->Stale, suppresses all other transitions, suppresses Create/Delete/Generic.
+wrapper commits ebb327d; guardian commit a89242e.
+
+**AC-3 -- Guardian audit sweep (guardian):**
+Four unit tests (audit_sweep_test.go): LazyAuditWriter drops when ErrDatabaseNotReady,
+forwards after Set, BootstrapAnnotationRunnable emits bootstrap.annotation_sweep_complete,
+RBACPolicyReconciler emits rbacpolicy.validated. Five e2e stubs skip until
+GUARDIAN-BL-ENVTEST-FAIL closed. guardian commit c78f474.
+
+**AC-4 -- LineageController manifest tracking (seam-core):**
+Five unit tests (ac4_lineage_controller_test.go): ILI with deterministic name, LineageSynced
+transitions to True/LineageIndexCreated, governance annotation on root, idempotency, all 9
+GVKs registered. Seven e2e stubs skip until TENANT-CLUSTER-E2E closed. seam-core commit e4d2cfa.
+
+**AC-5 -- DSNS lineage tracking in seam.ontave.dev (seam-core):**
+Six unit tests (ac5_dsns_test.go): TalosCluster cluster-topology, PackInstance pack-lineage,
+IdentityBinding identity-plane, RunnerConfig execution-authority, zone always has SOA+NS,
+all 5 DSNSGVKs registered. Seven e2e stubs skip until TENANT-CLUSTER-E2E closed.
+seam-core commit 96724b8.
+
+**WS7 -- run-acceptance.sh:**
+lab/scripts/run-acceptance.sh created. Runs make test-unit for all 5 repos sequentially.
+All 5 pass: 5 passed, 0 failed. (lab/ is gitignored -- file is local only.)
+
+**WS8 -- Full suite pass:**
+All five repo unit suites green via run-acceptance.sh. No regressions.
+
 ---
 
 ## Open Backlog (High Priority)
@@ -132,7 +175,8 @@ GitHub issue on any failure.
 
 ## Next Session Candidates
 
-1. WS10: Push session/7-ci-pipelines branches and raise PRs (conductor, guardian, platform, wrapper, seam-core, ontai root).
-2. Merge session/4 PRs (guardian #5, conductor #3, platform #4, ontai #1).
-3. ontai-schema PR for any fields added by session/4 (Schema-First contract).
-4. TENANT-CLUSTER-E2E -- ccs-dev onboarding.
+1. WS10 (session/8): Push session/8-acceptance-contracts branches and raise PRs
+   (platform, wrapper, guardian, seam-core). Stop for Governor review before push.
+2. TENANT-CLUSTER-E2E -- ccs-dev onboarding. Promotes all AC-2/AC-4/AC-5 e2e stubs to live.
+3. G-BL-CNPG-POOLER-AUTH -- guardian CNPG connection fix.
+4. PLATFORM-BL-TENANT-GC -- TalosCluster cascade deletion to seam-tenant namespace.

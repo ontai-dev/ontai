@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
 **Last updated:** April 20, 2026
-**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform); session/7-ci-pipelines (all repos)
+**Branch:** session/1-governor-init (all repos); session/2-lineage-sync (seam-core, guardian); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform); session/7-ci-pipelines (all repos); session/8-acceptance-contracts (platform, wrapper, guardian, seam-core)
 
 Priority: High / Medium / Low
 
@@ -98,3 +98,8 @@ Priority: High / Medium / Low
 | CNPG-BOOTSTRAP-ANNOTATION-SWEEP | SSA wiped system ClusterRoles. Fixed with MergePatch. | 1da7e64 |
 | CI-SCRIPT | enable-ccs-mgmt.sh committed to conductor/scripts/. Dry-run verified. | 2026-04-19 |
 | SEAM-CORE-BL-LINEAGE | PackInstance test added (seam-core 52de8d3). PermissionSnapshot LineageSynced init removed (guardian c36ffd3). Regression guards added both repos. | 2026-04-19 |
+| AC-1 | Management cluster import acceptance contract. 5 unit tests (platform). 5 e2e stubs skip until MGMT_KUBECONFIG. platform commit d4e7f26. | 2026-04-20 |
+| AC-2 | ClusterPack deploy gate chain acceptance contract. 5 gate unit tests (wrapper). 5 EPG predicate tests (guardian). 7 e2e stubs each skip until TENANT-CLUSTER-E2E. wrapper ebb327d; guardian a89242e. | 2026-04-20 |
+| AC-3 | Guardian audit sweep acceptance contract. 4 unit tests covering LazyAuditWriter and 2 controller audit actions. 5 e2e stubs skip until GUARDIAN-BL-ENVTEST-FAIL closed. guardian c78f474. | 2026-04-20 |
+| AC-4 | LineageController manifest tracking acceptance contract. 5 unit tests covering ILI creation, LineageSynced transition, governance annotation, idempotency, 9 GVKs. 7 e2e stubs skip until TENANT-CLUSTER-E2E. seam-core e4d2cfa. | 2026-04-20 |
+| AC-5 | DSNS lineage tracking acceptance contract. 6 unit tests covering all 4 CRD families and zone integrity. 7 e2e stubs skip until TENANT-CLUSTER-E2E. seam-core 96724b8. | 2026-04-20 |
