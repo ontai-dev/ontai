@@ -40,7 +40,8 @@ Priority: High / Medium / Low
 | G-BL-SELF-AUDIT-MISSING | guardian | rbacprofile.provisioned and rbac.would_deny not in audit trail. Investigate LazyAuditWriter event dropping. |
 | GUARDIAN-BL-ENVTEST-FAIL | guardian | CLOSED 2026-04-20 (session/7). Three root causes fixed: RBACPolicy finalizer early-return, EPGReconciler OperatorNamespace unset, OIDC HTTP timeout race. All guardian integration suites green. |
 | WRAPPER-BL-ENVTEST-GC | wrapper | TestPackInstance_OwnerRefCascade_DeletedWhenPackExecutionDeleted requires kube-controller-manager GC controller. envtest starts API server and etcd only; GC controller is not started. Test must run against a real cluster. Promote when cluster e2e suite is established (TENANT-CLUSTER-E2E). |
-| SEAM-CORE-BL-DESCENDANT-LABELS | platform, wrapper, guardian | Operators must call lineage.SetDescendantLabels on RunnerConfig and other derived objects at creation time so DescendantReconciler can append entries to the ILI DescendantRegistry. DescendantReconciler implemented (seam-core 8312ad7); operator label wiring is the remaining step. |
+| SEAM-CORE-BL-DESCENDANT-LABELS | platform, wrapper, guardian | Operators must call lineage.SetDescendantLabels when creating RunnerConfigs and PackInstances. Infrastructure is in place in seam-core. Operator call sites are the remaining step. Required before AC-4 e2e stubs can be promoted to live. |
+| CONDUCTOR-BL-CAPABILITY-IMPL | conductor | 14 named capability handlers are minimal stubs. Full implementation required for day2 operations on live cluster. One session per capability family: etcd ops, node ops, PKI, upgrade, pack-deploy. |
 
 ---
 
@@ -104,3 +105,5 @@ Priority: High / Medium / Low
 | AC-3 | Guardian audit sweep acceptance contract. 4 unit tests covering LazyAuditWriter and 2 controller audit actions. 5 e2e stubs skip until GUARDIAN-BL-ENVTEST-FAIL closed. guardian c78f474. | 2026-04-20 |
 | AC-4 | LineageController manifest tracking acceptance contract. 5 unit tests covering ILI creation, LineageSynced transition, governance annotation, idempotency, 9 GVKs. 7 e2e stubs skip until TENANT-CLUSTER-E2E. seam-core e4d2cfa. | 2026-04-20 |
 | AC-5 | DSNS lineage tracking acceptance contract. 6 unit tests covering all 4 CRD families and zone integrity. 7 e2e stubs skip until TENANT-CLUSTER-E2E. seam-core 96724b8. | 2026-04-20 |
+| AC-DAY2 | Day-2 operational reconcilers acceptance contract. 21 platform unit tests, 2 integration tests, 32 e2e stubs across 8 reconcilers. EtcdMaintenance PVCFallbackEnabled field added. HardeningProfile Valid condition added. platform cd38ebd, 7f5da7d; conductor 4e52c9c. | 2026-04-20 |
+| SEAM-CORE-BL-DESCENDANT-APPEND | seam-core DescendantReconciler: watches RunnerConfig GVK, appends DescendantEntry to ILI on root-ili label. SetDescendantLabels helper in pkg/lineage. 3 unit tests. seam-core 8312ad7. | 2026-04-20 |

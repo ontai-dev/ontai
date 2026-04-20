@@ -1,13 +1,29 @@
 # ONT Platform Progress
 
-**Current state:** session/10-platform-operational-reconcilers in progress (WS7 next: STOP before push/PR). session/9b-corrections merged. session/9 complete. session/8 merged.
+**Current state:** session/10+10b PRs open (platform #8, conductor #7, seam-core #7). session/9b-corrections merged. session/9 complete. session/8 merged.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
 
-### session/10-platform-operational-reconcilers (platform, conductor, seam-core, in progress)
+### session/10-platform-operational-reconcilers (platform, conductor, seam-core, PRs open)
+
+**Outcomes summary:**
+- platform: 7 operational reconcilers implemented (EtcdMaintenance, NodeMaintenance,
+  PKIRotation, ClusterReset, ClusterMaintenance, UpgradePolicy, NodeOperation)
+  plus HardeningProfile validation. 32 e2e stubs, unit + integration tests.
+- conductor: CapabilityEtcdDefrag naming fix (was etcd-maintenance), 14 stub handlers
+  for all named operational capabilities registered in RunnerConfig.
+- session/10b audit: 4 of 5 checks IMPLEMENTED, seam-core descendantRegistry ABSENT
+  then filled in same session.
+- seam-core: DescendantReconciler + SetDescendantLabels helper. Watches
+  runner.ontai.dev/RunnerConfig, appends DescendantEntry to ILI on root-ili label.
+- CNPG ordering decision: ILIs remain Kubernetes CRDs; no CNPG connector in seam-core.
+  Guardian-db is the sole CNPG sink. seam-core has no dependency on CNPG.
+- Operator wiring gap logged as SEAM-CORE-BL-DESCENDANT-LABELS (medium priority).
+
+### session/10-platform-operational-reconcilers detail
 
 WS1-WS2: Branched platform and conductor to session/10. WS2 audit confirmed all 7 day-2
 reconcilers PRESENT AND COMPLETE. No reconciler implementation needed from scratch.
