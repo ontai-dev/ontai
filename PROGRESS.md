@@ -113,6 +113,10 @@ GitHub issue on any failure.
 - conductor: build, test-unit, test-integration, e2e all exit 0.
 - guardian: build, test-unit, test-integration (50s), e2e all exit 0.
 
+**WS9:** PROGRESS.md, BACKLOG.md, GIT_TRACKING.md updated.
+
+**WS10:** PRs raised: conductor #6, guardian #7, platform #6, wrapper #4, seam-core #5, ontai #2.
+
 ---
 
 ## Open Backlog (High Priority)
