@@ -1,11 +1,51 @@
 # ONT Platform Progress
 
-**Current state:** session/10+10b PRs open (platform #8, conductor #7, seam-core #7). session/9b-corrections merged. session/9 complete. session/8 merged.
+**Current state:** session/10c in progress (platform). session/10+10b PRs open (platform #8, conductor #7, seam-core #7). session/9b-corrections merged. session/9 complete. session/8 merged.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
+
+### session/10c (platform, in progress -- WS11 STOP pending Governor push authorization)
+
+**Architecture correction:** 6 operational reconcilers (EtcdMaintenance, NodeMaintenance,
+PKIRotation, ClusterReset, UpgradePolicy, NodeOperation) rewrote from incorrect per-operation
+RunnerConfig creation to the correct Job-based pattern. Conductor's CapabilityPublisher
+self-declares capabilities in RunnerConfig `status.capabilities` (CR-INV-005); operators
+read this field before submitting any batch/v1 Job. WS8 (adding capabilities to bootstrap
+RunnerConfig spec.steps) was dropped after architectural confirmation.
+
+**WS6 -- Reconciler rewrite (6 files):**
+- `platform/internal/controller/operational_job_base.go`: added
+  `capabilityUnavailableRetryInterval`, `getClusterRunnerConfig`, `hasCapability`.
+- `platform/api/v1alpha1/capability_conditions.go`: new file with
+  `ConditionTypeCapabilityUnavailable`, `ReasonRunnerConfigNotFound`, `ReasonCapabilityNotPublished`.
+- `platform/internal/controller/runnerconfig_cr.go`: added `CapabilityEntry` struct and
+  `Capabilities []CapabilityEntry` to `OperationalRunnerConfigStatus`.
+- 6 reconcilers rewritten: EtcdMaintenance, NodeMaintenance, PKIRotation, ClusterReset,
+  UpgradePolicy, NodeOperation. All now gate on cluster RunnerConfig capability, submit
+  batch/v1 Job, watch OperationResult ConfigMap. NodeMaintenance: removed 4-step
+  cordon/drain/operate/uncordon; single capability Job. UpgradePolicy: stack-upgrade is
+  single compound capability.
+
+**WS7 -- Unit test rewrite (2 files):**
+- `platform/test/unit/controller/day2_reconcilers_test.go`: complete rewrite. All ORC
+  checks replaced with Job checks. Added cluster RC pre-load pattern using `clusterRC()`
+  helper. Added `successResultCM`, `failedResultCM`, `preExistingJob` helpers. NodeAffinity
+  assertions replace ORC field assertions for node exclusion tests.
+- `platform/test/unit/controller/runnerconfig_production_test.go`: rewritten for Job
+  pattern. ORC list assertions replaced with Job list assertions.
+- All unit tests pass (go test ./test/unit/... green).
+
+WS8: CANCELLED. Conductor self-declares capabilities via CapabilityPublisher (CR-INV-005).
+No changes needed to ensureBootstrapRunnerConfig.
+
+WS9: PROGRESS.md updated (this entry).
+WS10: Full suite pass -- go build, go vet, go test all green.
+WS11: STOP. Waiting for Governor push authorization.
+
+---
 
 ### session/10-platform-operational-reconcilers (platform, conductor, seam-core, PRs open)
 
