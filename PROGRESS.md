@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Current state:** session/10d-tenant-onboarding-blockers in progress (platform, seam-core, wrapper branched; commits ready, not yet pushed). session/10c MERGED (platform PR #9 -> main, 2026-04-20). session/10+10b PRs merged. session/9b-corrections merged.
+**Current state:** session/10d MERGED (platform PR #10, seam-core PR #8, wrapper PR #6 all merged to main 2026-04-20). session/10c MERGED. session/10+10b PRs merged. session/9b-corrections merged.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---

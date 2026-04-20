@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
 **Last updated:** April 20, 2026
-**Branch:** session/10d-tenant-onboarding-blockers (platform, seam-core, wrapper); session/10c (platform, merged)
+**Branch:** session/10d MERGED (platform c0d3cab, seam-core ca40489, wrapper 84da6af)
 
 Priority: High / Medium / Low
 
@@ -41,9 +41,9 @@ Priority: High / Medium / Low
 | GUARDIAN-BL-ENVTEST-FAIL | guardian | CLOSED 2026-04-20 (session/7). Three root causes fixed: RBACPolicy finalizer early-return, EPGReconciler OperatorNamespace unset, OIDC HTTP timeout race. All guardian integration suites green. |
 | WRAPPER-BL-ENVTEST-GC | wrapper | TestPackInstance_OwnerRefCascade_DeletedWhenPackExecutionDeleted requires kube-controller-manager GC controller. envtest starts API server and etcd only; GC controller is not started. Test must run against a real cluster. Promote when cluster e2e suite is established (TENANT-CLUSTER-E2E). |
 | SEAM-CORE-BL-DESCENDANT-LABELS | guardian | PARTIALLY CLOSED 2026-04-20 (session/10d). Platform RunnerConfig and Wrapper PackInstance wired. Guardian PermissionSnapshot wiring deferred -- no single root RBACPolicy per snapshot; architectural question unresolved. See GUARDIAN-BL-PERMISSIONSNAPSHOT-WIRING. |
-| PLATFORM-BL-ILI-CROSS-NS | platform | Platform bootstrap RunnerConfig is in ont-system; TalosCluster ILI is in seam-system. DescendantReconciler resolves ILI by obj.GetNamespace() -- labels are set but cross-namespace lookup will not find the ILI. Requires either moving the RC to seam-system or extending DescendantReconciler with a cross-ns resolver. |
+| PLATFORM-BL-ILI-CROSS-NS | platform, seam-core | CLOSED 2026-04-20 (session/10d). Added root-ili-namespace label to SetDescendantLabels. DescendantReconciler reads the label and resolves cross-namespace ILI. Unit test added. platform c0d3cab, seam-core ca40489. |
 | PLATFORM-BL-HARDENINGPROFILE-MERGE | platform | HardeningProfileRef field absent from TalosClusterSpec. TalosConfigTemplate cannot merge HardeningProfile patches at runtime. Decision 11: schema PR to ontai-schema required before implementation. Governor session needed. |
-| GUARDIAN-BL-PERMISSIONSNAPSHOT-WIRING | guardian | SetDescendantLabels not wired on PermissionSnapshot creation. EPGController creates one snapshot per cluster over all RBACProfiles/policies -- no single root RBACPolicy per snapshot. Lineage root for PermissionSnapshot requires architectural decision before wiring. |
+| GUARDIAN-BL-PERMISSIONSNAPSHOT-WIRING | guardian | CLOSED NOT A GAP (Governor ruling 2026-04-20). PermissionSnapshot lineage wiring deferred by design. |
 | CONDUCTOR-BL-CAPABILITY-IMPL | conductor | 14 named capability handlers are minimal stubs. Full implementation required for day2 operations on live cluster. One session per capability family: etcd ops, node ops, PKI, upgrade, pack-deploy. |
 
 ---
