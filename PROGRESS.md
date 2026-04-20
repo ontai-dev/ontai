@@ -147,27 +147,40 @@ platform `test/unit/controller/seaminfrastructuremachine_reconciler_test.go`:
 
 captureApplier struct added to capture Talos API call args without network.
 
+**WS4 C/D audit (session/10d continuation):**
+- C: CiliumPending set when CAPI Cluster Running -- COMPLETE (taloscluster_controller.go Step 8)
+- D: CiliumPending cleared when Cilium PackInstance Ready -- COMPLETE (Step 10/transitionToReady)
+
+**WS6 audit:** Tenant namespace created at Step 1 of reconcileCAPIPath, before all CAPI objects (SIC, Cluster, TCT, TCP, MachineDeployments) -- YES.
+
 **WS7 -- Compiler ccs-dev dry-run:**
-Input: mode=import, role=tenant, namespace=seam-tenant-ccs-dev, importExistingCluster=true (talosconfig-only path).
-Output verified:
+Fixture from Governor brief had two gaps: (1) `importExistingCluster: true` without `machineConfigPaths` requires live cluster API -- not suitable for workstation dry-run; (2) `role: tenant` absent from fixture.
+Fixed by: adding `role: tenant` and `machineConfigPaths` pointing to a locally generated init-node machine config. Also rebuilt compiler to pick up *CAPIConfig pointer change.
+Output verified with fixed fixture + rebuilt compiler:
 - spec.mode=import -- PASS
 - spec.role=tenant -- PASS
 - namespace=seam-tenant-ccs-dev -- PASS
-- spec.capi.enabled=false -- PASS
-- spec.capi.controlPlane: {} -- FINDING: pre-built binary emits empty controlPlane block; current types define ControlPlane as *CAPIControlPlaneConfig with omitempty (fix present, binary predates it). Non-blocking.
+- spec.capi block absent (nil pointer, omitempty suppressed) -- PASS (satisfies capi.enabled=false AND controlPlane absent)
 
-**WS8 -- Full suite pass (all 5 repos):**
+**WS8 (session/10d continuation) -- Full suite pass (all 5 repos):**
 - platform: go build CLEAN, go vet CLEAN, make test-unit PASS
 - seam-core: go build CLEAN, go vet CLEAN, make test-unit PASS
 - wrapper: go build CLEAN, go vet CLEAN, make test-unit PASS
 - guardian: make test-unit PASS (no changes)
 - conductor: make test-unit PASS (no changes)
 
-**WS9:** PROGRESS.md and BACKLOG.md updated (this entry).
+**WS9 (session/10d continuation) -- TalosConfigTemplate CNI/CiliumPending tests:**
+3 new tests added to taloscluster_capi_provisioning_test.go:
+1. TestTalosClusterReconcile_CAPI_TalosConfigTemplateHasCNINone
+2. TestTalosClusterReconcile_CAPI_TalosConfigTemplateHasBPFSysctls
+3. TestTalosClusterReconcile_CAPI_CiliumPendingClearedWhenPackInstanceReady
+All PASS. platform commit b2b93db.
+
+**PROGRESS/BACKLOG updated (this entry).**
 **WS11:** STOP. Waiting for Governor push authorization.
 
 Commits ready (not pushed):
-- platform: d57429e (BPF fix, SetDescendantLabels wiring, 5 SIM tests)
+- platform: d57429e, b2b93db (BPF fix, SetDescendantLabels, SIM tests, CNI/BPF tests, CiliumPending-clear test)
 - seam-core: 51bbce3 (IndexName export, PackInstance GVK)
 - wrapper: 6c6afee (PackInstance SetDescendantLabels wiring)
 
