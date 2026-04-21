@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Current state:** session/12-lineage-schema-amendment in progress. WS1-WS12 complete, WS13 STOP (awaiting Governor push authorization).
+**Current state:** session/13-live-cluster-validation in progress. Phase A PASS. WS1-WS12 complete. Conductor PR pending Governor push authorization.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -78,6 +78,54 @@ All 4 repos green: go build, make test-unit, go vet.
 **WS12:** PROGRESS.md updated (this entry).
 
 **WS13:** STOP. Awaiting Governor push authorization.
+
+---
+
+### session/13-live-cluster-validation (ontai root, conductor -- in progress)
+
+**Role:** Lab Operator.
+
+**WS1 -- session/12 merge (CLOSED):**
+All session/12 PRs merged to main. ontai-schema PR #1, seam-core PR #9, guardian PR #7, platform PR #8, wrapper PR #7 -- all squash-merged, branches deleted.
+
+**WS2 -- Image rebuild and enable bundle regeneration (CLOSED):**
+All five operator images rebuilt and pushed to 10.20.0.1:5000 with tag `dev`.
+Enable bundle (40 files) regenerated under `lab/configs/ccs-mgmt/compiled/enable/`.
+Conductor go.mod bumped to seam-core session/12 merge commit.
+Conductor PR raised on session/13 branch (pending Governor push).
+
+**WS3-WS9 -- Phase scripts authored (CLOSED):**
+All six phase scripts created and syntax-verified:
+- `phase-a-mgmt-import.sh`: ccs-mgmt import, AC-1/AC-3
+- `phase-b-dev-import.sh`: ccs-dev import, AC-2/AC-4
+- `phase-c-dev-native-bootstrap.sh`: destructive ONT-native bootstrap (CONFIRM_DESTRUCTIVE gate)
+- `phase-d-dev-capi-bootstrap.sh`: destructive CAPI bootstrap (CONFIRM_DESTRUCTIVE gate)
+- `phase-e-helm-clusterpack.sh`: cert-manager ClusterPack deploy
+- `phase-f-day2-ops.sh`: six day-2 scenarios (lineage, audit, RBAC intake, tenant GC)
+- `run-all-phases.sh`: master runner for A+B
+
+**WS10 -- Phase A execution (CLOSED):**
+Three bugs found and fixed during live phase A run:
+
+BLOCKER-001: SeamMembership CRD absent from enable bundle (SC-INV-003 violation).
+Fix: Added `00-infrastructure-dependencies/seam-core-crds.yaml` with both ILI and SeamMembership CRDs.
+
+BLOCKER-002: Guardian webhook timeout on cluster startup.
+Fix: phase-a script now waits for guardian rollout status before applying phase 01 RBAC resources.
+
+BLOCKER-003: Conductor --cluster-ref=ccs-mgmt arg missing from compiled enable bundle.
+Fix: `04-conductor/conductor-deployment.yaml` updated with `args: [agent, --cluster-ref=ccs-mgmt]`.
+
+BLOCKER-004: talosconfig Secret not in enable bundle -- TalosCluster reconciler blocked on KubeconfigUnavailable.
+Fix: phase-a now creates `seam-mc-ccs-mgmt-talosconfig` secret from `lab/configs/ccs-mgmt/talosconfig` before applying TalosCluster CR.
+
+Final result: TalosCluster ccs-mgmt Ready=True, AC-1 PASS (1/20 live), AC-3 PASS (0/22 live, stubs).
+
+**WS11 -- Commit (CLOSED):**
+All phase scripts and enable bundle fixes committed to session/13 branch.
+Commit: a4412b8
+
+**WS12:** PROGRESS.md and BACKLOG.md updated (this entry).
 
 ---
 
