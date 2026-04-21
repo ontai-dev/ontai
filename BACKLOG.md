@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
 **Last updated:** April 21, 2026
-**Branch:** session/13-live-cluster-validation in progress (phase A PASS, conductor PR pending Governor push)
+**Branch:** session/13 in progress (conductor PR #9 merged; guardian CNPG fix merged; investigation complete)
 
 Priority: High / Medium / Low
 
@@ -24,7 +24,7 @@ Priority: High / Medium / Low
 | SEAM-CORE-BL-DECLARING-PRINCIPAL | seam-core, guardian, platform, wrapper | CLOSED 2026-04-21 (session/12). declaringPrincipal on rootBinding, createdAt+actorRef on descendantRegistry, outcomeRegistry with OutcomeReconciler, lineageIndexRef in guardian audit. ontai-schema PR #1. 13 new unit tests. |
 | PLATFORM-BL-TENANT-GC | platform | CLOSED 2026-04-21 (session/11). Finalizer platform.ontai.dev/tenant-namespace-cleanup added to CAPI-enabled TalosCluster. Deletes seam-tenant-{name} on deletion. 4 unit tests. platform f7a310c. |
 | G-BL-CR-IMMUTABILITY | guardian | CLOSED 2026-04-20 (session/4). operator-authorship guard implemented; 10 unit tests + 6 e2e stubs. guardian commit 16c85f4. |
-| G-BL-CNPG-POOLER-AUTH | guardian | Connect to rw service not pooler to avoid md5 hash caching on guardian restart. Engineer session drafted. |
+| G-BL-CNPG-POOLER-AUTH | guardian | CLOSED 2026-04-21 (session/13). RunWithRetry now takes configFn closure; credentials re-read from secret on every retry. EPG stale-on-restart also fixed (permissionSnapshotStaleFilter.Create handles Fresh=False snapshots). guardian 044689b. |
 | C-COREDNS-PATCH | compiler | CLOSED 2026-04-20 (session/4). INV-001-violating shell script removed from compiler; phase 05 meta updated; CI script step 7a handles patch inline. conductor commit a2eada4. 3 e2e stubs. |
 | C-KUEUE-WEBHOOK | compiler | CLOSED 2026-04-20 (session/4). Webhook scoping moved to Phase 00 immediately after kueue-controller.yaml; wait_crd guard added. conductor commit a0a4c53. 3 e2e stubs. |
 
@@ -34,6 +34,8 @@ Priority: High / Medium / Low
 
 | ID | Component | Description |
 |----|-----------|-------------|
+| WRAPPER-BL-ILI-DECLARING-PRINCIPAL | guardian, wrapper | Guardian MutatingWebhookConfiguration for declaringPrincipal was never added to the compiler output. Session/12 added the mutating webhook handler code but the MutatingWebhookConfiguration YAML was never emitted by the compiler or applied to the cluster. Only ValidatingWebhookConfigurations exist on ccs-mgmt (guardian-lineage-immutability-webhook, guardian-rbac-webhook). guardian/main.go registers only /validate-rbac and /validate-lineage paths. ClusterPack and PackExecution CRs have no declaring-principal annotation. Fix: add MutatingWebhookConfiguration YAML to compiler enable output covering infra.ontai.dev/v1alpha1 CREATE for clusterpacks and packexecutions; apply to cluster. |
+| WRAPPER-BL-CROSS-CLUSTER-APPLY | conductor, wrapper | pack-deploy Job executed successfully (PackInstance Ready=True) but nginx was never deployed to the cluster. Root causes: (1) conductor execute mode kernel.RunExecute returns nil on HaltOnFailure failure path (kernel/execute.go:134) causing Job to exit 0 despite capability failure; (2) wrapper reconciler checks OperationResult ConfigMap existence but not content -- marks PackExecution Succeeded without reading the failure status; (3) nginx Helm render does not include a Namespace manifest so the first SSA apply to ingress-nginx namespace fails. Fix requires three changes: conductor kernel should return an error (exit 1) on HaltOnFailure failure; wrapper reconciler must read result.status from ConfigMap and fail PackExecution on ResultFailed; pack ClusterPack specs must include a Namespace manifest as the first resource. |
 | WRAPPER-BL-PACKINSTANCE-WATCH | wrapper | PackInstance deletion must trigger ClusterPack reconcile with PackExecution cascade delete. Fixed in 51fd2ec. Verify no regression after ARCH-BL-RUNNERCONFIG-UNIFICATION. |
 | PLATFORM-BL-STATUS-PATCH-CONFLICT | platform | TalosClusterReconciler status patch conflicts under 2-replica deployment. Use RetryOnConflict. |
 | PLATFORM-BL-3-LOCALQUEUE | platform | Platform must create LocalQueue in seam-tenant for tenant clusters. Currently only management cluster gets it from compiler phase 05. |

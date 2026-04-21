@@ -24,3 +24,4 @@ spec:
   rbacPolicyRef: seam-platform-rbac-policy
   targetClusters:
   - management
+  - ccs-mgmt
