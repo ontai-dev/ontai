@@ -5,9 +5,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    platform.ontai.dev/cluster-ref: ccs-dev
-    platform.ontai.dev/role: management
   labels:
     app.kubernetes.io/component: operator
     app.kubernetes.io/name: conductor
@@ -22,6 +19,9 @@ spec:
   strategy: {}
   template:
     metadata:
+      annotations:
+        platform.ontai.dev/cluster-ref: ccs-dev
+        platform.ontai.dev/role: management
       labels:
         app.kubernetes.io/component: operator
         app.kubernetes.io/name: conductor

@@ -19,9 +19,9 @@ metadata:
 stringData:
   private.pem: |
     -----BEGIN PRIVATE KEY-----
-    MC4CAQAwBQYDK2VwBCIEIHrG/5jAhpjpKanSNJQvZ22pkFfD1x0KL/E70SlFPEgW
+    MC4CAQAwBQYDK2VwBCIEICSUwyzTPdbs5APjWAioHJY4A6ySQsZIFAaa7hvf4zlE
     -----END PRIVATE KEY-----
   public.pem: |
     -----BEGIN PUBLIC KEY-----
-    MCowBQYDK2VwAyEA0KHbUV4hmH4ccwWGsIE0+0ebezH7dcvC8qppcnZoRok=
+    MCowBQYDK2VwAyEAISN5e3cXspNG0w+MscN3tF0+j/YszYS63vwp7OOvH8E=
     -----END PUBLIC KEY-----
