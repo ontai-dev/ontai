@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
 **Last updated:** April 21, 2026
-**Branch:** session/12-lineage-schema-amendment in progress (WS1-WS12 complete, awaiting Governor push)
+**Branch:** session/13-live-cluster-validation in progress (phase A PASS, conductor PR pending Governor push)
 
 Priority: High / Medium / Low
 
@@ -11,7 +11,9 @@ Priority: High / Medium / Low
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Required for alpha. |
+| TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Required for alpha. Phase B script ready. Prerequisite: ccs-dev VMs and TalosCluster CR for ccs-dev (configs/ccs-dev/compiled/bootstrap/ does not exist yet -- need compiler bootstrap run for ccs-dev). |
+| LAB-ENABLE-BUNDLE-SEAM-CORE-CRDS | lab, seam-core | SC-INV-003 violation found in phase A: SeamMembership CRD was absent from enable bundle. Fixed in session/13 (seam-core-crds.yaml added to 00-infrastructure-dependencies). Validate fix survives next full cluster-up. CLOSED 2026-04-21 (session/13). |
+| LAB-CONDUCTOR-CLUSTER-REF | lab, conductor | Conductor enable bundle missing --cluster-ref=ccs-mgmt arg. Fixed in session/13 (conductor-deployment.yaml updated). Compiler enable must pass --cluster-name flag. CLOSED 2026-04-21 (session/13). |
 
 ---
 

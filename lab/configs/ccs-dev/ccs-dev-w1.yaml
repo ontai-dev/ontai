@@ -1,0 +1,96 @@
+version: v1alpha1
+debug: false
+persist: true
+machine:
+    type: worker
+    token: 6avmds.29tyiaca5vg3sg3k
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQekNCOHFBREFnRUNBaEVBakpXTW9jdnZJak12U0J5QW9yL20zVEFGQmdNclpYQXdFREVPTUF3R0ExVUUKQ2hNRmRHRnNiM013SGhjTk1qWXdOREl3TVRjeU16QTJXaGNOTXpZd05ERTNNVGN5TXpBMldqQVFNUTR3REFZRApWUVFLRXdWMFlXeHZjekFxTUFVR0F5dGxjQU1oQUJvUWF0WmZpaUcvWW0rWnBPcmpxaHhDbHJvREd5ZTZQQytvClhsWEZydjZubzJFd1h6QU9CZ05WSFE4QkFmOEVCQU1DQW9Rd0hRWURWUjBsQkJZd0ZBWUlLd1lCQlFVSEF3RUcKQ0NzR0FRVUZCd01DTUE4R0ExVWRFd0VCL3dRRk1BTUJBZjh3SFFZRFZSME9CQllFRkFjakJtOXJYMzIvem1Pcgp2M1pBczRoaVdYbmJNQVVHQXl0bGNBTkJBTzhrc2NoOWI1SjNWdmNQcEdnYXp1WkpOOHcvSjRmSkowVGc4TDFmClp3ZzA5WE9RRVJpWGlMdFdNdzJPLzFzcmt0d0dRVTJSaXlWRmVuWGt4REdJUVFvPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+    certSANs: []
+    kubelet:
+        image: ghcr.io/siderolabs/kubelet:v1.32.3
+        extraMounts:
+            - destination: /var/local-path-provisioner
+              type: bind
+              source: /var/local-path-provisioner
+              options:
+                - bind
+                - rshared
+                - rw
+        defaultRuntimeSeccompProfileEnabled: true
+        nodeIP:
+            validSubnets:
+                - 10.20.0.0/24
+        disableManifestsDirectory: true
+    network:
+        hostname: ccs-dev-w1
+        interfaces:
+            - interface: enp1s0
+              addresses:
+                - 10.20.0.14/24
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 10.20.0.1
+        nameservers:
+            - 8.8.4.4
+            - 8.8.8.8
+    install:
+        disk: /dev/sda
+        image: ghcr.io/siderolabs/installer:v1.9.3
+        wipe: false
+    sysctls:
+        net.ipv4.conf.all.rp_filter: "0"
+        net.ipv4.conf.default.rp_filter: "0"
+    registries:
+        mirrors:
+            10.20.0.1:5000:
+                endpoints:
+                    - http://10.20.0.1:5000
+            docker.io:
+                endpoints:
+                    - http://10.20.0.1:5000
+            ghcr.io:
+                endpoints:
+                    - http://10.20.0.1:5000
+            registry.k8s.io:
+                endpoints:
+                    - http://10.20.0.1:5000
+    features:
+        rbac: true
+        stableHostname: true
+        apidCheckExtKeyUsage: true
+        diskQuotaSupport: true
+        kubePrism:
+            enabled: true
+            port: 7445
+        hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+    kernel:
+        modules:
+            - name: br_netfilter
+            - name: xt_socket
+cluster:
+    id: HdSGEeaAFHKNBImR5yUJkOX56sS837DKJvcJK2SKELk=
+    secret: pZ6GhYExDKIuYtY8b9SwF5EhMnid+E6dy/t5YuFtsCI=
+    controlPlane:
+        endpoint: https://10.20.0.20:6443
+    clusterName: ccs-dev
+    network:
+        dnsDomain: cluster.local
+        podSubnets:
+            - 10.244.0.0/16
+        serviceSubnets:
+            - 10.96.0.0/12
+    token: j33lzd.i44b566555fwk1xe
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJpRENDQVMrZ0F3SUJBZ0lRWjRsQnoxQTdFa2ExcDRmcVBxbHc0VEFLQmdncWhrak9QUVFEQWpBVk1STXcKRVFZRFZRUUtFd3ByZFdKbGNtNWxkR1Z6TUI0WERUSTJNRFF5TURFM01qTXdObG9YRFRNMk1EUXhOekUzTWpNdwpObG93RlRFVE1CRUdBMVVFQ2hNS2EzVmlaWEp1WlhSbGN6QlpNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VICkEwSUFCSC9sS2ZxK3RjbTQrOEtvSmdOTEREbXdBd1cvbzlMR2NVQis0NlMwNlhZZEg3MHRINzgvTGtaYzVXUWMKS243NHFMZEZCQWhsRW1WZlNFSzNFUGUxY1lHallUQmZNQTRHQTFVZER3RUIvd1FFQXdJQ2hEQWRCZ05WSFNVRQpGakFVQmdnckJnRUZCUWNEQVFZSUt3WUJCUVVIQXdJd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFCkZnUVV5dWdDVndBQmJ0VnpTVUxqUnFpSGRVbW9vbk13Q2dZSUtvWkl6ajBFQXdJRFJ3QXdSQUlnUWVkZW5RMzUKYjFpZzRsQjY3aWtNTXVUSkZhajhFSTdQRzdDV0tZQ21vTHdDSUZ3UHlUS2xtOU4zN0NtUWZjTGh5ZHVUUlhmYQowM3FXVy9PeVBtUEp1MTlnCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+        key: ""
+    discovery:
+        enabled: true
+        registries:
+            kubernetes:
+                disabled: false
+            service:
+                disabled: false

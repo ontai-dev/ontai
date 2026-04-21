@@ -1,0 +1,13 @@
+apiVersion: platform.ontai.dev/v1alpha1
+kind: TalosCluster
+metadata:
+  annotations:
+    ontai.dev/owns-runnerconfig: "true"
+  name: ccs-dev
+  namespace: seam-system
+spec:
+  clusterEndpoint: 10.20.0.20:6443
+  mode: import
+  role: tenant
+  talosVersion: v1.9.3
+status: {}
