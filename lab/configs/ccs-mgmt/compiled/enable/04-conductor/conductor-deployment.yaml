@@ -5,6 +5,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    platform.ontai.dev/cluster-ref: ccs-mgmt
+    platform.ontai.dev/role: management
   labels:
     app.kubernetes.io/component: operator
     app.kubernetes.io/name: conductor
@@ -24,7 +27,9 @@ spec:
         app.kubernetes.io/name: conductor
     spec:
       containers:
-      - env:
+      - args:
+        - agent
+        env:
         - name: POD_NAMESPACE
           valueFrom:
             fieldRef:
@@ -34,14 +39,17 @@ spec:
             fieldRef:
               fieldPath: metadata.name
         - name: CONDUCTOR_ROLE
-          value: management
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['platform.ontai.dev/role']
+        - name: CLUSTER_REF
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['platform.ontai.dev/cluster-ref']
         - name: SIGNING_PRIVATE_KEY_PATH
           value: /etc/conductor/signing/private.pem
         - name: SIGNING_PUBLIC_KEY_PATH
           value: /etc/conductor/signing/public.pem
-        args:
-        - agent
-        - --cluster-ref=ccs-mgmt
         image: 10.20.0.1:5000/ontai-dev/conductor:dev
         imagePullPolicy: Always
         name: conductor
