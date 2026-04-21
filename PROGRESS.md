@@ -1,11 +1,85 @@
 # ONT Platform Progress
 
-**Current state:** session/11 MERGED (platform PR #11 1829bbd, guardian PR #9 255645b, merged to main 2026-04-21). session/10d MERGED.
+**Current state:** session/12-lineage-schema-amendment in progress. WS1-WS12 complete, WS13 STOP (awaiting Governor push authorization).
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
+
+### session/12-lineage-schema-amendment (seam-core, platform, wrapper, guardian, ontai-schema -- in progress, awaiting Governor push)
+
+**Role:** Schema Engineer + Controller Engineer.
+
+**Four Governor-approved schema amendments:**
+1. `declaringPrincipal` added to `rootBinding` (stamps identity from declaring-principal annotation).
+2. `createdAt` and `actorRef` added to every `descendantRegistry` entry.
+3. `outcomeRegistry` as new append-only terminal outcome section in ILI spec.
+4. `lineageIndexRef` in guardian audit records correlates events to governing ILI.
+
+**WS1 -- Branch creation:** All 5 repos branched to session/12-lineage-schema-amendment from main.
+
+**WS2 -- domain-core schema amendment (CLOSED):**
+docs/domain-core-schema.md amended: `declaringPrincipal`, `createdAt`, `actorRef`, `outcomeRegistry`.
+Commit: `governor: amend DomainLineageIndex schema -- declaringPrincipal, createdAt, actorRef, outcomeRegistry`
+
+**WS3 -- seam-core schema amendment (CLOSED):**
+docs/seam-core-schema.md amended with same four fields. Declaration 6 added: outcomeRegistry terminal closure protocol.
+Commit: `governor: amend InfrastructureLineageIndex schema to inherit session/12 DomainLineageIndex amendments`
+
+**WS4 -- guardian schema amendment (CLOSED):**
+docs/guardian-schema.md: new §17 Audit Record Schema with AuditEvent table including lineageIndexRef.
+Commit: `governor: amend guardian audit record schema -- add lineageIndexRef`
+
+**WS5 -- ontai-schema JSON Schema (CLOSED):**
+InfrastructureLineageIndex.json: declaringPrincipal, createdAt, actorRef, outcomeRegistry, OutcomeEntry defs.
+AuditEvent.json: new schema file with LineageIndexRef.
+ontai-schema PR #1 raised (session/12 branch pushed, PR open).
+
+**WS6 -- seam-core Go types (CLOSED):**
+`api/v1alpha1/infrastructurelineageindex_types.go`: DeclaringPrincipal on RootBinding, CreatedAt+ActorRef on DescendantEntry (RecordedAt renamed), OutcomeType enum, OutcomeEntry struct, OutcomeRegistry field.
+`api/v1alpha1/zz_generated.deepcopy.go`: OutcomeEntry deep copy methods added.
+Commit: `session/12: add declaringPrincipal, createdAt, actorRef, outcomeRegistry to ILI types`
+
+**WS7 -- guardian webhook (CLOSED):**
+`internal/webhook/declaring_principal_handler.go`: DeclaringPrincipalHandler stamps annotation on CREATE for all 9 root-declaration kinds. Skips during bootstrap window (INV-020). RFC 6901 JSON patch.
+`internal/webhook/server.go`: RegisterDeclaringPrincipal method added.
+5 unit tests in `test/unit/webhook/declaring_principal_test.go`.
+Commit: `session/12: guardian declaring-principal MutatingWebhook stamps annotation on root declaration CREATE`
+
+**WS8 -- seam-core controller changes (CLOSED):**
+`internal/controller/lineage_controller.go`: buildILI reads declaring-principal annotation, populates rootBinding.declaringPrincipal. Fallback "system:unknown".
+`internal/controller/descendant_reconciler.go`: actorRef resolved from ILI.declaringPrincipal (authoritative), falls back to LabelActorRef label.
+`internal/controller/outcome_reconciler.go`: new OutcomeReconciler watches derived GVKs, classifies terminal conditions (Ready=True/False with reason-based drift/superseded/failed), appends OutcomeEntry idempotently.
+8 unit tests: `test/unit/principal_propagation_test.go` (4), `test/unit/outcome_registry_test.go` (4).
+Commit: `session/12: LineageController propagates declaringPrincipal, appends actorRef and createdAt, outcomeRegistry watcher`
+
+**WS9 -- SetDescendantLabels callers (CLOSED):**
+`platform/internal/controller/taloscluster_helpers.go`: 5 calls updated to pass `tc.GetAnnotations()[lineage.AnnotationDeclaringPrincipal]` as actorRef.
+`wrapper/internal/controller/packexecution_reconciler.go`: 1 call updated with `pe.GetAnnotations()[lineage.AnnotationDeclaringPrincipal]`.
+All tests pass on both repos.
+Commits: `session/12: update SetDescendantLabels callers to pass actorRef` (platform and wrapper).
+
+**WS10 -- guardian audit lineageIndexRef (CLOSED):**
+`internal/database/cnpg.go`: LineageIndexRef struct and AuditEvent.LineageIndexRef field added.
+`internal/controller/audit_helpers.go`: lineageRef() helper builds LineageIndexRef from kind/name/namespace.
+`internal/controller/rbacpolicy_controller.go`: 2 audit events carry lineageIndexRef.
+`internal/controller/rbacprofile_controller.go`: 4 audit events carry lineageIndexRef.
+4 unit tests in `test/unit/controller/audit_lineage_test.go`.
+Commit: `session/12: guardian audit records carry lineageIndexRef for governed object events`
+
+**WS11 -- Full suite pass (CLOSED):**
+All 4 repos green: go build, make test-unit, go vet.
+- seam-core: ok
+- platform: ok
+- wrapper: ok
+- guardian: ok
+
+**WS12:** PROGRESS.md updated (this entry).
+
+**WS13:** STOP. Awaiting Governor push authorization.
+
+---
 
 ### session/11-pre-cluster-backlog-clearance (platform, guardian -- in progress, not pushed)
 

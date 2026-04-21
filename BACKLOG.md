@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
 **Last updated:** April 21, 2026
-**Branch:** session/11 MERGED (platform 1829bbd, guardian 255645b)
+**Branch:** session/12-lineage-schema-amendment in progress (WS1-WS12 complete, awaiting Governor push)
 
 Priority: High / Medium / Low
 
@@ -19,6 +19,7 @@ Priority: High / Medium / Low
 
 | ID | Component | Description |
 |----|-----------|-------------|
+| SEAM-CORE-BL-DECLARING-PRINCIPAL | seam-core, guardian, platform, wrapper | CLOSED 2026-04-21 (session/12). declaringPrincipal on rootBinding, createdAt+actorRef on descendantRegistry, outcomeRegistry with OutcomeReconciler, lineageIndexRef in guardian audit. ontai-schema PR #1. 13 new unit tests. |
 | PLATFORM-BL-TENANT-GC | platform | CLOSED 2026-04-21 (session/11). Finalizer platform.ontai.dev/tenant-namespace-cleanup added to CAPI-enabled TalosCluster. Deletes seam-tenant-{name} on deletion. 4 unit tests. platform f7a310c. |
 | G-BL-CR-IMMUTABILITY | guardian | CLOSED 2026-04-20 (session/4). operator-authorship guard implemented; 10 unit tests + 6 e2e stubs. guardian commit 16c85f4. |
 | G-BL-CNPG-POOLER-AUTH | guardian | Connect to rw service not pooler to avoid md5 hash caching on guardian restart. Engineer session drafted. |
@@ -37,7 +38,7 @@ Priority: High / Medium / Low
 | CONDUCTOR-BL-CAPABILITY-WATCH | conductor | Wrapper ConductorReady gate should watch RunnerConfig status and trigger immediately when capabilities appear rather than polling on 30s requeue. |
 | G-BL-SNAPSHOT-ALIAS | guardian | snapshot-management should cover ccs-mgmt for management cluster. Eliminates redundant snapshot-ccs-mgmt. |
 | G-BL-IDP-POLLING | guardian | IdentityProviderReconciler must poll OIDC provider for group membership changes and record identitybinding.drift_detected. Requires Keycloak or Dex in lab. |
-| G-BL-SELF-AUDIT-MISSING | guardian | rbacprofile.provisioned and rbac.would_deny not in audit trail. Investigate LazyAuditWriter event dropping. |
+| G-BL-SELF-AUDIT-MISSING | guardian | PARTIALLY CLOSED 2026-04-21 (session/12). rbacprofile.provisioned confirmed in audit trail (AuditWriter wired in WS3/session/11). lineageIndexRef now populated on all governed-object events (WS10). rbac.would_deny still absent -- separate investigation required. |
 | GUARDIAN-BL-ENVTEST-FAIL | guardian | CLOSED 2026-04-20 (session/7). Three root causes fixed: RBACPolicy finalizer early-return, EPGReconciler OperatorNamespace unset, OIDC HTTP timeout race. All guardian integration suites green. |
 | WRAPPER-BL-ENVTEST-GC | wrapper | TestPackInstance_OwnerRefCascade_DeletedWhenPackExecutionDeleted requires kube-controller-manager GC controller. envtest starts API server and etcd only; GC controller is not started. Test must run against a real cluster. Promote when cluster e2e suite is established (TENANT-CLUSTER-E2E). |
 | SEAM-CORE-BL-DESCENDANT-LABELS | guardian | PARTIALLY CLOSED 2026-04-20 (session/10d). Platform RunnerConfig and Wrapper PackInstance wired. Guardian PermissionSnapshot wiring deferred -- no single root RBACPolicy per snapshot; architectural question unresolved. See GUARDIAN-BL-PERMISSIONSNAPSHOT-WIRING. |
