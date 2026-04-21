@@ -1,0 +1,11 @@
+name: ccs-dev
+namespace: seam-system
+mode: import
+role: tenant
+capi:
+  enabled: false
+importExistingCluster: true
+bootstrap:
+  controlPlaneEndpoint: "https://10.20.0.20:6443"
+  talosVersion: "v1.9.3"
+  kubernetesVersion: "1.32.3"
