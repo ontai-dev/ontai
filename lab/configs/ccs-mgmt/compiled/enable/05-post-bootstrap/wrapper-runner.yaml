@@ -242,7 +242,7 @@ subjects:
   name: wrapper-runner
   namespace: seam-tenant-ccs-mgmt
 ---
-# Cross-namespace grant: wrapper-runner reads RBACProfiles in tenant-ccs-mgmt.
+# wrapper-runner reads RBACProfiles in seam-tenant-ccs-mgmt.
 # Required for WaitForRBACProfileProvisioned in the conductor split path.
 # guardian-schema.md §7, INV-004.
 apiVersion: rbac.authorization.k8s.io/v1
@@ -255,7 +255,7 @@ metadata:
     app.kubernetes.io/name: wrapper
     ontai.dev/managed-by: compiler
   name: wrapper-runner-rbacprofile-reader
-  namespace: tenant-ccs-mgmt
+  namespace: seam-tenant-ccs-mgmt
 rules:
 - apiGroups:
   - security.ontai.dev
@@ -276,7 +276,7 @@ metadata:
     app.kubernetes.io/name: wrapper
     ontai.dev/managed-by: compiler
   name: wrapper-runner-rbacprofile-reader
-  namespace: tenant-ccs-mgmt
+  namespace: seam-tenant-ccs-mgmt
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

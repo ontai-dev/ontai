@@ -1,11 +1,56 @@
 # ONT Platform Progress
 
-**Current state:** session/13-clusterpack-rbac-split WS1-WS10 COMPLETE. Full 6-step split path verified end-to-end on ccs-mgmt.
+**Current state:** session/13-namespace-model-fix WS1-WS8 COMPLETE. All four repos build and test-unit green. Stop at WS10 -- awaiting Governor push approval.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
+
+### session/13-namespace-model-fix (conductor, guardian, platform -- WS1-WS8 complete, stop before push)
+
+**Role:** Controller Engineer.
+
+**Governor ruling:** `tenant-{cluster-name}` namespace pattern permanently abolished. `seam-tenant-{cluster-name}` is the universal per-cluster namespace for all clusters including management. Compiler emits `seam-tenant-namespace.yaml` for mode=import. Platform creates namespace for mode=bootstrap and CAPI.
+
+**WS1 -- Branch creation (CLOSED):** conductor, guardian, platform branched to `session/13-namespace-model-fix`. wrapper had no violations.
+
+**WS2 -- Guardian pack intake handler (CLOSED):**
+- `guardian/internal/webhook/rbac_pack_intake_handler.go`: `ns := "seam-tenant-" + targetCluster` (was `"tenant-" + targetCluster`). Comments updated.
+- `guardian/test/unit/webhook/rbac_pack_intake_test.go`: `ns := "seam-tenant-ccs-mgmt"` (was `"tenant-ccs-mgmt"`).
+- Commit: `fix: guardian pack intake creates RBACProfile in seam-tenant-{cluster}` (guardian fa763a2)
+
+**WS3 -- Conductor WaitForRBACProfileProvisioned (CLOSED):**
+- `conductor/internal/capability/adapters.go`: `"seam-tenant-"+targetCluster` (was `"tenant-"+targetCluster`). Comment updated.
+- `conductor/internal/capability/clients.go`: comment updated.
+- `conductor/test/unit/capability/rbacprofile_wait_test.go`: all 9 `"tenant-ccs-mgmt"` and `"tenant-ccs-dev"` occurrences replaced.
+- Commit: `fix: WaitForRBACProfileProvisioned polls seam-tenant-{cluster}` (conductor d3fe068)
+
+**WS4 -- Compiler mode=import namespace manifest (CLOSED):**
+- `conductor/cmd/compiler/compile.go`: new `writeSeamTenantNamespaceManifest` function using `corev1.Namespace`; `compileBootstrap` prepends namespace manifest for `importExistingCluster=true`; `compileImportTalosconfigSecret` emits namespace manifest and uses `seam-tenant-{name}` for talosconfig Secret.
+- `conductor/cmd/compiler/compile_bootstrap_import_test.go`: 3 new tests verifying namespace manifest emission for mode=import and absence for mode=bootstrap.
+- Commit: `fix: compiler emits seam-tenant namespace manifest for mode=import` (conductor dbd0fe4)
+
+**WS5 -- Lab enable bundle (CLOSED):**
+- `lab/configs/ccs-mgmt/compiled/enable/00a-namespaces/namespaces.yaml`: removed `tenant-ccs-mgmt` Namespace; updated header comment. Gitignored, filesystem only.
+- `lab/configs/ccs-mgmt/compiled/enable/05-post-bootstrap/wrapper-runner.yaml`: `wrapper-runner-rbacprofile-reader` Role and RoleBinding namespace changed to `seam-tenant-ccs-mgmt`. Gitignored, filesystem only.
+
+**WS6 -- Platform reconciler import secrets namespace (CLOSED):**
+- `platform/internal/controller/taloscluster_import_helpers.go`: removed `importSecretsNamespace = "seam-system"` constant; added `importSecretsNamespace(clusterName string) string` returning `"seam-tenant-" + clusterName`.
+- `platform/internal/controller/taloscluster_helpers.go`: deletion path uses `importSecretsNamespace(tc.Name)` not hardcoded `"seam-system"`.
+- `platform/test/unit/controller/taloscluster_lifecycle_test.go`: talosconfig and kubeconfig Secret namespaces changed to `"seam-tenant-ccs-mgmt"`.
+- Commit: `fix: talosconfig Secret in seam-tenant-{cluster} not seam-system` (platform 4aacf02)
+
+**WS7 -- Conductor capability tenantNamespace (CLOSED):**
+- `conductor/internal/capability/platform_etcd.go`: `tenantNamespace()` returns `"seam-tenant-" + clusterRef` (was `"tenant-" + clusterRef`). Comment updated.
+- `conductor/internal/capability/platform_cluster.go`: comment updated.
+- `conductor/test/unit/capability/platform_test.go`: all 7 `"tenant-"+clusterRef` occurrences replaced with `"seam-tenant-"+clusterRef`.
+- Commit: `fix: abolish tenant-{x} pattern in capability code and tests` (conductor 449dfb2)
+
+**WS8 -- Full suite pass (CLOSED):**
+- All four repos: `go build ./...` CLEAN, `make test-unit` PASS (all packages), `go vet ./...` CLEAN.
+
+---
 
 ### session/13-clusterpack-rbac-split (conductor, wrapper, guardian, ontai-schema -- WS1-WS8 complete, stop at WS8)
 
