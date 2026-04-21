@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Current state:** session/13-clusterpack-rbac-split WS1-WS8 COMPLETE. WS9-WS10 (image builds, cluster apply, nginx retest, report) await Governor cluster access authorization.
+**Current state:** session/13-clusterpack-rbac-split WS1-WS10 COMPLETE. Full 6-step split path verified end-to-end on ccs-mgmt.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -51,8 +51,12 @@
 - guardian: all unit tests PASS. go vet PASS.
 - wrapper: all unit tests PASS. go vet PASS.
 
-**WS9-WS10 -- Cluster apply and report (BLOCKED: awaiting Governor authorization):**
-- Rebuild images with new tags. Regenerate enable bundle. Apply to cluster. Delete old ClusterRole from live cluster. Restart operators. Recompile nginx pack with two-layer split. Run nginx test. Report to Governor.
+**WS9-WS10 -- Cluster apply, nginx split-path e2e (CLOSED 2026-04-21):**
+- Images rebuilt from merged main (wrapper, conductor, guardian). Enable bundle applied (new seam-core-crds, conductor-deployment, wrapper-runner, MutatingWebhookConfiguration). Old wrapper-runner ClusterRole/CRB deleted from cluster. Operators restarted.
+- Nginx two-layer OCI artifacts pushed. nginx-v3.yaml compiled with rbacDigest/workloadDigest. ClusterPack applied.
+- Root causes found and fixed (3 sessions): GuardianIntakeClientAdapter wired in conductor execute mode; guardian webhook registrations (RegisterRBACIntake, RegisterPackIntake, RegisterOperatorCRGuard, RegisterDeclaringPrincipal) added to main.go; rbac_pack_intake_handler.go creates PermissionSet/RBACPolicy/RBACProfile in tenant-{targetCluster} after applying RBAC manifests; tenant-ccs-mgmt namespace added to enable bundle; wrapper-runner-rbacprofile-reader Role/RB added to tenant-ccs-mgmt; wrapper-runner-ns-creator ClusterRole/CRB added for cross-namespace workload deployment.
+- Full 6-step split path verified: pull-rbac-layer PASS, rbac-intake PASS, wait-rbac-profile PASS (RBACProfile provisioned=true), pull-workload-layer PASS, ensure-namespaces PASS, apply-workload PASS. PackExecution Succeeded=True.
+- Key architectural confirmation: management cluster (ccs-mgmt) is treated as tenant for operations -- uses seam-tenant-ccs-mgmt (pack delivery) and tenant-ccs-mgmt (guardian security CRs) namespaces identically to tenant clusters.
 
 ---
 
