@@ -1,11 +1,60 @@
 # ONT Platform Progress
 
-**Current state:** session/13-live-cluster-validation in progress. Phase A PASS. WS1-WS12 complete. Conductor PR pending Governor push authorization.
+**Current state:** session/13-clusterpack-rbac-split WS1-WS8 COMPLETE. WS9-WS10 (image builds, cluster apply, nginx retest, report) await Governor cluster access authorization.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
+
+### session/13-clusterpack-rbac-split (conductor, wrapper, guardian, ontai-schema -- WS1-WS8 complete, stop at WS8)
+
+**Role:** Platform Engineer + Schema Engineer.
+
+**Governor ruling:** wrapper-runner ClusterRole from session/13-clusterpack-apply-fixes WS7 is the WRONG fix. Pack-deploy must use guardian intake for RBAC (INV-004). Session replaces it with the two-layer OCI artifact contract.
+
+**WS1 -- Branch creation and baseline (CLOSED):** All three repos branched to session/13-clusterpack-rbac-split from main.
+
+**WS2 -- Schema amendments (CLOSED):**
+- ontai-schema PR #2 merged: `ClusterPack.json` with `rbacDigest` and `workloadDigest` fields.
+- `wrapper/docs/wrapper-schema.md` amended: `rbacDigest`/`workloadDigest` fields, two-layer OCI artifact contract section.
+
+**WS3 -- Compiler packbuild split (CLOSED):**
+- `conductor/internal/packbuild/split.go`: `ParseManifests` and `SplitRBACAndWorkload` pure functions.
+- `conductor/cmd/compiler/compile_packbuild_split.go`: re-exports from cmd/compiler.
+- `conductor/cmd/compiler/compile.go`: `RBACDigest`/`WorkloadDigest` in `PackBuildInput` and `compilePackBuild`.
+- 6 unit tests in `conductor/test/unit/compiler/packbuild_split_test.go`. All pass.
+- Commit: `feat: compiler packbuild splits RBAC and workload into separate OCI layers`
+
+**WS4 -- wrapper ClusterPack types (CLOSED):**
+- `wrapper/api/v1alpha1/clusterpack_types.go`: `RBACDigest` and `WorkloadDigest` on `ClusterPackSpec`.
+- `make generate` run; CRD YAML regenerated.
+
+**WS5 -- Guardian /rbac-intake/pack endpoint (CLOSED):**
+- `guardian/internal/webhook/rbac_pack_intake_handler.go`: new `RBACPackIntakeHandler` at `/rbac-intake/pack`. Accepts YAML manifests with `componentName` + `targetCluster`. Stamps `ontai.dev/rbac-owner=guardian` and applies via SSA. INV-004.
+- `guardian/internal/webhook/server.go`: `RegisterPackIntake` method added.
+- 7 unit tests in `guardian/test/unit/webhook/rbac_pack_intake_test.go`. All pass.
+- Commit: `feat: guardian /rbac-intake/pack endpoint for ClusterPack RBAC layer intake`
+
+**WS6 -- pack-deploy split path (CLOSED):**
+- `conductor/internal/capability/clients.go`: `GuardianIntakeClient` interface (`SubmitPackRBACLayer`, `WaitForRBACProfileProvisioned`). `GuardianClient` field on `ExecuteClients`.
+- `conductor/internal/capability/wrapper.go`: `executeSplitPath` method for two-layer OCI artifact. `ensureNamespaces` function added. Legacy path unchanged for backward compatibility.
+- 6 unit tests in `conductor/test/unit/capability/pack_deploy_split_test.go`. All pass.
+- Commit: `feat: pack-deploy routes RBAC through guardian intake before workload apply`
+
+**WS7 -- wrapper-runner Role tightened (CLOSED):**
+- `conductor/cmd/compiler/compile_enable.go`: removed `rbac.authorization.k8s.io` rule from wrapper-runner Role. Added workload kinds: `persistentvolumeclaims`, `endpoints`, `pods`, `replicasets`, `ingresses`, `ingressclasses`, `jobs`, `cronjobs`, `horizontalpodautoscalers`.
+- Commit: `fix: tighten wrapper-runner Role to workload resources only`
+
+**WS8 -- Full suite pass (CLOSED):**
+- conductor: all unit tests PASS. go vet PASS.
+- guardian: all unit tests PASS. go vet PASS.
+- wrapper: all unit tests PASS. go vet PASS.
+
+**WS9-WS10 -- Cluster apply and report (BLOCKED: awaiting Governor authorization):**
+- Rebuild images with new tags. Regenerate enable bundle. Apply to cluster. Delete old ClusterRole from live cluster. Restart operators. Recompile nginx pack with two-layer split. Run nginx test. Report to Governor.
+
+---
 
 ### session/12-lineage-schema-amendment (seam-core, platform, wrapper, guardian, ontai-schema -- in progress, awaiting Governor push)
 
