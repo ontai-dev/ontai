@@ -117,146 +117,6 @@ rules:
   - watch
   - patch
   - update
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  annotations:
-    ontai.dev/rbac-owner: guardian
-  labels:
-    app.kubernetes.io/component: runner
-    app.kubernetes.io/name: wrapper
-    ontai.dev/managed-by: compiler
-  name: wrapper-runner
-  namespace: seam-tenant-ccs-mgmt
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: wrapper-runner
-subjects:
-- kind: ServiceAccount
-  name: wrapper-runner
-  namespace: seam-tenant-ccs-mgmt
----
-# Cluster-scoped grant: wrapper-runner creates workload namespaces and manages workload
-# resources across target namespaces during pack deployment. Required for ensure-namespaces
-# and apply-workload steps in executeSplitPath. wrapper-schema.md §4, INV-004.
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  annotations:
-    ontai.dev/rbac-owner: guardian
-  labels:
-    app.kubernetes.io/component: runner
-    app.kubernetes.io/name: wrapper
-    ontai.dev/managed-by: compiler
-  name: wrapper-runner-ns-creator
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - secrets
-  - serviceaccounts
-  - services
-  - persistentvolumeclaims
-  - endpoints
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  - daemonsets
-  - statefulsets
-  - replicasets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - networking.k8s.io
-  resources:
-  - ingresses
-  - ingressclasses
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - batch
-  resources:
-  - jobs
-  - cronjobs
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  annotations:
-    ontai.dev/rbac-owner: guardian
-  labels:
-    app.kubernetes.io/component: runner
-    app.kubernetes.io/name: wrapper
-    ontai.dev/managed-by: compiler
-  name: wrapper-runner-ns-creator
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: wrapper-runner-ns-creator
-subjects:
-- kind: ServiceAccount
-  name: wrapper-runner
-  namespace: seam-tenant-ccs-mgmt
----
-# wrapper-runner reads RBACProfiles in seam-tenant-ccs-mgmt.
-# Required for WaitForRBACProfileProvisioned in the conductor split path.
-# guardian-schema.md §7, INV-004.
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  annotations:
-    ontai.dev/rbac-owner: guardian
-  labels:
-    app.kubernetes.io/component: runner
-    app.kubernetes.io/name: wrapper
-    ontai.dev/managed-by: compiler
-  name: wrapper-runner-rbacprofile-reader
-  namespace: seam-tenant-ccs-mgmt
-rules:
 - apiGroups:
   - security.ontai.dev
   resources:
@@ -265,6 +125,17 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - infrastructure.ontai.dev
+  resources:
+  - packoperationresults
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -275,12 +146,12 @@ metadata:
     app.kubernetes.io/component: runner
     app.kubernetes.io/name: wrapper
     ontai.dev/managed-by: compiler
-  name: wrapper-runner-rbacprofile-reader
+  name: wrapper-runner
   namespace: seam-tenant-ccs-mgmt
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: wrapper-runner-rbacprofile-reader
+  name: wrapper-runner
 subjects:
 - kind: ServiceAccount
   name: wrapper-runner
