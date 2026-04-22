@@ -2930,6 +2930,19 @@ spec:
                     except by the retention enforcement loop (which removes stale entries after
                     the retention window elapses).
                   properties:
+                    actorRef:
+                      description: |-
+                        ActorRef is the identity propagated from rootBinding.declaringPrincipal.
+                        Every derived object entry carries the initiating human principal from the
+                        root of its causal chain. Immutable.
+                      type: string
+                    createdAt:
+                      description: |-
+                        CreatedAt is the time this descendant entry was appended to the registry.
+                        Used by the retention enforcement loop to determine when a stale entry
+                        (referenced object no longer exists) has exceeded its retention window.
+                      format: date-time
+                      type: string
                     creationRationale:
                       allOf:
                       - enum:
@@ -2964,13 +2977,6 @@ spec:
                       type: string
                     namespace:
                       description: Namespace is the namespace of the derived object.
-                      type: string
-                    recordedAt:
-                      description: |-
-                        RecordedAt is the time this descendant entry was appended to the registry.
-                        Used by the retention enforcement loop to determine when a stale entry
-                        (referenced object no longer exists) has exceeded its retention window.
-                      format: date-time
                       type: string
                     rootGenerationAtCreation:
                       description: |-
@@ -3011,6 +3017,53 @@ spec:
                   Set by the InfrastructureLineageController on creation. Validated by the
                   admission webhook: when present, must equal "infrastructure.core.ontai.dev".
                 type: string
+              outcomeRegistry:
+                description: |-
+                  OutcomeRegistry is the append-only registry of terminal outcomes for derived
+                  objects tracked in DescendantRegistry. Entries are appended by LineageController
+                  when a terminal condition is observed on a tracked derived object. Entries are
+                  never modified or removed. An outcomeRegistry entry supersedes but does not
+                  replace its corresponding DescendantRegistry entry.
+                items:
+                  description: |-
+                    OutcomeEntry records the terminal outcome for a derived object tracked in
+                    DescendantRegistry. Entries are appended by LineageController when a terminal
+                    condition is observed. Entries are never modified or removed.
+                  properties:
+                    derivedObjectUID:
+                      description: DerivedObjectUID is the UID matching a derived
+                        object entry in DescendantRegistry.
+                      type: string
+                    outcomeDetail:
+                      description: |-
+                        OutcomeDetail is a brief human-readable summary of the outcome written by
+                        LineageController from the terminal condition message. Optional.
+                      type: string
+                    outcomeRef:
+                      description: |-
+                        OutcomeRef is the name of the OperationResult ConfigMap or terminal condition
+                        reason that produced this outcome classification. Optional.
+                      type: string
+                    outcomeTimestamp:
+                      description: OutcomeTimestamp is the time when the terminal
+                        condition was observed.
+                      format: date-time
+                      type: string
+                    outcomeType:
+                      description: OutcomeType is the terminal classification of the
+                        derived object lifecycle.
+                      enum:
+                      - Succeeded
+                      - Failed
+                      - Drifted
+                      - Superseded
+                      type: string
+                  required:
+                  - derivedObjectUID
+                  - outcomeTimestamp
+                  - outcomeType
+                  type: object
+                type: array
               policyBindingStatus:
                 description: |-
                   PolicyBindingStatus records the InfrastructurePolicy and InfrastructureProfile
@@ -3074,6 +3127,13 @@ spec:
                   Immutable after admission. The admission webhook rejects any update that
                   modifies a field in this section.
                 properties:
+                  declaringPrincipal:
+                    description: |-
+                      DeclaringPrincipal is the identity of the human operator or automation
+                      principal that applied the root declaration CR. Stamped by the admission
+                      webhook via annotation infrastructure.ontai.dev/declaring-principal at
+                      CREATE time. Immutable after rootBinding is sealed.
+                    type: string
                   rootKind:
                     description: RootKind is the kind of the root declaration (e.g.,
                       TalosCluster, PackExecution).
@@ -3245,6 +3305,14 @@ spec:
               All fields except lineage are immutable after creation. CI-INV-002.
               wrapper-schema.md §3.
             properties:
+              basePackName:
+                description: |-
+                  BasePackName is the logical pack name shared across versions (e.g., "nginx-ingress").
+                  Separate from the versioned CR name (e.g., "nginx-ingress-v4.9.0-r1"). When set,
+                  PackInstances are named {basePackName}-{clusterName} so that a newer version of the
+                  same base pack supersedes an older one in-place rather than creating a parallel
+                  PackInstance. Schema-first per Decision 11.
+                type: string
               checksum:
                 description: |-
                   Checksum is the SHA256 checksum of the pack artifact, used for integrity
@@ -4027,6 +4095,39 @@ spec:
                   (PackReceipt observed in a Ready state).
                 format: date-time
                 type: string
+              deployedResources:
+                description: |-
+                  DeployedResources is the list of Kubernetes resources applied by the
+                  pack-deploy job. Written by PackExecutionReconciler on successful deployment.
+                  Used by the PackInstance deletion handler to clean up workload resources
+                  when the ClusterPack is deleted. wrapper-schema.md §3, Decision 11.
+                items:
+                  description: |-
+                    DeployedResourceRef records a single Kubernetes resource applied by the pack-deploy
+                    job. Used by the PackInstance deletion handler to clean up deployed workload when
+                    the ClusterPack is deleted. wrapper-schema.md §3, Decision 11.
+                  properties:
+                    apiVersion:
+                      description: APIVersion is the Kubernetes apiVersion (e.g.,
+                        apps/v1, v1).
+                      type: string
+                    kind:
+                      description: Kind is the Kubernetes resource Kind (e.g., Deployment,
+                        Namespace).
+                      type: string
+                    name:
+                      description: Name is the resource name.
+                      type: string
+                    namespace:
+                      description: Namespace is the resource namespace. Empty for
+                        cluster-scoped resources.
+                      type: string
+                  required:
+                  - apiVersion
+                  - kind
+                  - name
+                  type: object
+                type: array
               driftSummary:
                 description: |-
                   DriftSummary is a human-readable one-line summary of the current drift
@@ -4036,6 +4137,19 @@ spec:
                 description: ObservedGeneration is the generation most recently reconciled.
                 format: int64
                 type: integer
+              upgradeDirection:
+                description: |-
+                  UpgradeDirection records the version transition direction for the last
+                  deployment of this PackInstance. Set by PackExecutionReconciler via semver
+                  comparison of the existing version against the new ClusterPack version.
+                  Initial: first deployment. Upgrade: newer version. Rollback: older version.
+                  Redeploy: same version reapplied. wrapper-schema.md §3, Decision 11.
+                enum:
+                - Initial
+                - Upgrade
+                - Rollback
+                - Redeploy
+                type: string
             type: object
         type: object
     served: true
@@ -4116,6 +4230,19 @@ spec:
                     except by the retention enforcement loop (which removes stale entries after
                     the retention window elapses).
                   properties:
+                    actorRef:
+                      description: |-
+                        ActorRef is the identity propagated from rootBinding.declaringPrincipal.
+                        Every derived object entry carries the initiating human principal from the
+                        root of its causal chain. Immutable.
+                      type: string
+                    createdAt:
+                      description: |-
+                        CreatedAt is the time this descendant entry was appended to the registry.
+                        Used by the retention enforcement loop to determine when a stale entry
+                        (referenced object no longer exists) has exceeded its retention window.
+                      format: date-time
+                      type: string
                     creationRationale:
                       allOf:
                       - enum:
@@ -4150,13 +4277,6 @@ spec:
                       type: string
                     namespace:
                       description: Namespace is the namespace of the derived object.
-                      type: string
-                    recordedAt:
-                      description: |-
-                        RecordedAt is the time this descendant entry was appended to the registry.
-                        Used by the retention enforcement loop to determine when a stale entry
-                        (referenced object no longer exists) has exceeded its retention window.
-                      format: date-time
                       type: string
                     rootGenerationAtCreation:
                       description: |-
@@ -4197,6 +4317,53 @@ spec:
                   Set by the InfrastructureLineageController on creation. Validated by the
                   admission webhook: when present, must equal "infrastructure.core.ontai.dev".
                 type: string
+              outcomeRegistry:
+                description: |-
+                  OutcomeRegistry is the append-only registry of terminal outcomes for derived
+                  objects tracked in DescendantRegistry. Entries are appended by LineageController
+                  when a terminal condition is observed on a tracked derived object. Entries are
+                  never modified or removed. An outcomeRegistry entry supersedes but does not
+                  replace its corresponding DescendantRegistry entry.
+                items:
+                  description: |-
+                    OutcomeEntry records the terminal outcome for a derived object tracked in
+                    DescendantRegistry. Entries are appended by LineageController when a terminal
+                    condition is observed. Entries are never modified or removed.
+                  properties:
+                    derivedObjectUID:
+                      description: DerivedObjectUID is the UID matching a derived
+                        object entry in DescendantRegistry.
+                      type: string
+                    outcomeDetail:
+                      description: |-
+                        OutcomeDetail is a brief human-readable summary of the outcome written by
+                        LineageController from the terminal condition message. Optional.
+                      type: string
+                    outcomeRef:
+                      description: |-
+                        OutcomeRef is the name of the OperationResult ConfigMap or terminal condition
+                        reason that produced this outcome classification. Optional.
+                      type: string
+                    outcomeTimestamp:
+                      description: OutcomeTimestamp is the time when the terminal
+                        condition was observed.
+                      format: date-time
+                      type: string
+                    outcomeType:
+                      description: OutcomeType is the terminal classification of the
+                        derived object lifecycle.
+                      enum:
+                      - Succeeded
+                      - Failed
+                      - Drifted
+                      - Superseded
+                      type: string
+                  required:
+                  - derivedObjectUID
+                  - outcomeTimestamp
+                  - outcomeType
+                  type: object
+                type: array
               policyBindingStatus:
                 description: |-
                   PolicyBindingStatus records the InfrastructurePolicy and InfrastructureProfile
@@ -4260,6 +4427,13 @@ spec:
                   Immutable after admission. The admission webhook rejects any update that
                   modifies a field in this section.
                 properties:
+                  declaringPrincipal:
+                    description: |-
+                      DeclaringPrincipal is the identity of the human operator or automation
+                      principal that applied the root declaration CR. Stamped by the admission
+                      webhook via annotation infrastructure.ontai.dev/declaring-principal at
+                      CREATE time. Immutable after rootBinding is sealed.
+                    type: string
                   rootKind:
                     description: RootKind is the kind of the root declaration (e.g.,
                       TalosCluster, PackExecution).
@@ -4360,6 +4534,259 @@ spec:
                 description: |-
                   ObservedGeneration is the last generation of the InfrastructureLineageIndex
                   that the controller has processed.
+                format: int64
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.1
+  name: packoperationresults.infrastructure.ontai.dev
+spec:
+  group: infrastructure.ontai.dev
+  names:
+    kind: PackOperationResult
+    listKind: PackOperationResultList
+    plural: packoperationresults
+    shortNames:
+    - por
+    singular: packoperationresult
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.capability
+      name: Capability
+      type: string
+    - jsonPath: .spec.status
+      name: Status
+      type: string
+    - jsonPath: .spec.targetClusterRef
+      name: Cluster
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: |-
+          PackOperationResult is the immutable result record written by the Conductor
+          execute-mode Job after a pack-deploy capability completes. It replaces the
+          ConfigMap output channel, providing a versioned, richly-typed CR that the
+          wrapper PackExecutionReconciler reads to advance PackExecution status and
+          that the lineagesink can consume as additional data. One PackOperationResult
+          per PackExecution, created in namespace seam-tenant-{clusterName}.
+          seam-core-schema.md §8, Decision 11.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: |-
+              PackOperationResultSpec is the complete result document written by the
+              Conductor execute-mode Job before exit. Written by conductor; read by wrapper.
+              seam-core-schema.md §8, Decision 11.
+            properties:
+              artifacts:
+                description: Artifacts is the list of artifacts produced by this execution.
+                items:
+                  description: |-
+                    PackOperationArtifact is a structured reference to an artifact produced
+                    by a pack-deploy execution. Never contains raw artifact content.
+                  properties:
+                    checksum:
+                      description: 'Checksum is the content-addressed checksum. Format:
+                        sha256:<hex>.'
+                      type: string
+                    kind:
+                      description: 'Kind declares the artifact type. One of: ConfigMap,
+                        Secret, OCIImage, S3Object.'
+                      enum:
+                      - ConfigMap
+                      - Secret
+                      - OCIImage
+                      - S3Object
+                      type: string
+                    name:
+                      description: Name is a logical identifier for this artifact.
+                      type: string
+                    reference:
+                      description: Reference is the fully qualified reference for
+                        the artifact kind.
+                      type: string
+                  required:
+                  - kind
+                  - name
+                  - reference
+                  type: object
+                type: array
+              capability:
+                description: Capability is the name of the Conductor capability that
+                  produced this result.
+                type: string
+              clusterPackRef:
+                description: ClusterPackRef is the name of the ClusterPack CR that
+                  was deployed.
+                type: string
+              completedAt:
+                description: CompletedAt is the time the capability execution finished.
+                format: date-time
+                type: string
+              deployedResources:
+                description: |-
+                  DeployedResources is the list of Kubernetes resources applied during this
+                  execution. Populated by pack-deploy on success. Used by PackInstanceReconciler
+                  for deletion cleanup.
+                items:
+                  description: |-
+                    PackOperationDeployedResource records a single Kubernetes resource applied
+                    during a pack-deploy execution.
+                  properties:
+                    apiVersion:
+                      description: APIVersion is the Kubernetes apiVersion (e.g.,
+                        apps/v1, v1).
+                      type: string
+                    kind:
+                      description: Kind is the Kubernetes resource Kind (e.g., Deployment,
+                        Namespace).
+                      type: string
+                    name:
+                      description: Name is the resource name.
+                      type: string
+                    namespace:
+                      description: Namespace is the resource namespace. Empty for
+                        cluster-scoped resources.
+                      type: string
+                  required:
+                  - apiVersion
+                  - kind
+                  - name
+                  type: object
+                type: array
+              failureReason:
+                description: FailureReason is populated when Status is Failed. Nil
+                  on success.
+                properties:
+                  category:
+                    description: Category classifies the failure domain.
+                    enum:
+                    - ValidationFailure
+                    - CapabilityUnavailable
+                    - ExecutionFailure
+                    - ExternalDependencyFailure
+                    - InvariantViolation
+                    - LicenseViolation
+                    - StorageUnavailable
+                    type: string
+                  failedStep:
+                    description: FailedStep is the name of the step that failed. Empty
+                      for single-step capabilities.
+                    type: string
+                  reason:
+                    description: Reason is a human-readable description of the specific
+                      failure.
+                    type: string
+                required:
+                - category
+                - reason
+                type: object
+              packExecutionRef:
+                description: PackExecutionRef is the name of the PackExecution CR
+                  that triggered this operation.
+                type: string
+              phase:
+                description: Phase identifies the RunnerConfig phase this result belongs
+                  to.
+                type: string
+              startedAt:
+                description: StartedAt is the time the capability execution began.
+                format: date-time
+                type: string
+              status:
+                allOf:
+                - enum:
+                  - Succeeded
+                  - Failed
+                - enum:
+                  - Succeeded
+                  - Failed
+                description: Status is the terminal status of the capability execution.
+                type: string
+              steps:
+                description: Steps contains individual step results for multi-step
+                  capabilities.
+                items:
+                  description: |-
+                    PackOperationStepResult is the execution result for one step within a
+                    multi-step capability.
+                  properties:
+                    completedAt:
+                      description: CompletedAt is the time this step finished execution.
+                      format: date-time
+                      type: string
+                    message:
+                      description: Message provides additional context about the step
+                        outcome.
+                      type: string
+                    name:
+                      description: Name is the step identifier within the capability.
+                      type: string
+                    startedAt:
+                      description: StartedAt is the time this step began execution.
+                      format: date-time
+                      type: string
+                    status:
+                      allOf:
+                      - enum:
+                        - Succeeded
+                        - Failed
+                      - enum:
+                        - Succeeded
+                        - Failed
+                      description: Status is the terminal status of this step.
+                      type: string
+                  required:
+                  - name
+                  - status
+                  type: object
+                type: array
+              targetClusterRef:
+                description: TargetClusterRef is the name of the target cluster this
+                  operation ran against.
+                type: string
+            required:
+            - capability
+            - status
+            type: object
+          status:
+            description: |-
+              PackOperationResultStatus is the observed state of a PackOperationResult.
+              Currently empty; reserved for future controller-set conditions.
+            properties:
+              observedGeneration:
+                description: ObservedGeneration is the last generation processed by
+                  any consumer.
                 format: int64
                 type: integer
             type: object

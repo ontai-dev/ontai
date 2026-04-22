@@ -24,6 +24,7 @@ spec:
   rbacPolicyRef: seam-platform-rbac-policy
   targetClusters:
   - management
+  - ccs-dev
 ---
 apiVersion: security.ontai.dev/v1alpha1
 kind: RBACProfile
@@ -46,6 +47,7 @@ spec:
   rbacPolicyRef: seam-platform-rbac-policy
   targetClusters:
   - management
+  - ccs-dev
 ---
 apiVersion: security.ontai.dev/v1alpha1
 kind: RBACProfile
@@ -68,3 +70,4 @@ spec:
   rbacPolicyRef: seam-platform-rbac-policy
   targetClusters:
   - management
+  - ccs-dev

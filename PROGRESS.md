@@ -1,11 +1,40 @@
 # ONT Platform Progress
 
-**Current state:** session/13-namespace-model-fix WS1-WS8 COMPLETE. All four repos build and test-unit green. Stop at WS10 -- awaiting Governor push approval.
+**Current state:** session/14-bake-lab-patches IN PROGRESS. conductor branch session/14-bake-lab-patches: wrapper-runner Role RBAC fix baked into compiler template (WRAPPER-RUNNER-ROLE-PACKOPRESULT). Five helm-path bugs found and fixed (NOTES.txt filter, double-digest OCI ref, raw YAML vs tar.gz push, RBACProfile provisioned boolean, WaitForRBACProfileProvisioned). Enable bundles regenerated for ccs-mgmt and ccs-dev. COMPILER-HELM-E2E: helm compile path verified end-to-end (RBAC intake, OCI pull, tar.gz unpack); workload apply limited by wrapper-runner ClusterRole gap for cluster-scoped webhook resources. Stop before push.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
+
+### session/14-bake-lab-patches (conductor -- IN PROGRESS, stop before push)
+
+**Role:** Controller Engineer.
+
+**WS1 -- Branch creation (CLOSED):** conductor session/14-bake-lab-patches branched from origin/main (reset local main after squash-merge drift). ontai root also branched.
+
+**WS2 -- wrapper-runner Role RBAC (CLOSED):**
+- `conductor/cmd/compiler/compile_enable.go`: added `infrastructure.ontai.dev/packoperationresults` get/list/watch/create/update/patch to `writeWrapperRunnerRBACYAML`.
+- `conductor/cmd/compiler/compile_enable_test.go`: added `TestEnable_WrapperRunnerRole_ContainsPackOperationResultRule`.
+- Commit: `fix: bake PackOperationResult RBAC into wrapper-runner Role template` (conductor 687b8bd)
+
+**WS3 -- COMPILER-HELM-E2E (IN PROGRESS):**
+- Five bugs found and fixed during helm e2e testing on ccs-mgmt:
+  1. `compile_packbuild_helm.go`: skip NOTES.txt in rendered Helm output (commit ba05579).
+  2. `wrapper.go` (executeSplitPath): pass `registryBaseURL` not `ociRef` to avoid `url@workload@rbac` double-digest (commit ba05579).
+  3. `compile_oci_push.go`: wrap YAML in tar.gz before OCI push; conductor `extractYAMLsFromTarGz` expects gzip format (commit 7a18acb).
+  4. `adapters.go` (`WaitForRBACProfileProvisioned`): check `status.provisioned` boolean in addition to `Provisioned` condition; guardian may set boolean without updating condition (commit 3a29708).
+  5. Unit test `TestPackDeploy_SplitPath_LayerRefsUsesBaseURLWhenRegistryRefDigestSet` added to catch double-digest regression.
+- Helm compile path verified end-to-end: chart fetch, NOTES.txt filter, RBAC/workload split, tar.gz push, correct OCI refs, guardian RBAC intake, RBACProfile provisioned=true.
+- Workload apply reached `apply-workload` step; failed on cert-manager `MutatingWebhookConfiguration` -- cluster-scoped resource requires ClusterRole not in wrapper-runner Role scope. Not a compiler bug; design limitation.
+
+**WS4 -- Enable bundle regeneration (CLOSED):**
+- `lab/configs/ccs-mgmt/compiled/enable/05-post-bootstrap/wrapper-runner.yaml`: regenerated with packoperationresults rule.
+- `lab/configs/ccs-dev/compiled/enable/05-post-bootstrap/wrapper-runner.yaml`: generated for Phase B.
+- Applied updated role to ccs-mgmt: `kubectl apply --server-side --force-conflicts`. Role applied successfully.
+- Commit: `lab: add PackOperationResult RBAC to wrapper-runner Role in ccs-mgmt and ccs-dev enable bundles` (ontai 509fd2b)
+
+---
 
 ### session/13-namespace-model-fix (conductor, guardian, platform -- WS1-WS8 complete, stop before push)
 
@@ -176,6 +205,47 @@ All 4 repos green: go build, make test-unit, go vet.
 **WS12:** PROGRESS.md updated (this entry).
 
 **WS13:** STOP. Awaiting Governor push authorization.
+
+---
+
+### session/13-pack-operation-result (ontai-schema, seam-core, conductor, wrapper -- MERGED 2026-04-22)
+
+**Role:** Platform Engineer.
+
+**Governor-approved improvements to pack-deploy pipeline (Points 1, 2, 3):**
+
+**Point 2 -- PackOperationResult as seam-core CRD (CLOSED):**
+- `ontai-schema v1alpha1/seam-core/PackOperationResult.json`: schema-first per Decision 11. Fields: packExecutionRef, clusterPackRef, targetClusterRef, capability, phase, status (Succeeded/Failed), startedAt, completedAt, failureReason, deployedResources, artifacts, steps.
+- `seam-core api/v1alpha1/packoperationresult_types.go`: Go types + deepcopy. `PackResultStatus`, `PackUpgradeDirection` enums. CRD YAML generated: `infrastructure.ontai.dev_packoperationresults.yaml`.
+- `conductor internal/persistence/operationresult_writer.go`: `OperationResultWriter` interface, `KubeOperationResultWriter`, `NoopOperationResultWriter`. Replaces `ConfigMapWriter`.
+- `conductor cmd/conductor/main.go`: `seamScheme` + `seamv1alpha1.AddToScheme`; `KubeOperationResultWriter` wired.
+- `wrapper cmd/wrapper/main.go`: `seamv1alpha1.AddToScheme` added to scheme init.
+- `wrapper internal/controller/packexecution_reconciler.go`: reads `PackOperationResult` CR instead of ConfigMap; ownerRef written back to PackExecution.
+- Unit tests: `TestOperationResultWriter_CreatesPOR`, `UpdatesExistingPOR`, `TestNoopOperationResultWriter_WriteResultReturnsNil`.
+
+**Point 3 -- upgradeDirection rollback marker (CLOSED):**
+- `ontai-schema v1alpha1/infra/PackInstance.json`: `upgradeDirection` enum (Initial/Upgrade/Rollback/Redeploy) added to status.
+- `wrapper api/v1alpha1/packinstance_types.go`: `UpgradeDirection string` with kubebuilder enum marker.
+- `wrapper internal/controller/packexecution_reconciler.go`: `packUpgradeDirection`, `comparePackVersion`, `parsePackVer` helpers. vX.Y.Z-rN semver comparison.
+- Unit tests: `TestUpgradeDirection_Initial`, `Upgrade`, `Rollback`, `Redeploy`, `RevisionBump`.
+
+**Point 1 -- HelmSource in PackBuildInput (CLOSED, unit-tested, not e2e-verified):**
+- `conductor cmd/compiler/compile_packbuild_helm.go`: `helmCompilePackBuild` fetches helm chart via URL, renders with helm SDK, splits RBAC/workload via `SplitRBACAndWorkload`, pushes two OCI layers, emits ClusterPack YAML.
+- `conductor cmd/compiler/compile_oci_push.go`: `ociPushLayer`, `pushBlob`, `pushManifest` using OCI Distribution Spec v2.
+- `conductor cmd/compiler/compile.go`: `HelmSource *HelmSource` block in `PackBuildInput`; dispatch to helm path when set.
+
+**Bug fix -- RBACProfile namespace (CLOSED):**
+- `wrapper internal/controller/packexecution_reconciler.go`: `isRBACProfileProvisioned` now looks in `seam-tenant-{targetCluster}` (was hardcoded `seam-system`). All test helpers updated to match.
+
+**e2e verified on ccs-mgmt (2026-04-22):**
+- nginx-ingress v4.9.0-r1 Initial: PackOperationResult Succeeded, upgradeDirection=Initial.
+- nginx-ingress v4.10.0-r1 Upgrade: upgradeDirection=Upgrade.
+- nginx-ingress v4.9.0-r1 Rollback: upgradeDirection=Rollback.
+- nginx-ingress v4.9.0-r1 Redeploy: upgradeDirection=Redeploy.
+
+**PRs merged:** ontai-schema #4, seam-core #11, conductor #17, wrapper #10.
+
+**Remaining:** wrapper-runner Role needs `infrastructure.ontai.dev/packoperationresults` baked into compiler enable template (currently lab-patched). Helm compiler path e2e not yet tested.
 
 ---
 
