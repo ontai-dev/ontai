@@ -1,13 +1,13 @@
 # ONT Platform Progress
 
-**Current state:** session/14-bake-lab-patches IN PROGRESS. conductor branch session/14-bake-lab-patches: wrapper-runner Role RBAC fix baked into compiler template (WRAPPER-RUNNER-ROLE-PACKOPRESULT). Five helm-path bugs found and fixed (NOTES.txt filter, double-digest OCI ref, raw YAML vs tar.gz push, RBACProfile provisioned boolean, WaitForRBACProfileProvisioned). Enable bundles regenerated for ccs-mgmt and ccs-dev. COMPILER-HELM-E2E: helm compile path verified end-to-end (RBAC intake, OCI pull, tar.gz unpack); workload apply limited by wrapper-runner ClusterRole gap for cluster-scoped webhook resources. Stop before push.
+**Current state:** session/14-bake-lab-patches PRs open, WS8b (cert-manager e2e) held pending Governor VPN signoff. Three-bucket split implemented (conductor PR #18, wrapper PR #11, ontai-schema merged deca293). COMPILER-HELM-E2E open until cert-manager e2e re-run passes. Two new backlog items: CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION, GUARDIAN-BL-RBACPROFILE-SWEEP.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
 ## Branch Summary
 
-### session/14-bake-lab-patches (conductor -- IN PROGRESS, stop before push)
+### session/14-bake-lab-patches (conductor, wrapper, ontai-schema -- PRs open, WS8b held)
 
 **Role:** Controller Engineer.
 
@@ -33,6 +33,30 @@
 - `lab/configs/ccs-dev/compiled/enable/05-post-bootstrap/wrapper-runner.yaml`: generated for Phase B.
 - Applied updated role to ccs-mgmt: `kubectl apply --server-side --force-conflicts`. Role applied successfully.
 - Commit: `lab: add PackOperationResult RBAC to wrapper-runner Role in ccs-mgmt and ccs-dev enable bundles` (ontai 509fd2b)
+
+**WS5 -- PROGRESS and BACKLOG update (CLOSED):**
+- WRAPPER-RUNNER-ROLE-PACKOPRESULT closed. COMPILER-HELM-E2E closed with caveat (workload apply limited by ClusterRole gap; gap now addressed by WS6b-WS7b three-bucket split).
+- ontai root commits: `7227f4d` (session/14 BACKLOG/PROGRESS), `b2b04eb` (ontai-schema submodule advance).
+
+**WS6b -- ontai-schema clusterScopedDigest (CLOSED):**
+- `v1alpha1/infra/ClusterPack.json`: added `clusterScopedDigest` field.
+- ontai-schema PR #5 merged, commit `deca293`. ontai-schema submodule advanced in ontai root.
+
+**WS7b -- Three-bucket manifest split (CLOSED):**
+- `internal/packbuild/split.go`: `SplitManifests` returns three slices (rbac, clusterScoped, workload). Eight cluster-scoped kinds recognized. `SplitRBACAndWorkload` preserved as backward-compat wrapper.
+- `cmd/compiler/compile_packbuild_helm.go`: three-layer OCI push; `clusterScopedDigest` emitted in ClusterPack CR; checksum covers all three layers.
+- `cmd/compiler/compile_packbuild_split.go`: `SplitManifests` re-exported to main package.
+- `internal/capability/wrapper.go`: `executeSplitPath` gains step 6 (pull-and-apply cluster-scoped layer, skipped when digest absent); `clusterScopedDigest` read from ClusterPack spec; artifacts list includes cluster-scoped layer.
+- `cmd/compiler/compile_enable.go`: `writeWrapperRunnerRBACYAML` emits `wrapper-runner-cluster-scoped` ClusterRole and ClusterRoleBinding covering admissionregistration, apiextensions, storage, scheduling, networking (ingressclasses), cert-manager.io.
+- `wrapper/api/v1alpha1/clusterpack_types.go`: `ClusterScopedDigest string` field added.
+- Tests: 7 new split bucket tests, 2 executor step-6 tests, 1 enable bundle ClusterRole test. All suites green. go vet clean.
+- conductor PR #18. wrapper PR #11.
+
+**Governor design questions recorded (2026-04-22):**
+- `CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION`: conductor role=tenant must pull and cache RBACProfile from management cluster into ont-system on tenant cluster.
+- `GUARDIAN-BL-RBACPROFILE-SWEEP`: governance sweep for RBAC resources that arrived outside rbac-intake (bootstrap apply, pre-split packs). Design session required.
+
+**WS8b -- cert-manager e2e (HELD):** Live cluster work blocked pending Governor VPN signoff. Docker build also blocked.
 
 ---
 
