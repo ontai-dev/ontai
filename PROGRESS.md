@@ -4,7 +4,7 @@
 
 <!-- PRIORITY: WS8b (cert-manager e2e, three-bucket split) is the first live cluster test. It must pass before any tenant cluster work begins. Implementation sequence: WS8b on management cluster first, then ont-native import tenant, then CAPI bootstrapped tenant, then ont-native bootstrap tenant. GAP_TO_FILL.md Section "Live Cluster Testing Sequence" is authoritative. -->
 
-**Current state:** session/14-bake-lab-patches fully closed (all PRs merged). Architectural audit complete (GAP_TO_FILL.md). Phase 0 (T-01 through T-04c) COMPLETE as of 2026-04-24 session. T-04d awaiting Governor scheduling. Phase 1 schema PRs (T-04a, T-04, T-05, T-06) are next. WS8b (cert-manager e2e with three-bucket split) PRIORITY -- first live cluster gate, held pending VPN/docker/cluster access.
+**Current state:** Phase 1 schema PRs (T-04a, T-04, T-05, T-06) COMPLETE as of 2026-04-24. ontai-schema PR #6 (session/phase1) open and awaiting merge. Phase 2 operator implementation (T-07 through T-10) blocked on PR #6 merge. WS8b (cert-manager e2e with three-bucket split) PRIORITY -- first live cluster gate, held pending VPN/docker/cluster access.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -23,7 +23,19 @@
 
 **T-04d -- Migration session scheduling.** READY. T-04c complete. Awaiting Governor to open migration session branch.
 
-**Next:** Phase 1 -- ontai-schema PRs (T-04a, T-04, T-05, T-06). One PR per ontai-schema task against the ontai-schema repo. These must merge before Phase 2 operator implementation begins.
+## GAP_TO_FILL.md Phase 1 (PR OPEN 2026-04-24)
+
+**T-04a -- TalosCluster CEL validation (ontai-schema).** PR #6 (ontai-schema/session/phase1). New platform/TalosCluster.json with x-kubernetes-validations CEL rule: role required and must be management|tenant when mode=import. JSON Schema if/then conditional for non-Kubernetes tooling.
+
+**T-04 -- Helm metadata chain (ontai-schema).** PR #6. infra/ClusterPack.json: added chartVersion, chartURL, chartName, helmVersion. New infra/PackExecution.json. infra/PackInstance.json: added same four fields. New seam-core/PackReceipt.json with rbacDigest, workloadDigest, and all four helm fields. All optional/omitempty; absent for kustomize and raw.
+
+**T-05 -- PackBuild category discriminator (ontai-schema).** PR #6. New infra/PackBuild.json with category enum (helm/kustomize/raw) and seven CEL validation rules enforcing category-source exclusivity. helmSource.helmVersion required for category=helm.
+
+**T-06 -- PackOperationResult revision fields (ontai-schema).** PR #6. seam-core/PackOperationResult.json: revision (int64, required), previousRevisionRef (optional), talosClusterOperationResultRef (optional stub). Single-active-revision pattern Decision E.
+
+**index.json structural fix:** infra layer was outside the layers object in the prior version. Fixed and all new schemas registered.
+
+**Next:** Merge ontai-schema PR #6. Then open Phase 2 PR (session/phase2) in wrapper and conductor repos implementing T-07 through T-10.
 
 ---
 
