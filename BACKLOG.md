@@ -1,7 +1,7 @@
 # ONT Platform: Backlog
 
-**Last updated:** April 21, 2026
-**Branch:** session/13-namespace-model-fix WS1-WS8 complete, stop before push
+**Last updated:** April 22, 2026
+**Branch:** session/14-bake-lab-patches COMPLETE, stop before push/PR
 
 Priority: High / Medium / Low
 
@@ -39,6 +39,8 @@ Priority: High / Medium / Low
 | WRAPPER-BL-CROSS-CLUSTER-APPLY | conductor, wrapper | CLOSED 2026-04-21 (session/13-clusterpack-rbac-split WS10). Full 6-step split path verified on ccs-mgmt: pull-rbac-layer, rbac-intake (guardian creates PermissionSet/RBACPolicy/RBACProfile), wait-rbac-profile (provisioned=true), pull-workload-layer, ensure-namespaces, apply-workload. PackExecution Succeeded=True. |
 | WRAPPER-BL-GUARDIAN-RBACPROFILE-PROVISIONED | guardian, conductor | CLOSED 2026-04-21 (session/13-clusterpack-rbac-split WS8b). WaitForRBACProfileProvisioned polls security.ontai.dev/v1alpha1/rbacprofiles in tenant-{targetCluster}. NotFound retried; non-NotFound propagated. 6 unit tests. GuardianIntakeClientAdapter production implementation complete. |
 | WRAPPER-BL-PACKINSTANCE-WATCH | wrapper | PackInstance deletion must trigger ClusterPack reconcile with PackExecution cascade delete. Fixed in 51fd2ec. Verify no regression after ARCH-BL-RUNNERCONFIG-UNIFICATION. |
+| CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor on tenant clusters (role=tenant) must pull RBACProfile for its cluster from management cluster's seam-tenant-{tenantCluster} namespace and write it into ont-system on the tenant cluster. Requires: conductor role field (management vs tenant), federation pull path for RBACProfiles, write into ont-system (created by platform on import/bootstrap for both native and CAPI paths). Management conductor (role=management) retains signing (PermissionSnapshot, PackReceipt). Governor ruling 2026-04-22: design session required before implementation. |
+| GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | Guardian governs RBAC via admission webhook (stamps ontai.dev/rbac-owner=guardian) but does not create RBACProfiles for RBAC resources that arrive outside the /rbac-intake/pack path (bootstrap apply, kubectl apply, pre-split packs). A reconciler sweep that detects governed RBAC with no corresponding RBACProfile and back-fills it is absent. Design question: should sweep use the same PermissionSet/RBACPolicy/RBACProfile creation path as rbac-intake, or a lightweight annotation-only path? Governor session required. |
 | PLATFORM-BL-STATUS-PATCH-CONFLICT | platform | TalosClusterReconciler status patch conflicts under 2-replica deployment. Use RetryOnConflict. |
 | PLATFORM-BL-3-LOCALQUEUE | platform | Platform must create LocalQueue in seam-tenant for tenant clusters. Currently only management cluster gets it from compiler phase 05. |
 | CONDUCTOR-BL-CAPABILITY-WATCH | conductor | Wrapper ConductorReady gate should watch RunnerConfig status and trigger immediately when capabilities appear rather than polling on 30s requeue. |
@@ -62,7 +64,9 @@ Priority: High / Medium / Low
 | CONDUCTOR-BL-EXECUTION-ORDER | conductor | Staged manifest apply confirmed implemented. Verify with multi-manifest pack test. |
 | WRAPPER-BL-PACKINSTANCE-VERSION-DOUBLE-V | wrapper | Ready condition message says vv0.1.2 double v prefix. Fixed in 51fd2ec. Verify. |
 | C-34 | compiler | CLOSED 2026-04-20 (session/4). *CAPIConfig pointer change in platform API; CAPIEnabled() helper; nil suppresses capi block entirely. platform commit 7f70533, conductor commit f7c66ad. |
-| CONDUCTOR-BL-RESULT-CM-TTL | conductor | OperationResult ConfigMap TTL. Fixed in 6d31b77. Verify GC happening. |
+| CONDUCTOR-BL-RESULT-CM-TTL | conductor | CLOSED 2026-04-22 (session/13-pack-operation-result). Superseded: PackOperationResult CRD replaces ConfigMap as operation result channel. ConfigMap TTL is no longer relevant. conductor PR #17 merged. |
+| WRAPPER-RUNNER-ROLE-PACKOPRESULT | conductor, wrapper | CLOSED 2026-04-22 (session/14-bake-lab-patches). Rule baked into writeWrapperRunnerRBACYAML in compile_enable.go. Enable bundles regenerated for ccs-mgmt and ccs-dev. Role applied to live ccs-mgmt. conductor 687b8bd, ontai 509fd2b. |
+| COMPILER-HELM-E2E | conductor | CLOSED 2026-04-22 (session/14-bake-lab-patches). helmCompilePackBuild e2e verified on ccs-mgmt with cert-manager-helm v1.14.0. Five bugs fixed: NOTES.txt filter (compile_packbuild_helm.go), double-digest OCI ref (wrapper.go), raw YAML push without tar.gz (compile_oci_push.go packYAMLAsTarGz), WaitForRBACProfileProvisioned boolean check absent (adapters.go), tar.gz format mismatch. Split path completed through workload apply. ClusterRole gap for cluster-scoped webhook resources (cert-manager MutatingWebhookConfiguration) not addressed -- wrapper-runner is a namespaced Role; design decision required for cluster-scoped pack resources. conductor 687b8bd. |
 
 ---
 
