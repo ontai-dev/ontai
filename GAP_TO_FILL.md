@@ -243,61 +243,61 @@ Ordering rules enforced:
 Phase 2B completes Decision G: all cross-operator CRD schemas move to seam-core before the Compiler gains new output paths (kustomize, raw) in Phase 3. Phase 3 would deepen the Decision G violation if ClusterPack remains in wrapper when Phase 3 lands.
 
 **T-2B-0 -- PackReceipt vs PackOperationResult merge decision (CLOSED 2026-04-24)**
-Governor ruling: keep them separate. PackReceipt is written by the Conductor execute job after pack-deploy completes and carries rbacDigest, workloadDigest, and helm metadata. PackOperationResult is the management cluster append-log record written by the conductor wrapper capability and carries revision, previousRevisionRef, and operational status. Different writers, different lifecycles, different consumers. PackReceipt remains a distinct type deriving AppPackEvent. PackOperationResult remains as-is.
+Governor ruling: keep them separate. PackReceipt is written by the Conductor execute job after pack-deploy completes and carries rbacDigest, workloadDigest, and helm metadata. PackOperationResult is the management cluster append-log record written by the conductor wrapper capability and carries revision, previousRevisionRef, and operational status. Different writers, different lifecycles, different consumers.
 
-**T-2B-1 -- ontai-schema PR 1: app-core layer entries (ontai-schema)**
-Add five new app-core schema files in one PR. Must merge before T-2B-2 begins.
-- `app-core/AppRunnerConfig.json`: capability configuration resource. Derives DomainResource. Adds capability schema fields, version binding, cluster reference.
-- `app-core/AppPackDefinition.json`: versioned content-addressed pack artifact declaration. Derives DomainResource. Adds version, registry reference, OCI digest fields.
-- `app-core/AppPackExecution.json`: intent-driven pack-deploy request. Derives DomainTransaction. Adds execution context, target cluster, RunnerConfig binding.
-- `app-core/AppPackInstance.json`: delivered pack state record. Derives DomainResource. Adds delivery timestamp, drift summary, deployed resources list.
-- `app-core/AppPackEvent.json`: immutable pack-deploy completion record. Derives DomainEvent. Adds capability name, status, step results, failure reason. Basis for InfrastructurePackReceipt.
+Note on app-core: app-core is a future ONT application operator layer, not part of Phase 2B. The architectural chain domain-core -> app-core -> seam-core is canonical: every domain is application-first and every application is also a domain. app-core entries (AppBoundary, AppIdentity, etc.) already in index.json are correct and untouched. Phase 2B is a straight schema migration only.
+
+**T-2B-1 -- ontai-schema PR 1: seam-core migration schemas for all wrapper and platform CRDs (ontai-schema)**
+Add seven new seam-core schema files in one PR. Scope: all existing CRDs owned by wrapper and platform repos, plus conductor CRDs not yet in seam-core. Tracking: ontai-schema PR #7.
+- `seam-core/InfrastructureClusterPack.json`: migrated from infra/ClusterPack. seam-core owner; wrapper creates, conductor signing loop updates status.
+- `seam-core/InfrastructurePackExecution.json`: migrated from infra/PackExecution. seam-core owner; wrapper reconciler performs 4-gate check and submits Kueue Job.
+- `seam-core/InfrastructurePackInstance.json`: migrated from infra/PackInstance. seam-core owner; present on management and tenant clusters.
+- `seam-core/InfrastructurePackReceipt.json`: migrated from seam-core/PackReceipt. seam-core canonical form; supersedes interim PackReceipt entry. Spec sealed per INV-026.
+- `seam-core/InfrastructureRunnerConfig.json`: no prior infra/ entry; source is conductor/pkg/runnerlib/runnerconfig.go. seam-core owner; platform operator authors exclusively per INV-009.
+- `seam-core/InfrastructurePackBuild.json`: migrated from infra/PackBuild. seam-core owner; compiler input spec, never applied as a cluster CR.
+- `seam-core/InfrastructureTalosCluster.json`: migrated from platform/TalosCluster. seam-core owner; platform operator reconciles instances.
 Branch: session/phase2b. Repo: ontai-schema. Blocks T-2B-2.
 
-**T-2B-2 -- ontai-schema PR 2: seam-core layer entries (ontai-schema)**
-Add five new seam-core schema files in one PR. Must merge before T-2B-3 begins.
-- `seam-core/InfrastructureRunnerConfig.json`: derives AppRunnerConfig. Adds TalosCluster name binding, conductor image version, status.capabilities subresource.
-- `seam-core/InfrastructureClusterPack.json`: derives AppPackDefinition. Adds signing status, execution order, clusterScopedDigest, helm metadata fields (chartVersion, chartURL, chartName, helmVersion).
-- `seam-core/InfrastructurePackExecution.json`: derives AppPackExecution. Adds Kueue Job binding, status conditions, progress tracking.
-- `seam-core/InfrastructurePackInstance.json`: derives AppPackInstance. Adds target cluster reference, OCI digest tracking, upgradeDirection, basePackName.
-- `seam-core/InfrastructurePackReceipt.json`: derives AppPackEvent. Adds job name reference, rbacDigest, workloadDigest, helm metadata fields. Kept separate from PackOperationResult per T-2B-0 decision.
+**T-2B-2 -- ontai-schema PR 2: PackOperationResult cross-reference update (ontai-schema)**
+Update `seam-core/PackOperationResult.json`: add `x-ont-depends-on` reference to InfrastructurePackReceipt reflecting the kept-separate decision from T-2B-0. No new fields; only the cross-reference annotation update.
 Branch: session/phase2b. Repo: ontai-schema. Blocked on T-2B-1. Blocks T-2B-3.
 
-**T-2B-3 -- ontai-schema PR 3: PackOperationResult x-ont-related-to update (ontai-schema)**
-Update `seam-core/PackOperationResult.json`: add `x-ont-related-to` reference to InfrastructurePackReceipt reflecting the kept-separate decision from T-2B-0. No new fields; only the cross-reference annotation.
-Branch: session/phase2b. Repo: ontai-schema. Blocked on T-2B-2. Blocks T-2B-4.
-
-**T-2B-4 -- ontai-schema PR 4: infra/ deprecation markers (ontai-schema)**
-Add deprecation markers to two existing schema files:
-- `infra/ClusterPack.json`: add `x-ont-replaces: seam-core/InfrastructureClusterPack` and deprecation note.
-- `infra/PackInstance.json`: add `x-ont-replaces: seam-core/InfrastructurePackInstance` and deprecation note.
-Branch: session/phase2b. Repo: ontai-schema. Blocked on T-2B-3.
+**T-2B-3 -- ontai-schema PR 3: deprecation markers on superseded source schemas (ontai-schema)**
+Add deprecation markers to existing source schema files that have been migrated to seam-core:
+- `infra/ClusterPack.json`: add `x-ont-deprecated: true` and `x-ont-superseded-by: seam-core/InfrastructureClusterPack`.
+- `infra/PackExecution.json`: add `x-ont-deprecated: true` and `x-ont-superseded-by: seam-core/InfrastructurePackExecution`.
+- `infra/PackInstance.json`: add `x-ont-deprecated: true` and `x-ont-superseded-by: seam-core/InfrastructurePackInstance`.
+- `infra/PackBuild.json`: add `x-ont-deprecated: true` and `x-ont-superseded-by: seam-core/InfrastructurePackBuild`.
+- `platform/TalosCluster.json`: add `x-ont-deprecated: true` and `x-ont-superseded-by: seam-core/InfrastructureTalosCluster`.
+Branch: session/phase2b. Repo: ontai-schema. Blocked on T-2B-2.
 
 **T-2B-5 -- seam-core Go type additions (seam-core)**
-After all four ontai-schema PRs (T-2B-1 through T-2B-4) merge, add Go type definitions to seam-core under `api/v1alpha1`. New files only -- do not remove anything from conductor or wrapper in this step.
+After all three ontai-schema PRs (T-2B-1 through T-2B-3) merge, add Go type definitions to seam-core under `api/v1alpha1`. New files only -- do not remove anything from conductor, wrapper, or platform in this step.
 - `runnerconfig_types.go` -- InfrastructureRunnerConfig matching seam-core schema exactly
 - `clusterpack_types.go` -- InfrastructureClusterPack matching seam-core schema exactly
 - `packexecution_types.go` -- InfrastructurePackExecution matching seam-core schema exactly
 - `packinstance_types.go` -- InfrastructurePackInstance matching seam-core schema exactly
 - `packreceipt_types.go` -- InfrastructurePackReceipt matching seam-core schema exactly
+- `packbuild_types.go` -- InfrastructurePackBuild matching seam-core schema exactly
+- `taloscluster_types.go` -- InfrastructureTalosCluster matching seam-core schema exactly
 Full unit tests and serialization integrity tests required for each type.
-Branch: session/phase2b. Repo: seam-core. Blocked on T-2B-4.
+Branch: session/phase2b. Repo: seam-core. Blocked on T-2B-3.
 
 **T-2B-6 -- Conductor import migration (conductor)**
 After T-2B-5 merges: remove RunnerConfig and PackReceipt Go type definitions from conductor. Update all conductor imports to seam-core/api/v1alpha1. All existing tests must pass.
 Branch: session/phase2b. Repo: conductor. Blocked on T-2B-5.
 
 **T-2B-7 -- Wrapper import migration (wrapper)**
-After T-2B-6 merges: remove ClusterPack, PackExecution, and PackInstance Go type definitions from wrapper. Update all wrapper imports to seam-core/api/v1alpha1. All existing tests must pass.
+After T-2B-6 merges: remove ClusterPack, PackExecution, PackInstance, and PackBuild Go type definitions from wrapper. Update all wrapper imports to seam-core/api/v1alpha1. All existing tests must pass.
 Branch: session/phase2b. Repo: wrapper. Blocked on T-2B-6.
 
 **T-2B-8 -- Platform import migration (platform)**
-After T-2B-7 merges: remove the unstructured RunnerConfig workaround in runnerconfig_cr.go. Replace with a typed seam-core import. All existing tests must pass.
+After T-2B-7 merges: remove the unstructured RunnerConfig workaround in runnerconfig_cr.go. Remove TalosCluster Go type definition from platform and replace with typed seam-core import. Update all platform imports to seam-core/api/v1alpha1. All existing tests must pass.
 Branch: session/phase2b. Repo: platform. Blocked on T-2B-7.
 
-**T-2B-9 -- CRD manifest migration (seam-core, conductor, wrapper)**
-After T-2B-8 merges: remove generated CRD YAML for RunnerConfig, PackReceipt, ClusterPack, PackExecution, and PackInstance from conductor and wrapper Helm charts or kustomize layers. Add these CRD definitions to the seam-core installation manifests. After this step, tenant clusters that install seam-core receive these CRD definitions without needing wrapper or conductor deployed -- which is the T-18 forcing condition from Decision G.
-Branch: session/phase2b. Repos: seam-core, conductor, wrapper. Blocked on T-2B-8.
+**T-2B-9 -- CRD manifest migration (seam-core, conductor, wrapper, platform)**
+After T-2B-8 merges: remove generated CRD YAML for RunnerConfig, PackReceipt, ClusterPack, PackExecution, PackInstance, PackBuild, and TalosCluster from conductor, wrapper, and platform Helm charts or kustomize layers. Add these CRD definitions to the seam-core installation manifests. After this step, tenant clusters that install seam-core receive all CRD definitions without needing wrapper, conductor, or platform deployed -- resolving the T-18 forcing condition from Decision G.
+Branch: session/phase2b. Repos: seam-core, conductor, wrapper, platform. Blocked on T-2B-8.
 
 When T-2B-9 is merged and all CRD manifests are confirmed installed via seam-core: update GAP_TO_FILL.md to mark T-04d as closed, add Phase 2B completed note with date. Phase 3 may then proceed.
 
@@ -426,16 +426,15 @@ Phase 2 (after T-04):
   T-10  (conductor: carry-through to PackReceipt)     -- after T-08 T-09
 
 Phase 2B (after T-07 through T-10 merge; mandatory before Phase 3):
-  T-2B-0 (merge decision: keep PackReceipt separate)  -- CLOSED 2026-04-24
-  T-2B-1 (ontai-schema: app-core layer)               -- blocks T-2B-2
-  T-2B-2 (ontai-schema: seam-core layer)              -- after T-2B-1, blocks T-2B-3
-  T-2B-3 (ontai-schema: PackOperationResult update)   -- after T-2B-2, blocks T-2B-4
-  T-2B-4 (ontai-schema: infra/ deprecation markers)   -- after T-2B-3, blocks T-2B-5
-  T-2B-5 (seam-core: Go type additions)               -- after T-2B-4, blocks T-2B-6
-  T-2B-6 (conductor: import migration)                -- after T-2B-5, blocks T-2B-7
-  T-2B-7 (wrapper: import migration)                  -- after T-2B-6, blocks T-2B-8
-  T-2B-8 (platform: import migration)                 -- after T-2B-7, blocks T-2B-9
-  T-2B-9 (CRD manifest migration)                     -- after T-2B-8; closes T-04d on completion
+  T-2B-0 (merge decision: keep PackReceipt separate)          -- CLOSED 2026-04-24
+  T-2B-1 (ontai-schema: 7 seam-core Infrastructure* schemas)  -- IN PROGRESS (PR #7), blocks T-2B-2
+  T-2B-2 (ontai-schema: PackOperationResult cross-reference)  -- after T-2B-1, blocks T-2B-3
+  T-2B-3 (ontai-schema: deprecation markers on 5 sources)     -- after T-2B-2, blocks T-2B-5
+  T-2B-5 (seam-core: 7 Go type additions)                     -- after T-2B-3, blocks T-2B-6
+  T-2B-6 (conductor: import migration)                        -- after T-2B-5, blocks T-2B-7
+  T-2B-7 (wrapper: import migration)                          -- after T-2B-6, blocks T-2B-8
+  T-2B-8 (platform: import migration + TalosCluster)          -- after T-2B-7, blocks T-2B-9
+  T-2B-9 (CRD manifest migration: all 4 repos)                -- after T-2B-8; closes T-04d on completion
 
 Phase 3 (after T-05 AND Phase 2B complete):
   T-11  (conductor: PackBuildInput category + helmVersion) -- after T-05 + Phase 2B, blocks T-12 T-13
