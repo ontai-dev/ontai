@@ -1,0 +1,3 @@
+[submodule "ontai-schema"]
+	path = ontai-schema
+	url = https://github.com/ontai-dev/ontai-schema.git
