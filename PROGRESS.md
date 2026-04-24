@@ -4,7 +4,7 @@
 
 <!-- PRIORITY: WS8b (cert-manager e2e, three-bucket split) is the first live cluster test. It must pass before any tenant cluster work begins. Implementation sequence: WS8b on management cluster first, then ont-native import tenant, then CAPI bootstrapped tenant, then ont-native bootstrap tenant. GAP_TO_FILL.md Section "Live Cluster Testing Sequence" is authoritative. -->
 
-**Current state:** Phase 1 schema PRs (T-04a, T-04, T-05, T-06) COMPLETE as of 2026-04-24. ontai-schema PR #6 (session/phase1) open and awaiting merge. Phase 2 operator implementation (T-07 through T-10) blocked on PR #6 merge. WS8b (cert-manager e2e with three-bucket split) PRIORITY -- first live cluster gate, held pending VPN/docker/cluster access.
+**Current state:** Phase 1 schema PRs (T-04a, T-04, T-05, T-06) COMPLETE (ontai-schema PR #6 merged 2026-04-24). Phase 2 operator implementation (T-07 through T-10) COMPLETE as of 2026-04-24 -- wrapper PR #12 and conductor PR #20 open for review. WS8b (cert-manager e2e with three-bucket split) PRIORITY -- first live cluster gate, held pending VPN/docker/cluster access.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -35,7 +35,19 @@
 
 **index.json structural fix:** infra layer was outside the layers object in the prior version. Fixed and all new schemas registered.
 
-**Next:** Merge ontai-schema PR #6. Then open Phase 2 PR (session/phase2) in wrapper and conductor repos implementing T-07 through T-10.
+**Status:** COMPLETE. ontai-schema PR #6 merged. Phase 2 PRs open: wrapper PR #12, conductor PR #20.
+
+## GAP_TO_FILL.md Phase 2 (PRs OPEN 2026-04-24)
+
+**T-07 -- Helm metadata fields on wrapper types.** wrapper PR #12 (session/phase2). Added ChartVersion, ChartURL, ChartName, HelmVersion to ClusterPackSpec, PackExecutionSpec, PackInstanceSpec. All omitempty. 6 round-trip tests.
+
+**T-08 -- PackReceiptSpec new fields.** conductor PR #20 (session/phase2). Added RBACDigest, WorkloadDigest, ChartVersion, ChartURL, ChartName, HelmVersion to PackReceiptSpec in pkg/runnerlib. 2 unit tests.
+
+**T-09 -- helmSDKVersion and chart field population.** conductor PR #20. helmSDKVersion() via debug.ReadBuildInfo reads linked helm.sh/helm/v3 module version. helmCompilePackBuild populates all four chart fields in ClusterPack CR. Tests: minimalHelmChart helper, mockOCIRegistry (full Distribution Spec v2), 3 tests.
+
+**T-10 -- PackReceipt carry-through in pull loop.** conductor PR #20. packDeliveryMetadata struct. extractPackMetadataFromArtifact reads chart fields from PackInstance artifact JSON. readClusterPackDigests reads OCI anchors from ClusterPack. buildReceiptSpecPayload extracted for testability. upsertPackReceipt conditionally writes all six fields. 5 unit tests.
+
+**Next:** Governor review and merge of wrapper PR #12 and conductor PR #20. Then Phase 3 (T-11 through T-13, PackBuild categories).
 
 ---
 
