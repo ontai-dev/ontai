@@ -4,7 +4,7 @@
 
 <!-- PRIORITY: WS8b (cert-manager e2e, three-bucket split) is the first live cluster test. It must pass before any tenant cluster work begins. Implementation sequence: WS8b on management cluster first, then ont-native import tenant, then CAPI bootstrapped tenant, then ont-native bootstrap tenant. GAP_TO_FILL.md Section "Live Cluster Testing Sequence" is authoritative. -->
 
-**Current state:** Phase 1 schema PRs (T-04a, T-04, T-05, T-06) COMPLETE (ontai-schema PR #6 merged 2026-04-24). Phase 2 operator implementation (T-07 through T-10) COMPLETE as of 2026-04-24 -- wrapper PR #12 and conductor PR #20 open for review. WS8b (cert-manager e2e with three-bucket split) PRIORITY -- first live cluster gate, held pending VPN/docker/cluster access.
+**Current state:** Phase 2 COMPLETE (wrapper PR #12 merged, conductor PR #20 open -- CI fix pushed 2026-04-24). Phase 2B (seam-core CRD migration) is MANDATORY before Phase 3 begins. Phase 2B tasks documented in GAP_TO_FILL.md as T-2B-1 through T-2B-9. Phase 2B scope: four sequential ontai-schema PRs, then seam-core Go types, then three operator import migrations (conductor, wrapper, platform), then CRD manifest migration. Phase 3 is blocked on Phase 2B completion. WS8b (cert-manager e2e) remains held pending VPN/docker/cluster access.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -47,7 +47,28 @@
 
 **T-10 -- PackReceipt carry-through in pull loop.** conductor PR #20. packDeliveryMetadata struct. extractPackMetadataFromArtifact reads chart fields from PackInstance artifact JSON. readClusterPackDigests reads OCI anchors from ClusterPack. buildReceiptSpecPayload extracted for testability. upsertPackReceipt conditionally writes all six fields. 5 unit tests.
 
-**Next:** Governor review and merge of wrapper PR #12 and conductor PR #20. Then Phase 3 (T-11 through T-13, PackBuild categories).
+**wrapper PR #12:** MERGED 2026-04-24 (squash, commit 8be4f500e6ca).
+**conductor PR #20:** CI fix pushed 2026-04-24 (go.mod updated to wrapper v0.1.0-alpha.0.20260424113358-8be4f500e6ca). Awaiting CI pass and Governor merge.
+
+## GAP_TO_FILL.md Phase 2B -- Seam-core CRD migration (NOT YET STARTED)
+
+**Governor directive 2026-04-24:** Phase 2B is mandatory before Phase 3. Phase 3 adds kustomize and raw category paths to the Compiler which emit ClusterPack CRs. If ClusterPack remains in wrapper when Phase 3 lands, the Compiler would import wrapper types -- a Decision G violation that Phase 3 would deepen. Branch: session/phase2b.
+
+**T-2B-0 -- PackReceipt vs PackOperationResult merge decision (CLOSED 2026-04-24):** Keep separate. Different writers (conductor execute job vs wrapper capability), different lifecycles, different consumers. PackReceipt derives AppPackEvent. PackOperationResult remains as-is.
+
+**T-2B-1 through T-2B-4:** Four sequential ontai-schema PRs. Each must merge before the next begins.
+- PR 1: app-core layer (AppRunnerConfig, AppPackDefinition, AppPackExecution, AppPackInstance, AppPackEvent)
+- PR 2: seam-core layer (InfrastructureRunnerConfig, InfrastructureClusterPack, InfrastructurePackExecution, InfrastructurePackInstance, InfrastructurePackReceipt)
+- PR 3: seam-core/PackOperationResult.json x-ont-related-to reference to InfrastructurePackReceipt
+- PR 4: infra/ deprecation markers (ClusterPack.json, PackInstance.json with x-ont-replaces)
+
+**T-2B-5:** seam-core Go type additions (after all four ontai-schema PRs merge). New files only, nothing removed yet.
+
+**T-2B-6 through T-2B-8:** Operator import migrations in order: conductor (remove RunnerConfig, PackReceipt), wrapper (remove ClusterPack, PackExecution, PackInstance), platform (remove unstructured RunnerConfig workaround). One PR per repo; each must pass CI before next begins.
+
+**T-2B-9:** CRD manifest migration -- remove CRD YAML from conductor/wrapper charts, add to seam-core installation manifests. Closes T-04d.
+
+**Next:** Await conductor PR #20 CI pass and Governor merge. Then open session/phase2b.
 
 ---
 
