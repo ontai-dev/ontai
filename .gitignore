@@ -36,5 +36,6 @@ Thumbs.db
 !BACKLOG.md
 !PROGRESS.md
 !GIT_TRACKING.md
+!CRD_OWNERSHIP_AUDIT.md
 !docs/**
 guardian-db-credentials.yaml

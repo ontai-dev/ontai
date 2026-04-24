@@ -1,7 +1,29 @@
 # ONT Platform Progress
 
-**Current state:** session/14-bake-lab-patches PRs open, WS8b (cert-manager e2e) held pending Governor VPN signoff. Three-bucket split implemented (conductor PR #18, wrapper PR #11, ontai-schema merged deca293). COMPILER-HELM-E2E open until cert-manager e2e re-run passes. Two new backlog items: CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION, GUARDIAN-BL-RBACPROFILE-SWEEP.
+<!-- GAP_TO_FILL active: ~/ontai/GAP_TO_FILL.md contains the architectural gap report and sequenced task list (T-01 through T-21). Governor decisions A-F incorporated. Read before starting any schema or implementation work in Areas 1-6. REMOVE THIS COMMENT and the GAP_TO_FILL.md pointer when tasks T-01 through T-16 are closed. T-17 through T-21 remain in BACKLOG.md pending their respective blockers (TENANT-CLUSTER-E2E for T-17 through T-19, cluster-access for T-20 through T-21). -->
+
+<!-- PRIORITY: WS8b (cert-manager e2e, three-bucket split) is the first live cluster test. It must pass before any tenant cluster work begins. Implementation sequence: WS8b on management cluster first, then ont-native import tenant, then CAPI bootstrapped tenant, then ont-native bootstrap tenant. GAP_TO_FILL.md Section "Live Cluster Testing Sequence" is authoritative. -->
+
+**Current state:** session/14-bake-lab-patches fully closed (all PRs merged). Architectural audit complete (GAP_TO_FILL.md). Phase 0 (T-01 through T-04c) COMPLETE as of 2026-04-24 session. T-04d awaiting Governor scheduling. Phase 1 schema PRs (T-04a, T-04, T-05, T-06) are next. WS8b (cert-manager e2e with three-bucket split) PRIORITY -- first live cluster gate, held pending VPN/docker/cluster access.
 **Full history:** PROGRESS-archive-2026-04-20.md
+
+---
+
+## GAP_TO_FILL.md Phase 0 (COMPLETE 2026-04-24)
+
+**T-01 -- conductor compiler validation fix.** PR #19 (conductor/session/area1). Mode=import now requires explicit role. Mode=bootstrap never emits role field. 8 unit tests added.
+
+**T-02 -- platform TalosClusterSpec comment fix.** PR #15 (platform/session/area1). Role comment corrected from bootstrap to import invariant.
+
+**T-03 -- OCIPushClient interface extraction.** Committed to conductor/session/phase0. OCI push extracted behind interface. 4 unit tests. PR pending (part of conductor/session/phase0).
+
+**T-04b -- Guardian RBACProfile back-fill runnable.** PR #14 (guardian/session/phase0). Periodic background scan of seam-tenant-* namespaces; creates missing RBACProfiles for components with existing PermissionSets. 6 unit tests.
+
+**T-04c -- CRD ownership audit.** PR #10 (ontai/session/seam-core-audit). CRD_OWNERSHIP_AUDIT.md: 5 migration candidates (RunnerConfig, PackReceipt, ClusterPack, PackExecution, PackInstance), three-layer derivation mapping, ontai-schema gap list (5 app-core entries + 5 seam-core entries + 2 infra deprecations).
+
+**T-04d -- Migration session scheduling.** READY. T-04c complete. Awaiting Governor to open migration session branch.
+
+**Next:** Phase 1 -- ontai-schema PRs (T-04a, T-04, T-05, T-06). One PR per ontai-schema task against the ontai-schema repo. These must merge before Phase 2 operator implementation begins.
 
 ---
 

@@ -1,8 +1,38 @@
 # ONT Platform: Session Context
 
-**Last updated:** April 20, 2026
-**Branch:** session/1-governor-init (all repos); session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform) -- PRs open
+**Last updated:** April 24, 2026
+**Branch:** main (session/14-bake-lab-patches fully merged)
 **Author:** Krishna (ontave / ontave@ontave.dev)
+
+---
+
+## PRIORITY: GAP_TO_FILL.md Work Is Active and Must Finish First
+
+**File:** ~/ontai/GAP_TO_FILL.md
+**Status:** Active. Governor-approved. Implementation not yet started.
+
+The tasks listed in GAP_TO_FILL.md (T-01 through T-21 across six phases) represent
+the current architectural gap closure work. These tasks are the highest priority in
+the project. No new feature work, no backlog items, and no speculative design sessions
+may be started until T-01 through T-16 are closed and merged.
+
+T-17 through T-19 are blocked pending TENANT-CLUSTER-E2E.
+T-20 through T-21 are blocked pending live cluster access for Day2 scheduling work.
+These blocked tasks remain open in BACKLOG.md until their prerequisites are met.
+
+**First gate before any implementation:** WS8b (cert-manager e2e with three-bucket
+split) must pass on the management cluster. WS8b is the first live cluster validation.
+The full live testing sequence after WS8b is recorded in GAP_TO_FILL.md under "Live
+Cluster Testing Sequence" and is authoritative.
+
+**Schema-first ordering is enforced.** Phase 1 schema PRs to ontai-schema must merge
+before any Phase 2+ operator implementation PRs are opened. Branch naming convention
+for all GAP_TO_FILL work: session/area{N} (one branch per area, one PR per branch).
+
+**Absorption on completion:** When all tasks in a phase are closed and merged, the
+closed tasks are absorbed into PROGRESS.md (as closed work items) and BACKLOG.md
+(removing the completed entries). GAP_TO_FILL.md is removed and this CONTEXT.md
+priority block is deleted at that point. The removal commit closes the gap work cycle.
 
 ---
 
