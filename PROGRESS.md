@@ -4,7 +4,7 @@
 
 <!-- PRIORITY: WS8b (cert-manager e2e, three-bucket split) is the first live cluster test. It must pass before any tenant cluster work begins. Implementation sequence: WS8b on management cluster first, then ont-native import tenant, then CAPI bootstrapped tenant, then ont-native bootstrap tenant. GAP_TO_FILL.md Section "Live Cluster Testing Sequence" is authoritative. -->
 
-**Current state:** session/14-bake-lab-patches fully closed (all PRs merged). Architectural audit complete (GAP_TO_FILL.md). Phase 0 (T-01 through T-04c) COMPLETE as of 2026-04-24 session. T-04d awaiting Governor scheduling. Phase 1 schema PRs (T-04a, T-04, T-05, T-06) are next. WS8b (cert-manager e2e with three-bucket split) PRIORITY -- first live cluster gate, held pending VPN/docker/cluster access.
+**Current state:** Phase 2 COMPLETE (wrapper PR #12 merged, conductor PR #20 open -- CI fix pushed 2026-04-24). Phase 2B (seam-core CRD migration) is MANDATORY before Phase 3 begins. Phase 2B tasks documented in GAP_TO_FILL.md as T-2B-1 through T-2B-9. Phase 2B scope: four sequential ontai-schema PRs, then seam-core Go types, then three operator import migrations (conductor, wrapper, platform), then CRD manifest migration. Phase 3 is blocked on Phase 2B completion. WS8b (cert-manager e2e) remains held pending VPN/docker/cluster access.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
@@ -23,7 +23,52 @@
 
 **T-04d -- Migration session scheduling.** READY. T-04c complete. Awaiting Governor to open migration session branch.
 
-**Next:** Phase 1 -- ontai-schema PRs (T-04a, T-04, T-05, T-06). One PR per ontai-schema task against the ontai-schema repo. These must merge before Phase 2 operator implementation begins.
+## GAP_TO_FILL.md Phase 1 (PR OPEN 2026-04-24)
+
+**T-04a -- TalosCluster CEL validation (ontai-schema).** PR #6 (ontai-schema/session/phase1). New platform/TalosCluster.json with x-kubernetes-validations CEL rule: role required and must be management|tenant when mode=import. JSON Schema if/then conditional for non-Kubernetes tooling.
+
+**T-04 -- Helm metadata chain (ontai-schema).** PR #6. infra/ClusterPack.json: added chartVersion, chartURL, chartName, helmVersion. New infra/PackExecution.json. infra/PackInstance.json: added same four fields. New seam-core/PackReceipt.json with rbacDigest, workloadDigest, and all four helm fields. All optional/omitempty; absent for kustomize and raw.
+
+**T-05 -- PackBuild category discriminator (ontai-schema).** PR #6. New infra/PackBuild.json with category enum (helm/kustomize/raw) and seven CEL validation rules enforcing category-source exclusivity. helmSource.helmVersion required for category=helm.
+
+**T-06 -- PackOperationResult revision fields (ontai-schema).** PR #6. seam-core/PackOperationResult.json: revision (int64, required), previousRevisionRef (optional), talosClusterOperationResultRef (optional stub). Single-active-revision pattern Decision E.
+
+**index.json structural fix:** infra layer was outside the layers object in the prior version. Fixed and all new schemas registered.
+
+**Status:** COMPLETE. ontai-schema PR #6 merged. Phase 2 PRs open: wrapper PR #12, conductor PR #20.
+
+## GAP_TO_FILL.md Phase 2 (PRs OPEN 2026-04-24)
+
+**T-07 -- Helm metadata fields on wrapper types.** wrapper PR #12 (session/phase2). Added ChartVersion, ChartURL, ChartName, HelmVersion to ClusterPackSpec, PackExecutionSpec, PackInstanceSpec. All omitempty. 6 round-trip tests.
+
+**T-08 -- PackReceiptSpec new fields.** conductor PR #20 (session/phase2). Added RBACDigest, WorkloadDigest, ChartVersion, ChartURL, ChartName, HelmVersion to PackReceiptSpec in pkg/runnerlib. 2 unit tests.
+
+**T-09 -- helmSDKVersion and chart field population.** conductor PR #20. helmSDKVersion() via debug.ReadBuildInfo reads linked helm.sh/helm/v3 module version. helmCompilePackBuild populates all four chart fields in ClusterPack CR. Tests: minimalHelmChart helper, mockOCIRegistry (full Distribution Spec v2), 3 tests.
+
+**T-10 -- PackReceipt carry-through in pull loop.** conductor PR #20. packDeliveryMetadata struct. extractPackMetadataFromArtifact reads chart fields from PackInstance artifact JSON. readClusterPackDigests reads OCI anchors from ClusterPack. buildReceiptSpecPayload extracted for testability. upsertPackReceipt conditionally writes all six fields. 5 unit tests.
+
+**wrapper PR #12:** MERGED 2026-04-24 (squash, commit 8be4f500e6ca).
+**conductor PR #20:** CI fix pushed 2026-04-24 (go.mod updated to wrapper v0.1.0-alpha.0.20260424113358-8be4f500e6ca). Awaiting CI pass and Governor merge.
+
+## GAP_TO_FILL.md Phase 2B -- Seam-core CRD migration (NOT YET STARTED)
+
+**Governor directive 2026-04-24:** Phase 2B is mandatory before Phase 3. Phase 3 adds kustomize and raw category paths to the Compiler which emit ClusterPack CRs. If ClusterPack remains in wrapper when Phase 3 lands, the Compiler would import wrapper types -- a Decision G violation that Phase 3 would deepen. Branch: session/phase2b.
+
+**T-2B-0 -- PackReceipt vs PackOperationResult merge decision (CLOSED 2026-04-24):** Keep separate. Different writers (conductor execute job vs wrapper capability), different lifecycles, different consumers. PackReceipt derives AppPackEvent. PackOperationResult remains as-is.
+
+**T-2B-1 through T-2B-4:** Four sequential ontai-schema PRs. Each must merge before the next begins.
+- PR 1: app-core layer (AppRunnerConfig, AppPackDefinition, AppPackExecution, AppPackInstance, AppPackEvent)
+- PR 2: seam-core layer (InfrastructureRunnerConfig, InfrastructureClusterPack, InfrastructurePackExecution, InfrastructurePackInstance, InfrastructurePackReceipt)
+- PR 3: seam-core/PackOperationResult.json x-ont-related-to reference to InfrastructurePackReceipt
+- PR 4: infra/ deprecation markers (ClusterPack.json, PackInstance.json with x-ont-replaces)
+
+**T-2B-5:** seam-core Go type additions (after all four ontai-schema PRs merge). New files only, nothing removed yet.
+
+**T-2B-6 through T-2B-8:** Operator import migrations in order: conductor (remove RunnerConfig, PackReceipt), wrapper (remove ClusterPack, PackExecution, PackInstance), platform (remove unstructured RunnerConfig workaround). One PR per repo; each must pass CI before next begins.
+
+**T-2B-9:** CRD manifest migration -- remove CRD YAML from conductor/wrapper charts, add to seam-core installation manifests. Closes T-04d.
+
+**Next:** Await conductor PR #20 CI pass and Governor merge. Then open session/phase2b.
 
 ---
 
