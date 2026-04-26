@@ -68,6 +68,17 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 
 ---
 
+## Session/15 Round 1 Closures (2026-04-26)
+
+| Item | Resolution | Reference |
+|------|-----------|-----------|
+| GUARDIAN-BL-PERMISSIONSET-WATCH | Watches(PermissionSet, MapPermissionSetToProfiles) added to RBACProfileReconciler.SetupWithManager. 5 unit tests. | guardian session/15-guardian-fixes commit 1881ccf |
+| COMPILER-BL-PERMISSIONSET-DEFECT | writeBootstrapPermissionSets emits only management-maximum. buildOperatorRBACProfile uses permissionSetRef: management-maximum. Both enable bundles regenerated. | conductor PR #26 merged |
+| Enable bundle applied to ccs-mgmt | All 5 seam:* ClusterRoles auto-updated by guardian reconciler (no manual patching). 5 old per-operator PermissionSets deleted. | ontai root commit f732730 |
+| Guardian admission webhook | failurePolicy: Fail confirmed throughout. Test RBACProfile admitted and provisioned clean. | live cluster verified |
+
+---
+
 ## Open Work
 
 ### Blocking Alpha
@@ -75,14 +86,13 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 | ID | Component | Description |
 |----|-----------|-------------|
 | TENANT-CLUSTER-E2E | all | ccs-dev onboarding. Phase B script ready. Promotes all AC-2, AC-4, AC-5 e2e stubs to live. Awaiting Governor. |
-| COMPILER-BL-PERMISSIONSET-DEFECT | conductor (compiler) | Per-operator PermissionSets still emitted by compiler. RBACProfile permissionSetRef still uses `{op.Name}-permissions` instead of `management-maximum`. Violates CS-INV-008. |
 | CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull RBACProfile from management cluster and write into ont-system on tenant cluster. Governor design session required. |
 
 ### Next Session
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| GUARDIAN-BL-PERMISSIONSET-WATCH | guardian | RBACProfileReconciler not watching PermissionSet changes. PermissionSet updates do not propagate to ClusterRoles without manual patching. |
+| GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | Add RBACProfile validation webhook; route seam-operator label profiles through management-maximum validation. |
 | GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | No reconciler back-fills RBACProfiles for RBAC arriving outside rbac-intake. Governor design session required. |
 | PLATFORM-BL-3-LOCALQUEUE | platform | Platform must create LocalQueue in seam-tenant for tenant clusters. Only management cluster gets it today. |
 | CONDUCTOR-BL-CAPABILITY-WATCH | conductor | ConductorReady gate polls RunnerConfig on 30s requeue. Should watch RunnerConfig status and trigger immediately on capability publication. |

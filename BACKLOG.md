@@ -1,6 +1,6 @@
 # ONT Platform: Backlog
 
-**Last updated:** April 26, 2026
+**Last updated:** April 26, 2026 (session/15 round 1 closures)
 
 ---
 
@@ -18,7 +18,7 @@
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| COMPILER-BL-PERMISSIONSET-DEFECT | conductor (compiler) | writeBootstrapPermissionSets still generates per-operator PermissionSets (guardian-permissions, wrapper-permissions, platform-permissions, seam-core-permissions, conductor-permissions). buildOperatorRBACProfile still emits permissionSetRef: {op.Name}-permissions instead of management-maximum. Violates CS-INV-008 and the locked three-layer architecture (guardian-schema.md §19). Fix: (1) keep only management-maximum in writeBootstrapPermissionSets; (2) update buildOperatorRBACProfile to emit permissionSetRef: management-maximum. Regenerate both enable bundles after fix. |
+| ~~COMPILER-BL-PERMISSIONSET-DEFECT~~ | conductor (compiler) | CLOSED 2026-04-26: writeBootstrapPermissionSets now emits only management-maximum. buildOperatorRBACProfile now emits permissionSetRef: management-maximum. Both enable bundles regenerated. Per-operator PermissionSets deleted from live cluster. conductor PR #26 merged. |
 | CONDUCTOR-BL-CAPABILITY-IMPL | conductor | Named capability handlers need completion. Implemented and validated: etcd-defrag, node-reboot, pki-rotate (GetMachineConfig+staged), machine config capture after node-patch. Remaining stubs: etcd-backup, etcd-restore, node-scale-up, node-decommission, credential-rotate, cluster-reset, hardening-apply, upgrade, pack-deploy. |
 | CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull RBACProfile for its cluster from management cluster seam-tenant-{tenantCluster} and write it into ont-system on the tenant cluster. Management conductor (role=management) retains signing. Requires: conductor role field, federation pull path, ont-system write. Governor design session required before implementation. |
 | DAY2-OPS-MGMT | conductor, platform | Remaining day-2 live gaps on ccs-mgmt: node-patch needs patchSecretRef secret provisioned; cluster-reset not live-tested (requires reset-approved annotation); upgrade, credential-rotate, hardening-apply not yet live-tested. etcd-defrag, node-reboot, pki-rotate already validated. |
@@ -29,7 +29,7 @@
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| GUARDIAN-BL-PERMISSIONSET-WATCH | guardian | RBACProfileReconciler.SetupWithManager watches only For(&RBACProfile{}). PermissionSet changes do not trigger RBACProfile reconcile and downstream ClusterRole updates. Fix: add Watches(PermissionSet, handler.EnqueueRequestsFromMapFunc) to SetupWithManager to map PermissionSet updates to the RBACProfile that references them. Currently worked around by manual ClusterRole patching. |
+| ~~GUARDIAN-BL-PERMISSIONSET-WATCH~~ | guardian | CLOSED 2026-04-26: Watches(PermissionSet, MapPermissionSetToProfiles) added to RBACProfileReconciler.SetupWithManager. 5 unit tests added. guardian branch session/15-guardian-fixes commit 1881ccf. |
 | GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | No admission webhook intercepts RBACProfile admission on any cluster. RBACProfile is absent from guardian webhook InterceptedKinds. The seam-operator label (ontai.dev/rbac-profile-type=seam-operator) is intended to discriminate seam operator profiles from component profiles, but no webhook routing implements this today. Fix: add a RBACProfile validation webhook that (a) checks the label, (b) routes seam-operator profiles through management-maximum validation, (c) routes all others through cluster-policy. Documented in guardian-schema.md §20 validation bypass note. |
 | GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | No reconciler creates RBACProfiles for RBAC resources arriving outside /rbac-intake/pack (bootstrap apply, kubectl apply, pre-split packs). Sweep must detect governed RBAC with no corresponding RBACProfile and back-fill it. Design question: same PermissionSet/RBACPolicy/RBACProfile path as rbac-intake, or lightweight annotation-only path. Governor session required. |
 | WRAPPER-BL-ILI-DECLARING-PRINCIPAL | guardian, wrapper | MutatingWebhookConfiguration for declaring-principal handler added to compiler enable bundle. Needs cluster apply and verification against live admission webhook. |
