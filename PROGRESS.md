@@ -98,6 +98,14 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 
 ---
 
+## Session/15 Import-Wiring Correction (2026-04-26)
+
+| Item | Resolution | Reference |
+|------|-----------|-----------|
+| Option B revert | session/15-import-wiring changes reverted. Compiler emits seam-tenant-namespace.yaml for mode=import (both compileBootstrap and compileImportTalosconfigSecret). Platform controller import block ordering restored: ensureKubeconfigSecret before ensureTenantNamespace. platform-schema.md §9 namespace authority section corrected. | conductor 66c875e, platform d2c49db |
+
+---
+
 ## Session/15 Import-Wiring Closures (2026-04-26)
 
 | Item | Resolution | Reference |
