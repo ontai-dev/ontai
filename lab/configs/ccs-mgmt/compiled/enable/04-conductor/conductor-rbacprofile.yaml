@@ -21,7 +21,6 @@ spec:
   - permissionSetRef: conductor-permissions
     scope: cluster
   principalRef: system:serviceaccount:ont-system:conductor
-  rbacPolicyRef: seam-platform-rbac-policy
+  rbacPolicyRef: management-policy
   targetClusters:
   - management
-  - ccs-mgmt

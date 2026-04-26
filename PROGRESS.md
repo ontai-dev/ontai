@@ -1,930 +1,169 @@
 # ONT Platform Progress
 
-<!-- GAP_TO_FILL active: ~/ontai/GAP_TO_FILL.md contains the architectural gap report and sequenced task list (T-01 through T-21). Governor decisions A-F incorporated. Read before starting any schema or implementation work in Areas 1-6. REMOVE THIS COMMENT and the GAP_TO_FILL.md pointer when tasks T-01 through T-16 are closed. T-17 through T-21 remain in BACKLOG.md pending their respective blockers (TENANT-CLUSTER-E2E for T-17 through T-19, cluster-access for T-20 through T-21). -->
+**Current state:** Phase 2B complete. Day-2 operations on ccs-mgmt validated including PKI rotation end-to-end. conductor-execute image split implemented (executor=conductor-execute:dev, agent=conductor:dev). Machine config capture after node ops implemented. TCOR CRD in enable bundle base phase; platform-permissions PermissionSet updated. TCOR design correction from Governor: TCOR is a single per-cluster accumulated CR, not per-operation -- requires schema redesign before next day-2 session. Next gate: TENANT-CLUSTER-E2E.
 
-<!-- PRIORITY: WS8b (cert-manager e2e, three-bucket split) is the first live cluster test. It must pass before any tenant cluster work begins. Implementation sequence: WS8b on management cluster first, then ont-native import tenant, then CAPI bootstrapped tenant, then ont-native bootstrap tenant. GAP_TO_FILL.md Section "Live Cluster Testing Sequence" is authoritative. -->
-
-**Current state:** Phase 2 COMPLETE (wrapper PR #12 merged, conductor PR #20 open -- CI fix pushed 2026-04-24). Phase 2B (seam-core CRD migration) is MANDATORY before Phase 3 begins. Phase 2B tasks documented in GAP_TO_FILL.md as T-2B-1 through T-2B-9. Phase 2B scope: four sequential ontai-schema PRs, then seam-core Go types, then three operator import migrations (conductor, wrapper, platform), then CRD manifest migration. Phase 3 is blocked on Phase 2B completion. WS8b (cert-manager e2e) remains held pending VPN/docker/cluster access.
 **Full history:** PROGRESS-archive-2026-04-20.md
 
 ---
 
-## GAP_TO_FILL.md Phase 0 (COMPLETE 2026-04-24)
+## Phase 2B -- Seam-core CRD Migration (COMPLETE 2026-04-25)
 
-**T-01 -- conductor compiler validation fix.** PR #19 (conductor/session/area1). Mode=import now requires explicit role. Mode=bootstrap never emits role field. 8 unit tests added.
+All seven infrastructure types migrated from conductor and wrapper into seam-core under `infrastructure.ontai.dev/v1alpha1`:
 
-**T-02 -- platform TalosClusterSpec comment fix.** PR #15 (platform/session/area1). Role comment corrected from bootstrap to import invariant.
+| Type | Migrated From |
+|------|---------------|
+| InfrastructureRunnerConfig | conductor (runner.ontai.dev) |
+| InfrastructurePackReceipt | conductor (runner.ontai.dev) |
+| InfrastructureClusterPack | wrapper (infra.ontai.dev) |
+| InfrastructurePackExecution | wrapper (infra.ontai.dev) |
+| InfrastructurePackInstance | wrapper (infra.ontai.dev) |
+| InfrastructurePackBuild | wrapper (infra.ontai.dev) |
+| InfrastructureTalosCluster | platform (platform.ontai.dev) |
 
-**T-03 -- OCIPushClient interface extraction.** Committed to conductor/session/phase0. OCI push extracted behind interface. 4 unit tests. PR pending (part of conductor/session/phase0).
-
-**T-04b -- Guardian RBACProfile back-fill runnable.** PR #14 (guardian/session/phase0). Periodic background scan of seam-tenant-* namespaces; creates missing RBACProfiles for components with existing PermissionSets. 6 unit tests.
-
-**T-04c -- CRD ownership audit.** PR #10 (ontai/session/seam-core-audit). CRD_OWNERSHIP_AUDIT.md: 5 migration candidates (RunnerConfig, PackReceipt, ClusterPack, PackExecution, PackInstance), three-layer derivation mapping, ontai-schema gap list (5 app-core entries + 5 seam-core entries + 2 infra deprecations).
-
-**T-04d -- Migration session scheduling.** READY. T-04c complete. Awaiting Governor to open migration session branch.
-
-## GAP_TO_FILL.md Phase 1 (PR OPEN 2026-04-24)
-
-**T-04a -- TalosCluster CEL validation (ontai-schema).** PR #6 (ontai-schema/session/phase1). New platform/TalosCluster.json with x-kubernetes-validations CEL rule: role required and must be management|tenant when mode=import. JSON Schema if/then conditional for non-Kubernetes tooling.
-
-**T-04 -- Helm metadata chain (ontai-schema).** PR #6. infra/ClusterPack.json: added chartVersion, chartURL, chartName, helmVersion. New infra/PackExecution.json. infra/PackInstance.json: added same four fields. New seam-core/PackReceipt.json with rbacDigest, workloadDigest, and all four helm fields. All optional/omitempty; absent for kustomize and raw.
-
-**T-05 -- PackBuild category discriminator (ontai-schema).** PR #6. New infra/PackBuild.json with category enum (helm/kustomize/raw) and seven CEL validation rules enforcing category-source exclusivity. helmSource.helmVersion required for category=helm.
-
-**T-06 -- PackOperationResult revision fields (ontai-schema).** PR #6. seam-core/PackOperationResult.json: revision (int64, required), previousRevisionRef (optional), talosClusterOperationResultRef (optional stub). Single-active-revision pattern Decision E.
-
-**index.json structural fix:** infra layer was outside the layers object in the prior version. Fixed and all new schemas registered.
-
-**Status:** COMPLETE. ontai-schema PR #6 merged. Phase 2 PRs open: wrapper PR #12, conductor PR #20.
-
-## GAP_TO_FILL.md Phase 2 (PRs OPEN 2026-04-24)
-
-**T-07 -- Helm metadata fields on wrapper types.** wrapper PR #12 (session/phase2). Added ChartVersion, ChartURL, ChartName, HelmVersion to ClusterPackSpec, PackExecutionSpec, PackInstanceSpec. All omitempty. 6 round-trip tests.
-
-**T-08 -- PackReceiptSpec new fields.** conductor PR #20 (session/phase2). Added RBACDigest, WorkloadDigest, ChartVersion, ChartURL, ChartName, HelmVersion to PackReceiptSpec in pkg/runnerlib. 2 unit tests.
-
-**T-09 -- helmSDKVersion and chart field population.** conductor PR #20. helmSDKVersion() via debug.ReadBuildInfo reads linked helm.sh/helm/v3 module version. helmCompilePackBuild populates all four chart fields in ClusterPack CR. Tests: minimalHelmChart helper, mockOCIRegistry (full Distribution Spec v2), 3 tests.
-
-**T-10 -- PackReceipt carry-through in pull loop.** conductor PR #20. packDeliveryMetadata struct. extractPackMetadataFromArtifact reads chart fields from PackInstance artifact JSON. readClusterPackDigests reads OCI anchors from ClusterPack. buildReceiptSpecPayload extracted for testability. upsertPackReceipt conditionally writes all six fields. 5 unit tests.
-
-**wrapper PR #12:** MERGED 2026-04-24 (squash, commit 8be4f500e6ca).
-**conductor PR #20:** CI fix pushed 2026-04-24 (go.mod updated to wrapper v0.1.0-alpha.0.20260424113358-8be4f500e6ca). Awaiting CI pass and Governor merge.
-
-## GAP_TO_FILL.md Phase 2B -- Seam-core CRD migration (NOT YET STARTED)
-
-**Governor directive 2026-04-24:** Phase 2B is mandatory before Phase 3. Phase 3 adds kustomize and raw category paths to the Compiler which emit ClusterPack CRs. If ClusterPack remains in wrapper when Phase 3 lands, the Compiler would import wrapper types -- a Decision G violation that Phase 3 would deepen. Branch: session/phase2b.
-
-**T-2B-0 -- PackReceipt vs PackOperationResult merge decision (CLOSED 2026-04-24):** Keep separate. Different writers (conductor execute job vs wrapper capability), different lifecycles, different consumers. PackReceipt derives AppPackEvent. PackOperationResult remains as-is.
-
-**T-2B-1 through T-2B-4:** Four sequential ontai-schema PRs. Each must merge before the next begins.
-- PR 1: app-core layer (AppRunnerConfig, AppPackDefinition, AppPackExecution, AppPackInstance, AppPackEvent)
-- PR 2: seam-core layer (InfrastructureRunnerConfig, InfrastructureClusterPack, InfrastructurePackExecution, InfrastructurePackInstance, InfrastructurePackReceipt)
-- PR 3: seam-core/PackOperationResult.json x-ont-related-to reference to InfrastructurePackReceipt
-- PR 4: infra/ deprecation markers (ClusterPack.json, PackInstance.json with x-ont-replaces)
-
-**T-2B-5:** seam-core Go type additions (after all four ontai-schema PRs merge). New files only, nothing removed yet.
-
-**T-2B-6 through T-2B-8:** Operator import migrations in order: conductor (remove RunnerConfig, PackReceipt), wrapper (remove ClusterPack, PackExecution, PackInstance), platform (remove unstructured RunnerConfig workaround). One PR per repo; each must pass CI before next begins.
-
-**T-2B-9:** CRD manifest migration -- remove CRD YAML from conductor/wrapper charts, add to seam-core installation manifests. Closes T-04d.
-
-**Next:** Await conductor PR #20 CI pass and Governor merge. Then open session/phase2b.
+- T-2B-0: PackReceipt vs PackOperationResult separation decision. CLOSED.
+- T-2B-1 through T-2B-4: Four ontai-schema PRs (#4 through #7). All merged.
+- T-2B-5: seam-core Go types added. PR #11 merged.
+- T-2B-6: Conductor import migration (remove RunnerConfig/PackReceipt, import seam-core). PR #20 merged.
+- T-2B-7: Wrapper import migration (remove ClusterPack/PackExecution/PackInstance, import seam-core). PR #12 merged.
+- T-2B-8: Platform import migration (remove unstructured RunnerConfig workaround). Merged.
+- T-2B-9: CRD manifest migration -- removed CRD YAML from conductor/wrapper config/crd; migrated dynamic GVR constants to infrastructure.ontai.dev. conductor commit faf8e72, wrapper commit 2807054.
 
 ---
 
-## Branch Summary
+## Current Branch Work
 
-### session/14-bake-lab-patches (conductor, wrapper, ontai-schema -- PRs open, WS8b held)
+### session/phase2b (wrapper -- pushed, PR pending)
 
-**Role:** Controller Engineer.
+**Gate 4 deadlock fix (CLOSED):**
+`isRBACProfileProvisioned` returned false on NotFound, blocking Conductor Job submission. The Conductor Job creates the RBACProfile via rbac-intake -- circular deadlock. Fixed: NotFound returns true; only blocks when profile EXISTS with provisioned=false. Unit test: `TestPackExecutionReconciler_Gate4_AbsentProfileAllowsJobSubmission`. wrapper commit e621e22.
 
-**WS1 -- Branch creation (CLOSED):** conductor session/14-bake-lab-patches branched from origin/main (reset local main after squash-merge drift). ontai root also branched.
+**POR ownerRef Kind fix (CLOSED):**
+All 3 ownerRef constructions in `packexecution_reconciler.go` used pre-Phase2B Kind `"PackExecution"`. Kubernetes GC resolves by GVK; wrong Kind broke cascade deletion of PackOperationResult when PackExecution was deleted. Fixed to `"InfrastructurePackExecution"` (3 occurrences). Two unit test kind assertions updated. wrapper commit e621e22.
 
-**WS2 -- wrapper-runner Role RBAC (CLOSED):**
-- `conductor/cmd/compiler/compile_enable.go`: added `infrastructure.ontai.dev/packoperationresults` get/list/watch/create/update/patch to `writeWrapperRunnerRBACYAML`.
-- `conductor/cmd/compiler/compile_enable_test.go`: added `TestEnable_WrapperRunnerRole_ContainsPackOperationResultRule`.
-- Commit: `fix: bake PackOperationResult RBAC into wrapper-runner Role template` (conductor 687b8bd)
+**Additional bakes on session/phase2b:**
+- T-2B-9 wrapper CRD manifest migration (commit 2807054)
+- Gate 5 SAR: `RBACReadyChecker` hook field on PackExecutionReconciler, bypassed in unit tests via `rbacAllowedStub`
+- Stale Job detection fix: `newJob` helper sets ownerRef so pre-seeded test jobs are not considered stale
+- TalosCluster GVK fix in test/unit package: infrastructure.ontai.dev/InfrastructureTalosCluster
+- signing_loop_test.go spec field fix, packreceipt_test.go seam-core types cleanup
 
-**WS3 -- COMPILER-HELM-E2E (IN PROGRESS):**
-- Five bugs found and fixed during helm e2e testing on ccs-mgmt:
-  1. `compile_packbuild_helm.go`: skip NOTES.txt in rendered Helm output (commit ba05579).
-  2. `wrapper.go` (executeSplitPath): pass `registryBaseURL` not `ociRef` to avoid `url@workload@rbac` double-digest (commit ba05579).
-  3. `compile_oci_push.go`: wrap YAML in tar.gz before OCI push; conductor `extractYAMLsFromTarGz` expects gzip format (commit 7a18acb).
-  4. `adapters.go` (`WaitForRBACProfileProvisioned`): check `status.provisioned` boolean in addition to `Provisioned` condition; guardian may set boolean without updating condition (commit 3a29708).
-  5. Unit test `TestPackDeploy_SplitPath_LayerRefsUsesBaseURLWhenRegistryRefDigestSet` added to catch double-digest regression.
-- Helm compile path verified end-to-end: chart fetch, NOTES.txt filter, RBAC/workload split, tar.gz push, correct OCI refs, guardian RBAC intake, RBACProfile provisioned=true.
-- Workload apply reached `apply-workload` step; failed on cert-manager `MutatingWebhookConfiguration` -- cluster-scoped resource requires ClusterRole not in wrapper-runner Role scope. Not a compiler bug; design limitation.
+### session/phase1 (ontai root -- pushed)
 
-**WS4 -- Enable bundle regeneration (CLOSED):**
-- `lab/configs/ccs-mgmt/compiled/enable/05-post-bootstrap/wrapper-runner.yaml`: regenerated with packoperationresults rule.
-- `lab/configs/ccs-dev/compiled/enable/05-post-bootstrap/wrapper-runner.yaml`: generated for Phase B.
-- Applied updated role to ccs-mgmt: `kubectl apply --server-side --force-conflicts`. Role applied successfully.
-- Commit: `lab: add PackOperationResult RBAC to wrapper-runner Role in ccs-mgmt and ccs-dev enable bundles` (ontai 509fd2b)
+**Enable bundle Layer 1 naming alignment (CLOSED):**
+- `guardian-permissionsets.yaml`: renamed seam-bootstrap-ceiling to management-maximum; added `ontai.dev/policy-type: management` label.
+- `guardian-rbacpolicy.yaml`: renamed seam-platform-rbac-policy to management-policy; dropped allowedClusters; added policy-type label.
+- All `rbacPolicyRef` occurrences in guardian-rbacprofiles.yaml, platform-wrapper-rbacprofiles.yaml (x3), conductor-rbacprofile.yaml updated to management-policy.
+- Enforces CS-INV-008 Layer 1 naming. ontai root commit e82caf2.
 
-**WS5 -- PROGRESS and BACKLOG update (CLOSED):**
-- WRAPPER-RUNNER-ROLE-PACKOPRESULT closed. COMPILER-HELM-E2E closed with caveat (workload apply limited by ClusterRole gap; gap now addressed by WS6b-WS7b three-bucket split).
-- ontai root commits: `7227f4d` (session/14 BACKLOG/PROGRESS), `b2b04eb` (ontai-schema submodule advance).
+**INV-023 added (CLOSED):**
+Operator Deployments and enable bundles always reference `:dev` tag in lab/development. Custom per-build tags never written into committed artifacts. Amendment history updated.
 
-**WS6b -- ontai-schema clusterScopedDigest (CLOSED):**
-- `v1alpha1/infra/ClusterPack.json`: added `clusterScopedDigest` field.
-- ontai-schema PR #5 merged, commit `deca293`. ontai-schema submodule advanced in ontai root.
+**Three-bucket manifest split (CLOSED -- landed in session/14):**
+conductor `SplitManifests` returns three slices (rbac, clusterScoped, workload). Eight cluster-scoped kinds. `executeSplitPath` gains step 6 for cluster-scoped layer. `writeWrapperRunnerRBACYAML` emits `wrapper-runner-cluster-scoped` ClusterRole + ClusterRoleBinding covering admissionregistration, apiextensions, storage, scheduling, ingressclasses, cert-manager.io. conductor PR #18, wrapper PR #11.
 
-**WS7b -- Three-bucket manifest split (CLOSED):**
-- `internal/packbuild/split.go`: `SplitManifests` returns three slices (rbac, clusterScoped, workload). Eight cluster-scoped kinds recognized. `SplitRBACAndWorkload` preserved as backward-compat wrapper.
-- `cmd/compiler/compile_packbuild_helm.go`: three-layer OCI push; `clusterScopedDigest` emitted in ClusterPack CR; checksum covers all three layers.
-- `cmd/compiler/compile_packbuild_split.go`: `SplitManifests` re-exported to main package.
-- `internal/capability/wrapper.go`: `executeSplitPath` gains step 6 (pull-and-apply cluster-scoped layer, skipped when digest absent); `clusterScopedDigest` read from ClusterPack spec; artifacts list includes cluster-scoped layer.
-- `cmd/compiler/compile_enable.go`: `writeWrapperRunnerRBACYAML` emits `wrapper-runner-cluster-scoped` ClusterRole and ClusterRoleBinding covering admissionregistration, apiextensions, storage, scheduling, networking (ingressclasses), cert-manager.io.
-- `wrapper/api/v1alpha1/clusterpack_types.go`: `ClusterScopedDigest string` field added.
-- Tests: 7 new split bucket tests, 2 executor step-6 tests, 1 enable bundle ClusterRole test. All suites green. go vet clean.
-- conductor PR #18. wrapper PR #11.
+**Enable bundle other bakes (CLOSED -- landed in session/14):**
+- `wrapper-runner.yaml`: PackOperationResult RBAC rule baked into compiler template. Regenerated for ccs-mgmt and ccs-dev.
+- `wrapper-runner-cluster-scoped` ClusterRole/CRB: added to enable bundle for bucket 2 resources.
+- `platform-wrapper-deployments.yaml`: DSNS_SERVICE_IP=10.20.0.240.
+- `dsns-loadbalancer.yaml`: Cilium LB-IPAM annotation.
+- `conductor-signing-key.yaml`: Ed25519 signing key rotated.
+- seam-core lab additions: WrapperRunnerRBACNotReady condition, Ready printcolumn on InfrastructureTalosCluster, Dockerfile COPY path fix.
 
-**Governor design questions recorded (2026-04-22):**
-- `CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION`: conductor role=tenant must pull and cache RBACProfile from management cluster into ont-system on tenant cluster.
-- `GUARDIAN-BL-RBACPROFILE-SWEEP`: governance sweep for RBAC resources that arrived outside rbac-intake (bootstrap apply, pre-split packs). Design session required.
+### session/14-bake-lab-patches (conductor -- in progress)
 
-**WS8b -- cert-manager e2e (HELD):** Live cluster work blocked pending Governor VPN signoff. Docker build also blocked.
+**conductor-execute image split (CLOSED 2026-04-26):**
+- `conductorExecuteImageName = "conductor-execute"` constant added to platform `taloscluster_helpers.go`
+- `executorImageTag(talosVersion)` helper: returns `"dev"` in lab (devRevision=dev), returns `talosVersion` in production
+- `ensureBootstrapRunnerConfig` and `submitBootstrapJob` now write `conductor-execute:dev` to RunnerConfig.spec.runnerImage
+- Conductor agent Deployment image stays `conductor:dev`
+- Unit test assertion updated from `conductor:v1.9.3-dev` to `conductor-execute:dev`
 
----
+**Machine config capture (CLOSED 2026-04-26):**
+- `GetMachineConfig(ctx)` added to `TalosNodeClient` interface; implemented via Talos `Read()` at `/system/state/config.yaml`
+- `captureMachineConfigSecret` helper in `platform_node.go`: parses hostname from config YAML, writes `seam-mc-{cluster}-{hostname}` Secret in `seam-tenant-{cluster}` with key `machineconfig`
+- `nodePatchHandler.Execute` calls capture as final step after `ApplyConfiguration` succeeds
+- Non-fatal: capture failure logged as skipped step, does not fail the capability
 
-### session/13-namespace-model-fix (conductor, guardian, platform -- WS1-WS8 complete, stop before push)
+**PKI rotation fix (CLOSED 2026-04-26):**
+- Replaced invalid minimal CA config with `GetMachineConfig()` + `ApplyConfiguration(staged)` pattern
+- Validated end-to-end: `pki-rotate-lab-01` TCOR shows `Succeeded`, message "config staged for next reboot"
+- `compile_enable.go`: `operatorClusterRules("platform")` and `writePlatformExecutorRoleFile` both add secrets rule
 
-**Role:** Controller Engineer.
+**TCOR in enable bundle (CLOSED 2026-04-26):**
+- `seam-core-crds.yaml`: TCOR CRD appended to base phase `00-infrastructure-dependencies`
+- `guardian-permissionsets.yaml`: `platform-permissions` PermissionSet gains TCOR get/list/watch/create/update/patch/delete
+- Root ontai commit `bff1081`
 
-**Governor ruling:** `tenant-{cluster-name}` namespace pattern permanently abolished. `seam-tenant-{cluster-name}` is the universal per-cluster namespace for all clusters including management. Compiler emits `seam-tenant-namespace.yaml` for mode=import. Platform creates namespace for mode=bootstrap and CAPI.
+**TCOR design correction (OPEN -- Governor directive 2026-04-26):**
+- Current implementation treats TCOR as a per-operation CR (one per Job). This is incorrect.
+- Correct design: one TCOR per cluster, created on InfrastructureTalosCluster admission, operations appended as a list. Revision tied to talosVersion. On version upgrade, N-1 revision data dumped to graphQuery DB and deleted. Revisions linked across InfrastructureTalosCluster and InfrastructureClusterPacks. Dumped data = infrastructure memory.
+- Required: seam-core schema PR (Decision 11, Decision G) before any platform/conductor changes.
+- Tracked as TCOR-DESIGN-REVISION in BACKLOG.md.
 
-**WS1 -- Branch creation (CLOSED):** conductor, guardian, platform branched to `session/13-namespace-model-fix`. wrapper had no violations.
-
-**WS2 -- Guardian pack intake handler (CLOSED):**
-- `guardian/internal/webhook/rbac_pack_intake_handler.go`: `ns := "seam-tenant-" + targetCluster` (was `"tenant-" + targetCluster`). Comments updated.
-- `guardian/test/unit/webhook/rbac_pack_intake_test.go`: `ns := "seam-tenant-ccs-mgmt"` (was `"tenant-ccs-mgmt"`).
-- Commit: `fix: guardian pack intake creates RBACProfile in seam-tenant-{cluster}` (guardian fa763a2)
-
-**WS3 -- Conductor WaitForRBACProfileProvisioned (CLOSED):**
-- `conductor/internal/capability/adapters.go`: `"seam-tenant-"+targetCluster` (was `"tenant-"+targetCluster`). Comment updated.
-- `conductor/internal/capability/clients.go`: comment updated.
-- `conductor/test/unit/capability/rbacprofile_wait_test.go`: all 9 `"tenant-ccs-mgmt"` and `"tenant-ccs-dev"` occurrences replaced.
-- Commit: `fix: WaitForRBACProfileProvisioned polls seam-tenant-{cluster}` (conductor d3fe068)
-
-**WS4 -- Compiler mode=import namespace manifest (CLOSED):**
-- `conductor/cmd/compiler/compile.go`: new `writeSeamTenantNamespaceManifest` function using `corev1.Namespace`; `compileBootstrap` prepends namespace manifest for `importExistingCluster=true`; `compileImportTalosconfigSecret` emits namespace manifest and uses `seam-tenant-{name}` for talosconfig Secret.
-- `conductor/cmd/compiler/compile_bootstrap_import_test.go`: 3 new tests verifying namespace manifest emission for mode=import and absence for mode=bootstrap.
-- Commit: `fix: compiler emits seam-tenant namespace manifest for mode=import` (conductor dbd0fe4)
-
-**WS5 -- Lab enable bundle (CLOSED):**
-- `lab/configs/ccs-mgmt/compiled/enable/00a-namespaces/namespaces.yaml`: removed `tenant-ccs-mgmt` Namespace; updated header comment. Gitignored, filesystem only.
-- `lab/configs/ccs-mgmt/compiled/enable/05-post-bootstrap/wrapper-runner.yaml`: `wrapper-runner-rbacprofile-reader` Role and RoleBinding namespace changed to `seam-tenant-ccs-mgmt`. Gitignored, filesystem only.
-
-**WS6 -- Platform reconciler import secrets namespace (CLOSED):**
-- `platform/internal/controller/taloscluster_import_helpers.go`: removed `importSecretsNamespace = "seam-system"` constant; added `importSecretsNamespace(clusterName string) string` returning `"seam-tenant-" + clusterName`.
-- `platform/internal/controller/taloscluster_helpers.go`: deletion path uses `importSecretsNamespace(tc.Name)` not hardcoded `"seam-system"`.
-- `platform/test/unit/controller/taloscluster_lifecycle_test.go`: talosconfig and kubeconfig Secret namespaces changed to `"seam-tenant-ccs-mgmt"`.
-- Commit: `fix: talosconfig Secret in seam-tenant-{cluster} not seam-system` (platform 4aacf02)
-
-**WS7 -- Conductor capability tenantNamespace (CLOSED):**
-- `conductor/internal/capability/platform_etcd.go`: `tenantNamespace()` returns `"seam-tenant-" + clusterRef` (was `"tenant-" + clusterRef`). Comment updated.
-- `conductor/internal/capability/platform_cluster.go`: comment updated.
-- `conductor/test/unit/capability/platform_test.go`: all 7 `"tenant-"+clusterRef` occurrences replaced with `"seam-tenant-"+clusterRef`.
-- Commit: `fix: abolish tenant-{x} pattern in capability code and tests` (conductor 449dfb2)
-
-**WS8 -- Full suite pass (CLOSED):**
-- All four repos: `go build ./...` CLEAN, `make test-unit` PASS (all packages), `go vet ./...` CLEAN.
+**Permission hardening (CLOSED 2026-04-25):**
+- `writeBootstrapPermissionSets` rewritten: management-maximum replaces seam-bootstrap-ceiling (Layer 1 ceiling), five operator PermissionSets now emit scoped least-privilege rules (no wildcard apiGroups) instead of bootstrap wildcards. guardian-schema.md §6, §19; CS-INV-008.
+- `writeBootstrapRBACPolicy` rewritten: management-policy replaces seam-platform-rbac-policy; allowedClusters removed; ontai.dev/policy-type: management label added; maximumPermissionSetRef corrected to management-maximum.
+- `rbacPolicyRef` in `buildOperatorRBACProfile` updated to management-policy.
+- Five new tests: `TestEnable_BootstrapRBACPolicyName`, `TestEnable_BootstrapPermissionSetNames`, `TestEnable_ManagementMaximumHasPolicyTypeLabel`, `TestEnable_OperatorPermissionSetsAreScoped`, `TestEnable_RBACProfilesRefManagementPolicy`.
+- ccs-mgmt and ccs-dev enable bundle files regenerated.
+- New scoped PermissionSets applied to live cluster; guardian re-provisioned all five RBACProfiles with scoped ClusterRoles. conductor commit 2906355.
+- Note: bind/escalate verbs rejected by PermissionSet schema; guardian's RBAC escalation capability comes from bootstrap ClusterRole in guardian-rbac.yaml.
 
 ---
 
-### session/13-clusterpack-rbac-split (conductor, wrapper, guardian, ontai-schema -- WS1-WS8 complete, stop at WS8)
+## Management Cluster Validation (ccs-mgmt)
 
-**Role:** Platform Engineer + Schema Engineer.
+All tests run against ccs-mgmt. Management cluster is treated as a tenant for pack delivery (seam-tenant-ccs-mgmt namespace for pack delivery, security CRs).
 
-**Governor ruling:** wrapper-runner ClusterRole from session/13-clusterpack-apply-fixes WS7 is the WRONG fix. Pack-deploy must use guardian intake for RBAC (INV-004). Session replaces it with the two-layer OCI artifact contract.
+| # | Test | Status | Notes |
+|---|------|--------|-------|
+| 1 | Initial pack deploy (nginx v4.9.0-r1): 6-step split path, RBACProfile provisioned=true, PackExecution Succeeded | PASS | session/13-clusterpack-rbac-split |
+| 2 | PackOperationResult created with upgradeDirection=Initial | PASS | session/13-pack-operation-result |
+| 3 | Pack upgrade (v4.9.0-r1 to v4.10.0-r1): upgradeDirection=Upgrade | PASS | session/13-pack-operation-result |
+| 4 | Pack rollback (v4.10.0-r1 to v4.9.0-r1): upgradeDirection=Rollback | PASS | session/13-pack-operation-result |
+| 5 | Pack redeploy (same version): upgradeDirection=Redeploy | PASS | session/13-pack-operation-result |
+| 6 | ValuesFile field recorded in ClusterPack CR spec | PASS | session/14 WS12; required wrapper rebuild after seam-core ValuesFile addition |
+| 7 | Pack upgrade N→N+1 single-active-revision: r2 created, r1 deleted, one POR survives | PASS | session/14 WS12 |
+| 8 | PE deletion cascades POR via GC (ownerRef Kind fix required) | PASS | session/14 WS12 |
+| 9 | ClusterPack redeploy after PE+POR deletion starts at r1 | PASS | session/14 WS12 |
+| 10 | EtcdMaintenance defrag: Running=True then Ready=True | PASS | session/phase2b; required Pod informer fix, conductor rebuild, TCOR CRD install, executor SA/RBAC setup |
+| 11 | ClusterMaintenance window: WindowActive=False (outside window) | PASS | session/phase2b |
+| 12 | NodeOperation reboot ccs-mgmt-w2: JobName set, capability Succeeded | PASS | session/phase2b |
+| 13 | NodeMaintenance node-patch ccs-mgmt-w2: JobName set, capability fails (no patchSecretRef -- correct validation) | PASS | session/phase2b |
+| 14 | PKIRotation end-to-end: pki-rotate-lab-01 TCOR Succeeded; GetMachineConfig+staged apply | PASS | session/14-bake-lab-patches |
+| 15 | UpgradePolicy via spec.versionUpgrade: UpgradePolicy auto-created, VersionUpgradePending=True | PASS | session/phase2b |
+| 16 | Machine config capture: captureMachineConfigSecret writes seam-mc-{cluster}-{hostname} Secret after node-patch | IMPL | session/14-bake-lab-patches; node-patch full e2e blocked by patchSecretRef |
 
-**WS1 -- Branch creation and baseline (CLOSED):** All three repos branched to session/13-clusterpack-rbac-split from main.
+**Helm chart upgrade path:** nginx-ingress v4.9.0 → v4.10.0 upgrade tested and passing (test 3 above). This satisfies the helm upgrade e2e requirement.
 
-**WS2 -- Schema amendments (CLOSED):**
-- ontai-schema PR #2 merged: `ClusterPack.json` with `rbacDigest` and `workloadDigest` fields.
-- `wrapper/docs/wrapper-schema.md` amended: `rbacDigest`/`workloadDigest` fields, two-layer OCI artifact contract section.
-
-**WS3 -- Compiler packbuild split (CLOSED):**
-- `conductor/internal/packbuild/split.go`: `ParseManifests` and `SplitRBACAndWorkload` pure functions.
-- `conductor/cmd/compiler/compile_packbuild_split.go`: re-exports from cmd/compiler.
-- `conductor/cmd/compiler/compile.go`: `RBACDigest`/`WorkloadDigest` in `PackBuildInput` and `compilePackBuild`.
-- 6 unit tests in `conductor/test/unit/compiler/packbuild_split_test.go`. All pass.
-- Commit: `feat: compiler packbuild splits RBAC and workload into separate OCI layers`
-
-**WS4 -- wrapper ClusterPack types (CLOSED):**
-- `wrapper/api/v1alpha1/clusterpack_types.go`: `RBACDigest` and `WorkloadDigest` on `ClusterPackSpec`.
-- `make generate` run; CRD YAML regenerated.
-
-**WS5 -- Guardian /rbac-intake/pack endpoint (CLOSED):**
-- `guardian/internal/webhook/rbac_pack_intake_handler.go`: new `RBACPackIntakeHandler` at `/rbac-intake/pack`. Accepts YAML manifests with `componentName` + `targetCluster`. Stamps `ontai.dev/rbac-owner=guardian` and applies via SSA. INV-004.
-- `guardian/internal/webhook/server.go`: `RegisterPackIntake` method added.
-- 7 unit tests in `guardian/test/unit/webhook/rbac_pack_intake_test.go`. All pass.
-- Commit: `feat: guardian /rbac-intake/pack endpoint for ClusterPack RBAC layer intake`
-
-**WS6 -- pack-deploy split path (CLOSED):**
-- `conductor/internal/capability/clients.go`: `GuardianIntakeClient` interface (`SubmitPackRBACLayer`, `WaitForRBACProfileProvisioned`). `GuardianClient` field on `ExecuteClients`.
-- `conductor/internal/capability/wrapper.go`: `executeSplitPath` method for two-layer OCI artifact. `ensureNamespaces` function added. Legacy path unchanged for backward compatibility.
-- 6 unit tests in `conductor/test/unit/capability/pack_deploy_split_test.go`. All pass.
-- Commit: `feat: pack-deploy routes RBAC through guardian intake before workload apply`
-
-**WS7 -- wrapper-runner Role tightened (CLOSED):**
-- `conductor/cmd/compiler/compile_enable.go`: removed `rbac.authorization.k8s.io` rule from wrapper-runner Role. Added workload kinds: `persistentvolumeclaims`, `endpoints`, `pods`, `replicasets`, `ingresses`, `ingressclasses`, `jobs`, `cronjobs`, `horizontalpodautoscalers`.
-- Commit: `fix: tighten wrapper-runner Role to workload resources only`
-
-**WS8 -- Full suite pass (CLOSED):**
-- conductor: all unit tests PASS. go vet PASS.
-- guardian: all unit tests PASS. go vet PASS.
-- wrapper: all unit tests PASS. go vet PASS.
-
-**WS9-WS10 -- Cluster apply, nginx split-path e2e (CLOSED 2026-04-21):**
-- Images rebuilt from merged main (wrapper, conductor, guardian). Enable bundle applied (new seam-core-crds, conductor-deployment, wrapper-runner, MutatingWebhookConfiguration). Old wrapper-runner ClusterRole/CRB deleted from cluster. Operators restarted.
-- Nginx two-layer OCI artifacts pushed. nginx-v3.yaml compiled with rbacDigest/workloadDigest. ClusterPack applied.
-- Root causes found and fixed (3 sessions): GuardianIntakeClientAdapter wired in conductor execute mode; guardian webhook registrations (RegisterRBACIntake, RegisterPackIntake, RegisterOperatorCRGuard, RegisterDeclaringPrincipal) added to main.go; rbac_pack_intake_handler.go creates PermissionSet/RBACPolicy/RBACProfile in tenant-{targetCluster} after applying RBAC manifests; tenant-ccs-mgmt namespace added to enable bundle; wrapper-runner-rbacprofile-reader Role/RB added to tenant-ccs-mgmt; wrapper-runner-ns-creator ClusterRole/CRB added for cross-namespace workload deployment.
-- Full 6-step split path verified: pull-rbac-layer PASS, rbac-intake PASS, wait-rbac-profile PASS (RBACProfile provisioned=true), pull-workload-layer PASS, ensure-namespaces PASS, apply-workload PASS. PackExecution Succeeded=True.
-- Key architectural confirmation: management cluster (ccs-mgmt) is treated as tenant for operations -- uses seam-tenant-ccs-mgmt (pack delivery) and tenant-ccs-mgmt (guardian security CRs) namespaces identically to tenant clusters.
+**ClusterPack reconciler retrigger note:** ClusterPackReconciler does not watch PE deletions. After manual PE deletion, add annotation `ontai.dev/retrigger=$(date +%s)` on the ClusterPack to force re-reconciliation.
 
 ---
 
-### session/12-lineage-schema-amendment (seam-core, platform, wrapper, guardian, ontai-schema -- in progress, awaiting Governor push)
+## Open Work
 
-**Role:** Schema Engineer + Controller Engineer.
-
-**Four Governor-approved schema amendments:**
-1. `declaringPrincipal` added to `rootBinding` (stamps identity from declaring-principal annotation).
-2. `createdAt` and `actorRef` added to every `descendantRegistry` entry.
-3. `outcomeRegistry` as new append-only terminal outcome section in ILI spec.
-4. `lineageIndexRef` in guardian audit records correlates events to governing ILI.
-
-**WS1 -- Branch creation:** All 5 repos branched to session/12-lineage-schema-amendment from main.
-
-**WS2 -- domain-core schema amendment (CLOSED):**
-docs/domain-core-schema.md amended: `declaringPrincipal`, `createdAt`, `actorRef`, `outcomeRegistry`.
-Commit: `governor: amend DomainLineageIndex schema -- declaringPrincipal, createdAt, actorRef, outcomeRegistry`
-
-**WS3 -- seam-core schema amendment (CLOSED):**
-docs/seam-core-schema.md amended with same four fields. Declaration 6 added: outcomeRegistry terminal closure protocol.
-Commit: `governor: amend InfrastructureLineageIndex schema to inherit session/12 DomainLineageIndex amendments`
-
-**WS4 -- guardian schema amendment (CLOSED):**
-docs/guardian-schema.md: new §17 Audit Record Schema with AuditEvent table including lineageIndexRef.
-Commit: `governor: amend guardian audit record schema -- add lineageIndexRef`
-
-**WS5 -- ontai-schema JSON Schema (CLOSED):**
-InfrastructureLineageIndex.json: declaringPrincipal, createdAt, actorRef, outcomeRegistry, OutcomeEntry defs.
-AuditEvent.json: new schema file with LineageIndexRef.
-ontai-schema PR #1 raised (session/12 branch pushed, PR open).
-
-**WS6 -- seam-core Go types (CLOSED):**
-`api/v1alpha1/infrastructurelineageindex_types.go`: DeclaringPrincipal on RootBinding, CreatedAt+ActorRef on DescendantEntry (RecordedAt renamed), OutcomeType enum, OutcomeEntry struct, OutcomeRegistry field.
-`api/v1alpha1/zz_generated.deepcopy.go`: OutcomeEntry deep copy methods added.
-Commit: `session/12: add declaringPrincipal, createdAt, actorRef, outcomeRegistry to ILI types`
-
-**WS7 -- guardian webhook (CLOSED):**
-`internal/webhook/declaring_principal_handler.go`: DeclaringPrincipalHandler stamps annotation on CREATE for all 9 root-declaration kinds. Skips during bootstrap window (INV-020). RFC 6901 JSON patch.
-`internal/webhook/server.go`: RegisterDeclaringPrincipal method added.
-5 unit tests in `test/unit/webhook/declaring_principal_test.go`.
-Commit: `session/12: guardian declaring-principal MutatingWebhook stamps annotation on root declaration CREATE`
-
-**WS8 -- seam-core controller changes (CLOSED):**
-`internal/controller/lineage_controller.go`: buildILI reads declaring-principal annotation, populates rootBinding.declaringPrincipal. Fallback "system:unknown".
-`internal/controller/descendant_reconciler.go`: actorRef resolved from ILI.declaringPrincipal (authoritative), falls back to LabelActorRef label.
-`internal/controller/outcome_reconciler.go`: new OutcomeReconciler watches derived GVKs, classifies terminal conditions (Ready=True/False with reason-based drift/superseded/failed), appends OutcomeEntry idempotently.
-8 unit tests: `test/unit/principal_propagation_test.go` (4), `test/unit/outcome_registry_test.go` (4).
-Commit: `session/12: LineageController propagates declaringPrincipal, appends actorRef and createdAt, outcomeRegistry watcher`
-
-**WS9 -- SetDescendantLabels callers (CLOSED):**
-`platform/internal/controller/taloscluster_helpers.go`: 5 calls updated to pass `tc.GetAnnotations()[lineage.AnnotationDeclaringPrincipal]` as actorRef.
-`wrapper/internal/controller/packexecution_reconciler.go`: 1 call updated with `pe.GetAnnotations()[lineage.AnnotationDeclaringPrincipal]`.
-All tests pass on both repos.
-Commits: `session/12: update SetDescendantLabels callers to pass actorRef` (platform and wrapper).
-
-**WS10 -- guardian audit lineageIndexRef (CLOSED):**
-`internal/database/cnpg.go`: LineageIndexRef struct and AuditEvent.LineageIndexRef field added.
-`internal/controller/audit_helpers.go`: lineageRef() helper builds LineageIndexRef from kind/name/namespace.
-`internal/controller/rbacpolicy_controller.go`: 2 audit events carry lineageIndexRef.
-`internal/controller/rbacprofile_controller.go`: 4 audit events carry lineageIndexRef.
-4 unit tests in `test/unit/controller/audit_lineage_test.go`.
-Commit: `session/12: guardian audit records carry lineageIndexRef for governed object events`
-
-**WS11 -- Full suite pass (CLOSED):**
-All 4 repos green: go build, make test-unit, go vet.
-- seam-core: ok
-- platform: ok
-- wrapper: ok
-- guardian: ok
-
-**WS12:** PROGRESS.md updated (this entry).
-
-**WS13:** STOP. Awaiting Governor push authorization.
-
----
-
-### session/13-pack-operation-result (ontai-schema, seam-core, conductor, wrapper -- MERGED 2026-04-22)
-
-**Role:** Platform Engineer.
-
-**Governor-approved improvements to pack-deploy pipeline (Points 1, 2, 3):**
-
-**Point 2 -- PackOperationResult as seam-core CRD (CLOSED):**
-- `ontai-schema v1alpha1/seam-core/PackOperationResult.json`: schema-first per Decision 11. Fields: packExecutionRef, clusterPackRef, targetClusterRef, capability, phase, status (Succeeded/Failed), startedAt, completedAt, failureReason, deployedResources, artifacts, steps.
-- `seam-core api/v1alpha1/packoperationresult_types.go`: Go types + deepcopy. `PackResultStatus`, `PackUpgradeDirection` enums. CRD YAML generated: `infrastructure.ontai.dev_packoperationresults.yaml`.
-- `conductor internal/persistence/operationresult_writer.go`: `OperationResultWriter` interface, `KubeOperationResultWriter`, `NoopOperationResultWriter`. Replaces `ConfigMapWriter`.
-- `conductor cmd/conductor/main.go`: `seamScheme` + `seamv1alpha1.AddToScheme`; `KubeOperationResultWriter` wired.
-- `wrapper cmd/wrapper/main.go`: `seamv1alpha1.AddToScheme` added to scheme init.
-- `wrapper internal/controller/packexecution_reconciler.go`: reads `PackOperationResult` CR instead of ConfigMap; ownerRef written back to PackExecution.
-- Unit tests: `TestOperationResultWriter_CreatesPOR`, `UpdatesExistingPOR`, `TestNoopOperationResultWriter_WriteResultReturnsNil`.
-
-**Point 3 -- upgradeDirection rollback marker (CLOSED):**
-- `ontai-schema v1alpha1/infra/PackInstance.json`: `upgradeDirection` enum (Initial/Upgrade/Rollback/Redeploy) added to status.
-- `wrapper api/v1alpha1/packinstance_types.go`: `UpgradeDirection string` with kubebuilder enum marker.
-- `wrapper internal/controller/packexecution_reconciler.go`: `packUpgradeDirection`, `comparePackVersion`, `parsePackVer` helpers. vX.Y.Z-rN semver comparison.
-- Unit tests: `TestUpgradeDirection_Initial`, `Upgrade`, `Rollback`, `Redeploy`, `RevisionBump`.
-
-**Point 1 -- HelmSource in PackBuildInput (CLOSED, unit-tested, not e2e-verified):**
-- `conductor cmd/compiler/compile_packbuild_helm.go`: `helmCompilePackBuild` fetches helm chart via URL, renders with helm SDK, splits RBAC/workload via `SplitRBACAndWorkload`, pushes two OCI layers, emits ClusterPack YAML.
-- `conductor cmd/compiler/compile_oci_push.go`: `ociPushLayer`, `pushBlob`, `pushManifest` using OCI Distribution Spec v2.
-- `conductor cmd/compiler/compile.go`: `HelmSource *HelmSource` block in `PackBuildInput`; dispatch to helm path when set.
-
-**Bug fix -- RBACProfile namespace (CLOSED):**
-- `wrapper internal/controller/packexecution_reconciler.go`: `isRBACProfileProvisioned` now looks in `seam-tenant-{targetCluster}` (was hardcoded `seam-system`). All test helpers updated to match.
-
-**e2e verified on ccs-mgmt (2026-04-22):**
-- nginx-ingress v4.9.0-r1 Initial: PackOperationResult Succeeded, upgradeDirection=Initial.
-- nginx-ingress v4.10.0-r1 Upgrade: upgradeDirection=Upgrade.
-- nginx-ingress v4.9.0-r1 Rollback: upgradeDirection=Rollback.
-- nginx-ingress v4.9.0-r1 Redeploy: upgradeDirection=Redeploy.
-
-**PRs merged:** ontai-schema #4, seam-core #11, conductor #17, wrapper #10.
-
-**Remaining:** wrapper-runner Role needs `infrastructure.ontai.dev/packoperationresults` baked into compiler enable template (currently lab-patched). Helm compiler path e2e not yet tested.
-
----
-
-### session/13-live-cluster-validation (ontai root, conductor -- in progress)
-
-**Role:** Lab Operator.
-
-**WS1 -- session/12 merge (CLOSED):**
-All session/12 PRs merged to main. ontai-schema PR #1, seam-core PR #9, guardian PR #7, platform PR #8, wrapper PR #7 -- all squash-merged, branches deleted.
-
-**WS2 -- Image rebuild and enable bundle regeneration (CLOSED):**
-All five operator images rebuilt and pushed to 10.20.0.1:5000 with tag `dev`.
-Enable bundle (40 files) regenerated under `lab/configs/ccs-mgmt/compiled/enable/`.
-Conductor go.mod bumped to seam-core session/12 merge commit.
-Conductor PR raised on session/13 branch (pending Governor push).
-
-**WS3-WS9 -- Phase scripts authored (CLOSED):**
-All six phase scripts created and syntax-verified:
-- `phase-a-mgmt-import.sh`: ccs-mgmt import, AC-1/AC-3
-- `phase-b-dev-import.sh`: ccs-dev import, AC-2/AC-4
-- `phase-c-dev-native-bootstrap.sh`: destructive ONT-native bootstrap (CONFIRM_DESTRUCTIVE gate)
-- `phase-d-dev-capi-bootstrap.sh`: destructive CAPI bootstrap (CONFIRM_DESTRUCTIVE gate)
-- `phase-e-helm-clusterpack.sh`: cert-manager ClusterPack deploy
-- `phase-f-day2-ops.sh`: six day-2 scenarios (lineage, audit, RBAC intake, tenant GC)
-- `run-all-phases.sh`: master runner for A+B
-
-**WS10 -- Phase A execution (CLOSED):**
-Three bugs found and fixed during live phase A run:
-
-BLOCKER-001: SeamMembership CRD absent from enable bundle (SC-INV-003 violation).
-Fix: Added `00-infrastructure-dependencies/seam-core-crds.yaml` with both ILI and SeamMembership CRDs.
-
-BLOCKER-002: Guardian webhook timeout on cluster startup.
-Fix: phase-a script now waits for guardian rollout status before applying phase 01 RBAC resources.
-
-BLOCKER-003: Conductor --cluster-ref=ccs-mgmt arg missing from compiled enable bundle.
-Fix: `04-conductor/conductor-deployment.yaml` updated with `args: [agent, --cluster-ref=ccs-mgmt]`.
-
-BLOCKER-004: talosconfig Secret not in enable bundle -- TalosCluster reconciler blocked on KubeconfigUnavailable.
-Fix: phase-a now creates `seam-mc-ccs-mgmt-talosconfig` secret from `lab/configs/ccs-mgmt/talosconfig` before applying TalosCluster CR.
-
-Final result: TalosCluster ccs-mgmt Ready=True, AC-1 PASS (1/20 live), AC-3 PASS (0/22 live, stubs).
-
-**WS11 -- Commit (CLOSED):**
-All phase scripts and enable bundle fixes committed to session/13 branch.
-Commit: a4412b8
-
-**WS12:** PROGRESS.md and BACKLOG.md updated (this entry).
-
----
-
-### session/11-pre-cluster-backlog-clearance (platform, guardian -- in progress, not pushed)
-
-**Role:** Controller Engineer.
-
-**WS1:** All 5 repos (platform, conductor, guardian, seam-core, wrapper) branched to
-session/11-pre-cluster-backlog-clearance from clean main.
-
-**WS2 -- PLATFORM-BL-CAPI-DERIVED-LINEAGE (CLOSED):**
-SetDescendantLabels wired on all 4 CAPI-derived objects in taloscluster_helpers.go:
-- `ensureSeamInfrastructureCluster`: SeamInfrastructureCluster gets ClusterProvision labels.
-- `ensureCAPICluster`: CAPI Cluster gets ClusterProvision labels.
-- `ensureTalosControlPlane`: TalosControlPlane gets ClusterProvision labels.
-- `ensureWorkerPool` (MachineDeployment): per-pool MachineDeployment gets ClusterProvision labels.
-All 4 pass `tc.Namespace` as `iliNamespace` so the DescendantReconciler can resolve the
-ILI cross-namespace (TalosCluster is in seam-system, CAPI objects are in seam-tenant-{name}).
-4 unit tests in `test/unit/controller/capi_lineage_test.go`.
-
-**WS3 -- PLATFORM-BL-TENANT-GC (CLOSED):**
-Finalizer `platform.ontai.dev/tenant-namespace-cleanup` added to CAPI-enabled TalosCluster.
-`ensureTenantNamespaceCleanupFinalizer` wired at Step 0 of `reconcileCAPIPath`.
-`handleTalosClusterDeletion` extended to delete `seam-tenant-{name}` namespace and remove the
-finalizer. Cross-namespace ownerReferences are not supported by Kubernetes GC; a finalizer is
-the correct mechanism. 4 unit tests in `test/unit/controller/taloscluster_gc_test.go`.
-
-platform commit: f7a310c
-
-**WS4 -- GUARDIAN-BL-RBAC-INTAKE (CLOSED):**
-`RBACIntakeHandler` implemented in `internal/webhook/rbac_intake_handler.go`.
-POST `/rbac-intake` endpoint registered via `AdmissionWebhookServer.RegisterRBACIntake`.
-Handler stamps `ontai.dev/rbac-owner=guardian` on each submitted RBAC resource and applies
-via SSA (`client.Apply`, field manager `guardian-rbac-intake`). Idempotent on Helm re-apply.
-5 unit tests in `test/unit/webhook/rbac_intake_test.go`: annotation stamping, wrapped count,
-empty list, invalid JSON, method guard.
-
-guardian commit: c0c41fb
-
-**WS5 -- CapabilityRBACProvision (no action):**
-`rbac-provision` capability already fully implemented in `internal/capability/guardian.go`
-from prior sessions. Unit tests exist in `test/unit/capability/guardian_test.go`. No gaps.
-
-**WS6 -- Seven day2 conductor capabilities (no action):**
-All 7 capabilities already fully implemented:
-- etcd-backup, etcd-defrag, etcd-restore: `platform_etcd.go`.
-- node-patch, node-scale-up, node-decommission, node-reboot: `platform_node.go`.
-- pki-rotate, credential-rotate, hardening-apply, cluster-reset: `platform_cluster.go`.
-Full unit tests exist. No stubs remain.
-
-**WS7 -- Full suite pass:**
-All 5 repos green: platform, guardian, seam-core, wrapper, conductor.
-
-**WS8:** BACKLOG and PROGRESS updated (this entry).
-
-**WS9:** Governor merge session completed. PRs squash-merged. All branches deleted. All repos on clean main.
-
----
-
-### session/10c (platform, MERGED -- PR #9 merged to main 2026-04-20)
-
-**Architecture correction:** 6 operational reconcilers (EtcdMaintenance, NodeMaintenance,
-PKIRotation, ClusterReset, UpgradePolicy, NodeOperation) rewrote from incorrect per-operation
-RunnerConfig creation to the correct Job-based pattern. Conductor's CapabilityPublisher
-self-declares capabilities in RunnerConfig `status.capabilities` (CR-INV-005); operators
-read this field before submitting any batch/v1 Job. WS8 (adding capabilities to bootstrap
-RunnerConfig spec.steps) was dropped after architectural confirmation.
-
-**WS6 -- Reconciler rewrite (6 files):**
-- `platform/internal/controller/operational_job_base.go`: added
-  `capabilityUnavailableRetryInterval`, `getClusterRunnerConfig`, `hasCapability`.
-- `platform/api/v1alpha1/capability_conditions.go`: new file with
-  `ConditionTypeCapabilityUnavailable`, `ReasonRunnerConfigNotFound`, `ReasonCapabilityNotPublished`.
-- `platform/internal/controller/runnerconfig_cr.go`: added `CapabilityEntry` struct and
-  `Capabilities []CapabilityEntry` to `OperationalRunnerConfigStatus`.
-- 6 reconcilers rewritten: EtcdMaintenance, NodeMaintenance, PKIRotation, ClusterReset,
-  UpgradePolicy, NodeOperation. All now gate on cluster RunnerConfig capability, submit
-  batch/v1 Job, watch OperationResult ConfigMap. NodeMaintenance: removed 4-step
-  cordon/drain/operate/uncordon; single capability Job. UpgradePolicy: stack-upgrade is
-  single compound capability.
-
-**WS7 -- Unit test rewrite (2 files):**
-- `platform/test/unit/controller/day2_reconcilers_test.go`: complete rewrite. All ORC
-  checks replaced with Job checks. Added cluster RC pre-load pattern using `clusterRC()`
-  helper. Added `successResultCM`, `failedResultCM`, `preExistingJob` helpers. NodeAffinity
-  assertions replace ORC field assertions for node exclusion tests.
-- `platform/test/unit/controller/runnerconfig_production_test.go`: rewritten for Job
-  pattern. ORC list assertions replaced with Job list assertions.
-- All unit tests pass (go test ./test/unit/... green).
-
-WS8: CANCELLED. Conductor self-declares capabilities via CapabilityPublisher (CR-INV-005).
-No changes needed to ensureBootstrapRunnerConfig.
-
-WS9: PROGRESS.md updated (this entry).
-WS10: Full suite pass -- go build, go vet, go test all green.
-WS11: STOP. Waiting for Governor push authorization.
-
-**session/10c continuation (Controller Engineer role, 2026-04-20):**
-
-WS1: Pushed session/10c-runnerconfig-correction, PR #9 raised.
-
-WS2 -- CAPI path audit (read-only, 6 checks):
-1. TalosClusterReconciler CAPI path (reconcileCAPIPath) -- IMPLEMENTED (10-step).
-2. SeamInfrastructureCluster created in seam-tenant namespace -- IMPLEMENTED.
-3. CAPI Cluster created with correct infrastructureRef/controlPlaneRef -- IMPLEMENTED.
-4. TalosControlPlane with replicas/version -- IMPLEMENTED.
-5. CiliumPending condition when CAPI cluster reaches Running -- IMPLEMENTED.
-6. Unit tests for CAPI path -- PARTIALLY IMPLEMENTED (machine reachability + Conductor tests existed; provisioning object creation tests absent).
-
-WS3: Gap: no unit tests for SeamInfrastructureCluster, CAPI Cluster, TalosControlPlane,
-MachineDeployment creation, or CiliumPending transition.
-
-WS4 -- CAPI path unit tests (new file taloscluster_capi_provisioning_test.go):
-5 tests added: SeamInfrastructureCluster creation, CAPI Cluster infrastructureRef,
-TalosControlPlane replicas/version, CiliumPending condition on Running, MachineDeployment
-per worker pool. All pass.
-
-WS5 -- CI diagnosis and fixes (3 rounds):
-- Round 1: lint FAIL -- 3 unused RunnerConfig helper functions removed from operational_job_base.go.
-- Round 2: integration test FAIL -- etcdmaintenance_test.go rewrote from ORC to Job assertions,
-  added cluster RunnerConfig setup via buildClusterRC helper.
-- Round 3: integration test FAIL -- CapabilityEntry missing required Version field per CRD schema.
-  Added Version string to CapabilityEntry struct, updated all test helpers. CI GREEN.
-
-WS6: PR #9 merged to main. Commit 4fbc2068.
-
-WS7: PROGRESS.md and BACKLOG.md updated.
-
-Artefacts delivered:
-- platform main: 6 reconcilers on Job-based pattern, CapabilityEntry struct with Version field,
-  CAPI provisioning unit tests (5), integration tests updated, lint clean, all suites green.
-
----
-
-### session/10d-tenant-onboarding-blockers (platform, seam-core, wrapper -- commits ready, not pushed)
-
-**Role:** Controller Engineer.
-
-**WS1:** session/10, session/10b PRs already merged to main -- confirmed via git log. No action needed.
-
-**WS2:** All four repos (platform, seam-core, wrapper, guardian) branched to
-session/10d-tenant-onboarding-blockers. Baseline unit tests green.
-
-**WS3 -- SeamInfrastructureMachineReconciler audit (platform-design.md §3.1 six-step spec):**
-All 6 steps confirmed COMPLETE:
-1. Read CAPI Machine (via OwnerReference lookup) -- COMPLETE
-2. Read bootstrap Secret (dataSecretName from Machine.Status.Bootstrap) -- COMPLETE
-3. Apply via Talos maintenance API port 50000 -- COMPLETE (injectable MachineConfigApplier interface)
-4. Poll IsOutOfMaintenance -- COMPLETE (MachineConfigApplied condition gates this)
-5. Set providerID talos://{clusterName}/{ip} -- COMPLETE
-6. Set status.ready=true -- COMPLETE
-
-**WS4 -- Gap audit (read-only before any code):**
-
-| Check | Component | Result |
-|-------|-----------|--------|
-| BPF params in TalosConfigTemplate | platform | NOT CORRECT: bpf_jit_harden=1 (must be 0); kernel.unprivileged_bpf_disabled absent (must be 0) |
-| SetDescendantLabels on bootstrap RunnerConfig | platform | NOT WIRED |
-| SetDescendantLabels on PackInstance | wrapper | NOT WIRED |
-| SetDescendantLabels on PermissionSnapshot | guardian | DEFERRED -- architectural question (no single root per snapshot) |
-| HardeningProfileRef in TalosClusterSpec | platform | ABSENT -- TalosClusterSpec has no HardeningProfileRef field; Decision 11 requires schema PR first |
-| Tenant namespace ordering | platform | seam-tenant namespace created by TalosClusterReconciler before CAPI objects -- CORRECT |
-| IndexName function in seam-core pkg/lineage | seam-core | ABSENT -- private lineageIndexName not exported; operators cannot compute ILI names |
-| PackInstance in DerivedObjectGVKs | seam-core | ABSENT -- DescendantReconciler only watches RunnerConfig |
-
-**WS5 -- Gaps filled:**
-
-platform `internal/controller/taloscluster_helpers.go`:
-- BPF fix: `net.core.bpf_jit_harden` changed from "1" to "0"; `kernel.unprivileged_bpf_disabled: "0"` added.
-- SetDescendantLabels wired on bootstrap RunnerConfig in `ensureBootstrapRunnerConfig`:
-  `lineage.SetDescendantLabels(rc, lineage.IndexName("TalosCluster", tc.Name), "platform", lineage.ConductorAssignment)`
-
-seam-core `pkg/lineage/descendant.go`:
-- Added `IndexName(kind, name string) string` export (formula: `strings.ToLower(kind) + "-" + name`).
-
-seam-core `internal/controller/descendant_reconciler.go`:
-- Added PackInstance GVK (`{Group: "infra.ontai.dev", Version: "v1alpha1", Kind: "PackInstance"}`) to DerivedObjectGVKs.
-
-wrapper `internal/controller/packexecution_reconciler.go`:
-- SetDescendantLabels wired before PackInstance Create:
-  `lineage.SetDescendantLabels(pi, lineage.IndexName("PackExecution", pe.Name), "wrapper", lineage.PackExecution)`
-
-Deferred (require Governor decision):
-- HardeningProfile merge: TalosClusterSpec has no HardeningProfileRef. Decision 11 requires schema PR before implementation. New BACKLOG: PLATFORM-BL-HARDENINGPROFILE-MERGE.
-- Guardian PermissionSnapshot wiring: EPGController upserts one snapshot per cluster over all RBACProfiles/policies; no single root RBACPolicy per snapshot. New BACKLOG: GUARDIAN-BL-PERMISSIONSNAPSHOT-WIRING.
-- ILI cross-namespace lookup: Platform RC is in ont-system, TalosCluster ILI is in seam-system. DescendantReconciler uses obj.GetNamespace() for lookup; labels are set but reconciler cannot immediately resolve cross-ns ILI. New BACKLOG: PLATFORM-BL-ILI-CROSS-NS.
-
-**WS6 -- Unit tests:**
-
-platform `test/unit/controller/seaminfrastructuremachine_reconciler_test.go`:
-5 new tests added:
-1. TestSIMReconcile_BootstrapDataSecretNameAbsent
-2. TestSIMReconcile_ApplyCalledWithCorrectAddressPortConfig (captureApplier helper)
-3. TestSIMReconcile_MachineConfigApplied_SkipsApply
-4. TestSIMReconcile_ReadyAfterOutOfMaintenance
-5. TestSIMReconcile_IsOutOfMaintenanceError
-
-captureApplier struct added to capture Talos API call args without network.
-
-**WS4 C/D audit (session/10d continuation):**
-- C: CiliumPending set when CAPI Cluster Running -- COMPLETE (taloscluster_controller.go Step 8)
-- D: CiliumPending cleared when Cilium PackInstance Ready -- COMPLETE (Step 10/transitionToReady)
-
-**WS6 audit:** Tenant namespace created at Step 1 of reconcileCAPIPath, before all CAPI objects (SIC, Cluster, TCT, TCP, MachineDeployments) -- YES.
-
-**WS7 -- Compiler ccs-dev dry-run:**
-Fixture from Governor brief had two gaps: (1) `importExistingCluster: true` without `machineConfigPaths` requires live cluster API -- not suitable for workstation dry-run; (2) `role: tenant` absent from fixture.
-Fixed by: adding `role: tenant` and `machineConfigPaths` pointing to a locally generated init-node machine config. Also rebuilt compiler to pick up *CAPIConfig pointer change.
-Output verified with fixed fixture + rebuilt compiler:
-- spec.mode=import -- PASS
-- spec.role=tenant -- PASS
-- namespace=seam-tenant-ccs-dev -- PASS
-- spec.capi block absent (nil pointer, omitempty suppressed) -- PASS (satisfies capi.enabled=false AND controlPlane absent)
-
-**WS8 (session/10d continuation) -- Full suite pass (all 5 repos):**
-- platform: go build CLEAN, go vet CLEAN, make test-unit PASS
-- seam-core: go build CLEAN, go vet CLEAN, make test-unit PASS
-- wrapper: go build CLEAN, go vet CLEAN, make test-unit PASS
-- guardian: make test-unit PASS (no changes)
-- conductor: make test-unit PASS (no changes)
-
-**WS9 (session/10d continuation) -- TalosConfigTemplate CNI/CiliumPending tests:**
-3 new tests added to taloscluster_capi_provisioning_test.go:
-1. TestTalosClusterReconcile_CAPI_TalosConfigTemplateHasCNINone
-2. TestTalosClusterReconcile_CAPI_TalosConfigTemplateHasBPFSysctls
-3. TestTalosClusterReconcile_CAPI_CiliumPendingClearedWhenPackInstanceReady
-All PASS. platform commit b2b93db.
-
-**PROGRESS/BACKLOG updated (this entry).**
-**WS11:** STOP. Waiting for Governor push authorization.
-
-Commits ready (not pushed):
-- platform: d57429e, b2b93db (BPF fix, SetDescendantLabels, SIM tests, CNI/BPF tests, CiliumPending-clear test)
-- seam-core: 51bbce3 (IndexName export, PackInstance GVK)
-- wrapper: 6c6afee (PackInstance SetDescendantLabels wiring)
-
----
-
-### session/10-platform-operational-reconcilers (platform, conductor, seam-core, PRs open)
-
-**Outcomes summary:**
-- platform: 7 operational reconcilers implemented (EtcdMaintenance, NodeMaintenance,
-  PKIRotation, ClusterReset, ClusterMaintenance, UpgradePolicy, NodeOperation)
-  plus HardeningProfile validation. 32 e2e stubs, unit + integration tests.
-- conductor: CapabilityEtcdDefrag naming fix (was etcd-maintenance), 14 stub handlers
-  for all named operational capabilities registered in RunnerConfig.
-- session/10b audit: 4 of 5 checks IMPLEMENTED, seam-core descendantRegistry ABSENT
-  then filled in same session.
-- seam-core: DescendantReconciler + SetDescendantLabels helper. Watches
-  runner.ontai.dev/RunnerConfig, appends DescendantEntry to ILI on root-ili label.
-- CNPG ordering decision: ILIs remain Kubernetes CRDs; no CNPG connector in seam-core.
-  Guardian-db is the sole CNPG sink. seam-core has no dependency on CNPG.
-- Operator wiring gap logged as SEAM-CORE-BL-DESCENDANT-LABELS (medium priority).
-
-### session/10-platform-operational-reconcilers detail
-
-WS1-WS2: Branched platform and conductor to session/10. WS2 audit confirmed all 7 day-2
-reconcilers PRESENT AND COMPLETE. No reconciler implementation needed from scratch.
-
-Critical gap found: conductor CapabilityEtcdMaintenance = "etcd-maintenance" mismatched
-conductor-schema.md §6 ("etcd-defrag") and platform reconciler (capabilityEtcdDefrag).
-
-**WS11 (conductor) -- CapabilityEtcdDefrag naming fix:**
-Renamed CapabilityEtcdMaintenance to CapabilityEtcdDefrag in constants.go.
-Updated stubs.go registration, platform_etcd.go handler references, and 3 test files.
-Conductor unit tests green. Commit 4e52c9c.
-
-**WS3 -- EtcdMaintenance:**
-Added PVCFallbackEnabled bool field to EtcdMaintenanceSpec. Updated reconciler to set
-EtcdBackupLocalFallback condition when PVCFallbackEnabled=true and no S3 configured.
-Added 3 unit tests: restore RunnerConfig, PVC fallback, idempotent after Ready=True.
-Created test/integration/day2/ suite and etcdmaintenance_test.go (2 envtest tests).
-Created test/e2e/day2/ suite and etcdmaintenance_e2e_test.go (6 stubs). Updated Makefile.
-Platform commit cd38ebd.
-
-**WS4-WS10 -- Remaining reconciler unit tests and HardeningProfile Valid condition:**
-- NodeMaintenance: 3 new tests (hardening-apply step, credential-rotate step, idempotent).
-- PKIRotation: 3 new tests (in-progress, complete, failed).
-- ClusterReset: 2 new tests (RunnerConfig complete, RunnerConfig failed).
-- ClusterMaintenance: 1 new test (blockOutsideWindows=true sets ConductorJobGateBlocked).
-- UpgradePolicy: 3 new tests (kube-upgrade RunnerConfig, CAPI path CAPIDelegated, failed).
-- NodeOperation: 2 new tests (reboot RunnerConfig, failed).
-- HardeningProfile: added ConditionTypeHardeningProfileValid/ReasonHardeningProfileValid/
-  ReasonHardeningProfileInvalid constants to API types. Added validateHardeningProfileSpec()
-  to reconciler. 3 new tests (valid, empty-patch invalid, empty-spec valid).
-All 21 new unit tests pass. Platform commit 7f5da7d.
-
-**WS12 -- AC-DAY2 e2e stubs:**
-Created 6 per-reconciler e2e stub files in test/e2e/day2/ (NodeMaintenance, PKIRotation,
-ClusterReset, UpgradePolicy, NodeOperation, ClusterMaintenance) plus day2_contracts_test.go
-in test/e2e/. All stubs skip until TENANT-CLUSTER-E2E closed. AC-DAY2 contract documented.
-
-**Test count summary (session/10 through session/10b):**
-- Unit tests added: 21 (platform); 0 net change (conductor refactors only); 3 (seam-core)
-- Integration test files: 1 new suite + 1 test file (2 tests, skip without KUBEBUILDER_ASSETS)
-- e2e stubs added: 7 new files, 32 stubs total (all skip until TENANT-CLUSTER-E2E)
-
-**session/10b WS2 audit (read-only):**
-All 5 checks verified across platform, wrapper, conductor, guardian, seam-core:
-
-| Check | Component | Result |
-|-------|-----------|--------|
-| 1 | Wrapper PackInstance drift + SecurityViolation | IMPLEMENTED |
-| 2 | Conductor local PermissionService (gRPC) | IMPLEMENTED |
-| 3 | seam-core descendantRegistry append | ABSENT -- filled in WS3 |
-| 4 | Guardian PermissionService gRPC server | IMPLEMENTED |
-| 5 | Conductor PackReceipt creation on tenant cluster | IMPLEMENTED |
-
-**session/10b WS3 -- seam-core DescendantReconciler (fills check 3 gap):**
-Added DescendantReconciler in internal/controller/descendant_reconciler.go. Watches
-DerivedObjectGVKs (starting with runner.ontai.dev/RunnerConfig). When a derived object
-carries label infrastructure.ontai.dev/root-ili, appends a DescendantEntry to the named
-ILI's DescendantRegistry. Idempotent: UID guard prevents duplicates. Registered in main.go
-alongside LineageReconciler loop.
-Added SetDescendantLabels helper in pkg/lineage/descendant.go for operators to set the
-three required labels (root-ili, seam-operator, creation-rationale) at derived object
-creation time.
-3 unit tests (append entry, idempotent, no-op without label). seam-core commit 8312ad7.
-
-WS4 cross-repo field reference verified during WS2: wrapper gate 3 reads Fresh condition
-type from PermissionSnapshot as unstructured -- matches guardian API. No mismatch.
-
-**WS5 full suite pass:**
-All five repos (platform, conductor, wrapper, guardian, seam-core): make test-unit green.
-No regressions.
-
----
-
-### session/9b-corrections (ontai root, merged to main)
-
-session/9b: .gitignore correction. app-core and ontai-schema are independent repos
-with ontai-dev remotes and must not appear in ontai root .gitignore. Entries removed.
-.claude/, ONT-Seam-Architecture.pptx, and build_pptx.py remain correctly gitignored
-as local working files.
-
----
-
-### session/1-governor-init (all repos, merged to main)
-
-Foundation work across all six operators. Established all CRD types, reconcilers,
-shared library, admission webhook, bootstrap window, lineage system, CAPI integration,
-and Wrapper pack delivery. Platform onboards management cluster via import path.
-Guardian CNPG audit sink operational. EPG auto-refresh live. ClusterPack delivery
-end-to-end verified. Key invariants closed: INV-020 (bootstrap window), CS-INV-001,
-SC-INV-002 (condition vocabulary). enable-ccs-mgmt.sh CI script committed. Commits
-across all six repos -- see GIT_TRACKING.md for full log.
-
-### session/2-lineage-sync (seam-core, guardian)
-
-Closed SEAM-CORE-BL-LINEAGE. Root cause: PermissionSnapshot was not a root GVK but
-received LineageSynced=False initialization. Fixed by removing erroneous init block
-from permissionsnapshot_controller.go. PackInstance test gap closed with new regression
-guard. seam-core commit 52de8d3. guardian commit c36ffd3.
-
-### session/3-reconciler-bugs (platform)
-
-Pre-existing guardian envtest FAIL recorded as GUARDIAN-BL-ENVTEST-FAIL (not introduced
-by session/3). RetryOnConflict added to TalosClusterReconciler status patch. LocalQueue
-creation in seam-tenant for tenant clusters added to platform. CI-SCRIPT backlog item
-closed (enable-ccs-mgmt.sh committed).
-
-### session/4-webhook-hardening-and-compiler-fixes (guardian, conductor, platform, ontai root)
-
-PRs open as of 2026-04-20. Four backlog items closed:
-
-**G-BL-CR-IMMUTABILITY (guardian PR #5):**
-Operator-authorship guard blocking human UPDATE/PATCH on PackInstance, RunnerConfig,
-PermissionSnapshot, PackExecution. Pure decision function EvaluateOperatorAuthorship.
-Bootstrap window bypass. 10 unit tests, 6 e2e stubs. Commit 16c85f4.
-
-**C-COREDNS-PATCH (conductor PR #3):**
-Removed INV-001-violating writeCoreDNSDSNSPatchScript from compiler. Phase 05 meta
-updated to reference CI step 7a inline patch. 2 unit tests, 3 e2e stubs. Commit a2eada4.
-
-**C-KUEUE-WEBHOOK (conductor PR #3):**
-Moved Kueue webhook scoping from Step 7d to Phase 00 in enable-ccs-mgmt.sh immediately
-after kueue-controller.yaml apply. wait_crd guard added. 1 unit test, 3 e2e stubs.
-Commit a0a4c53.
-
-**C-34 (platform PR #4, conductor PR #3):**
-TalosClusterSpec.CAPI changed from CAPIConfig to *CAPIConfig. nil pointer suppresses
-capi block in YAML when disabled (management cluster path). CAPIEnabled() helper added.
-deepcopy, 5 controllers, 3 test files updated in platform (commit 7f70533). Conductor
-management cluster builders updated, regression test added (commit f7c66ad).
-
-Two Governor directives codified in CLAUDE.md:
-- Section 16: Context Compaction Safety Protocol
-- Section 17: e2e CI Contract and Skip-Reason Standard
-
-### session/7-ci-pipelines (all repos, in progress)
-
-CI infrastructure only. No operator reconciler changes.
-
-**WS1:** All 6 repos branched to session/7-ci-pipelines.
-
-**WS2 -- Makefile targets (all 5 operator repos):**
-Added test-unit, test-integration, test-all targets uniformly. Existing targets unchanged.
-platform and seam-core test-integration exits 0 (no integration tests). conductor, guardian,
-wrapper test-integration runs envtest suite via KUBEBUILDER_ASSETS.
-
-**RunnerConfig json tag fix (conductor):**
-RunnerConfigSpec and nested types (RunnerConfigStep, PhaseConfig, OperationalHistoryEntry,
-RunnerConfigStepResult, ConfigMapRef, SecretRef, RunnerConfigStatus) had no json tags.
-Go marshaled with UpperCase keys; CRD schema expects camelCase. All 4 conductor integration
-tests were failing with Required value (clusterRef, runnerImage). Fixed by adding json tags
-to all struct fields. All 4 tests now pass.
-
-**GUARDIAN-BL-ENVTEST-FAIL resolved:**
-Three root causes found and fixed:
-
-1. RBACPolicyReconciler finalizer + GenerationChangedPredicate: the finalizer addition returns
-   early and the subsequent metadata-only Update does not trigger another reconcile (generation
-   unchanged). Fix: do not return early after adding finalizer; continue reconcile in same pass.
-   guardian/internal/controller/rbacpolicy_controller.go.
-
-2. EPGReconciler OperatorNamespace not set in test setup (epg_reconciler_test.go):
-   SSA patch targeted namespace "" which does not exist. Fix: set OperatorNamespace=testNamespace
-   in both epg and controller suite TestMain.
-
-3. IdentityProviderReconciler OIDC reachability check races 10s timeout against 10s test poll:
-   Fix: inject failFastHTTPClient in controller suite TestMain. OIDC check fails immediately
-   allowing status patch before test timeout.
-
-All guardian integration suites now pass: controller (27 tests), epg (1 test), lineage (3 tests),
-webhook (cached).
-
-**WS3-WS5 -- GitHub Actions per-repo ci.yaml:**
-conductor, guardian, platform, wrapper, seam-core each have .github/workflows/ci.yaml.
-Steps: checkout, setup-go, build, lint (golangci-lint direct), test-unit, envtest install
-(where applicable), test-integration, e2e (skip count to GITHUB_STEP_SUMMARY), upload artifacts
-on failure.
-
-**WS6 -- Cross-repo CI (.github/workflows/cross-repo-ci.yaml in ontai root):**
-Triggers: workflow_dispatch and daily 02:00 UTC. Dependency order: seam-core -> guardian ->
-platform+wrapper -> conductor. Summary job posts results table to GITHUB_STEP_SUMMARY and opens
-GitHub issue on any failure.
-
-**WS7:** All 6 YAML files validated with python3 yaml.safe_load.
-
-**WS8:** Local smoke tests passed:
-- conductor: build, test-unit, test-integration, e2e all exit 0.
-- guardian: build, test-unit, test-integration (50s), e2e all exit 0.
-
-**WS9:** PROGRESS.md, BACKLOG.md, GIT_TRACKING.md updated.
-
-**WS10:** PRs raised: conductor #6, guardian #7, platform #6, wrapper #4, seam-core #5, ontai #2.
-
-### session/9-pre-cluster-verify (ontai root, merged to main)
-
-Pre-cluster verification pass before raising session/9 PRs.
-
-**WS1:** conductor session/8-acceptance-contracts local branch deleted (remote squash-merged in session/8).
-
-**WS2:** Five untracked files disposed in ontai root .gitignore:
-- .claude/: Claude project context -- never committed
-- ONT-Seam-Architecture.pptx + build_pptx.py: generated working documents -- gitignored
-- app-core/: scaffold for future ontai-dev/app-core repo (APP-CORE backlog) -- gitignored
-- ontai-schema/: schema.ontai.dev GitHub Pages site -- gitignored
-
-**WS3 -- AC-1 platform import path verified (4 checks):**
-All four checks pass. No gap found, no implementation required.
-- A: TalosClusterModeImport branch present at taloscluster_controller.go:227
-- B: status.origin=imported set at line 228
-- C: ensureBootstrapRunnerConfig called unconditionally before import branch (line 210); comment at line 221 confirms RunnerConfig ensured above for Conductor attachment
-- D: import path returns ctrl.Result{}, nil at line 282 -- no Kueue Job
-
-**WS4 -- AC-2 wrapper gate chain verified:**
-PackExecutionReconciler implements all 5 gates in order: gate 0 ConductorReady, gate 1 Signature (ClusterPack.status.Signed=true), gate 2 Revocation, gate 3 PermissionSnapshot Fresh=true, gate 4 RBACProfile provisioned=true. Gate watches on PermissionSnapshot and RBACProfile present at packexecution_reconciler.go:792.
-
-**WS5 -- AC-2 conductor signing loop verified:**
-signing_loop.go implements SigningLoop: signs PackInstance and PermissionSnapshot with Ed25519, writes ontai.dev/pack-signature annotation that ClusterPackReconciler reads to set Status.Signed=true. INV-026 enforced.
-
-**WS6 -- AC-3 guardian audit trail verified:**
-- rbacprofile.provisioned emitted at rbacprofile_controller.go:336
-- rbac.would_deny emitted at rbac_handler.go:73 (webhook)
-- LazyAuditWriter in database/lazy.go; CNPG sink in database/cnpg.go
-
-**WS7 -- Full suite pass:**
-All four repos (platform, wrapper, conductor, guardian): go build, go vet, make test-unit all exit 0. No regressions.
-
----
-
-### session/8-acceptance-contracts (platform, wrapper, guardian, seam-core, in progress)
-
-Acceptance contract tests (AC-1 through AC-5) and run-acceptance.sh runner.
-
-**AC-1 -- Management cluster import (platform):**
-Five unit tests in platform/test/unit/controller/taloscluster_import_test.go covering:
-origin=imported, Ready=True, exactly one RunnerConfig in ont-system, no Job submitted,
-second reconcile idempotent, LineageSynced=False/LineageControllerAbsent on first pass.
-Five e2e stubs in platform/test/e2e/ac1_mgmt_import_test.go skip until MGMT_KUBECONFIG.
-platform commit d4e7f26.
-
-**AC-2 -- ClusterPack deploy gate chain (wrapper + guardian):**
-Wrapper: five unit tests (packexecution_gates_test.go): gate 1 unsigned, gate 2 revoked,
-gate 3 stale snapshot, gate 4 RBAC unprovisioned, all-gates-pass Job submission. Seven e2e
-stubs (ac2_clusterpack_deploy_test.go) skip until TENANT-CLUSTER-E2E closed.
-Guardian: five unit tests (epg_stale_predicate_test.go): permissionSnapshotStaleFilter
-passes Fresh->Stale, suppresses all other transitions, suppresses Create/Delete/Generic.
-wrapper commits ebb327d; guardian commit a89242e.
-
-**AC-3 -- Guardian audit sweep (guardian):**
-Four unit tests (audit_sweep_test.go): LazyAuditWriter drops when ErrDatabaseNotReady,
-forwards after Set, BootstrapAnnotationRunnable emits bootstrap.annotation_sweep_complete,
-RBACPolicyReconciler emits rbacpolicy.validated. Five e2e stubs skip until
-GUARDIAN-BL-ENVTEST-FAIL closed. guardian commit c78f474.
-
-**AC-4 -- LineageController manifest tracking (seam-core):**
-Five unit tests (ac4_lineage_controller_test.go): ILI with deterministic name, LineageSynced
-transitions to True/LineageIndexCreated, governance annotation on root, idempotency, all 9
-GVKs registered. Seven e2e stubs skip until TENANT-CLUSTER-E2E closed. seam-core commit e4d2cfa.
-
-**AC-5 -- DSNS lineage tracking in seam.ontave.dev (seam-core):**
-Six unit tests (ac5_dsns_test.go): TalosCluster cluster-topology, PackInstance pack-lineage,
-IdentityBinding identity-plane, RunnerConfig execution-authority, zone always has SOA+NS,
-all 5 DSNSGVKs registered. Seven e2e stubs skip until TENANT-CLUSTER-E2E closed.
-seam-core commit 96724b8.
-
-**WS7 -- run-acceptance.sh:**
-lab/scripts/run-acceptance.sh created. Runs make test-unit for all 5 repos sequentially.
-All 5 pass: 5 passed, 0 failed. (lab/ is gitignored -- file is local only.)
-
-**WS8 -- Full suite pass:**
-All five repo unit suites green via run-acceptance.sh. No regressions.
-
----
-
-## Open Backlog (High Priority)
+### Backlog items blocking alpha
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Required for alpha. |
-| PLATFORM-BL-TENANT-GC | platform | TalosCluster deletion should cascade to seam-tenant namespace. |
-| G-BL-CNPG-POOLER-AUTH | guardian | Connect to rw service not pooler. md5 hash caching issue. |
-| GUARDIAN-BL-ENVTEST-FAIL | guardian | CLOSED 2026-04-20 (session/7). Three root causes fixed: RBACPolicy finalizer early-return, EPGReconciler OperatorNamespace not set in test, OIDC HTTP timeout race. All suites green. |
+| TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Prerequisite for alpha. Requires ccs-dev VMs and compiler bootstrap run for ccs-dev. |
+| CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull RBACProfile from management cluster seam-tenant-{tenantCluster} and write into ont-system on tenant cluster. Governor design session required before implementation. |
+
+### Backlog items for next session
+
+| ID | Component | Description |
+|----|-----------|-------------|
+| DAY2-OPS-MGMT | conductor, platform | CLOSED (session/phase2b). All 6 day-2 operation types validated on ccs-mgmt. Remaining gaps: node-patch needs patchSecretRef secret; pki-rotation needs proper CA talosconfig; cluster-reset not manually tested (requires reset-approved annotation). |
+| GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | Reconciler sweep to back-fill RBACProfiles for RBAC resources arriving outside rbac-intake (bootstrap apply, pre-split packs). Governor design session required. |
+| PLATFORM-BL-3-LOCALQUEUE | platform | Platform must create LocalQueue in seam-tenant for tenant clusters. Currently only management cluster gets it from compiler phase 05. |
+| CONDUCTOR-BL-CAPABILITY-WATCH | conductor | Wrapper ConductorReady gate should watch RunnerConfig status and trigger immediately on capability publication rather than 30s requeue. |
+| G-BL-SNAPSHOT-ALIAS | guardian | snapshot-management should cover ccs-mgmt. Eliminates redundant snapshot-ccs-mgmt. |
+| WRAPPER-BL-ENVTEST-GC | wrapper | TestPackInstance_OwnerRefCascade_DeletedWhenPackExecutionDeleted requires kube-controller-manager GC. Promote when cluster e2e suite is established. |
+| WRAPPER-BL-PACKINSTANCE-WATCH | wrapper | PackInstance deletion triggers ClusterPack reconcile with PackExecution cascade. Verify no regression after Phase 2B. |
 
 ---
 
 ## Next Session Candidates
 
-1. TENANT-CLUSTER-E2E -- ccs-dev onboarding. Promotes all AC-2/AC-4/AC-5 e2e stubs to live.
-2. G-BL-CNPG-POOLER-AUTH -- guardian CNPG connection fix.
-3. PLATFORM-BL-TENANT-GC -- TalosCluster cascade deletion to seam-tenant namespace.
+1. **TENANT-CLUSTER-E2E** -- ccs-dev onboarding. Promotes all AC-2/AC-4/AC-5 e2e stubs to live. First step: compiler bootstrap run for ccs-dev.
+2. **TCOR-DESIGN-REVISION** -- Governor correction: TCOR is one per cluster, not per operation. Requires seam-core schema PR before any operator changes. Full design in BACKLOG.md.

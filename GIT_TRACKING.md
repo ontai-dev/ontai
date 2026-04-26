@@ -89,3 +89,8 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | a0a4c53 | session/4: C-KUEUE-WEBHOOK -- move webhook scoping to Phase 00 in enable-ccs-mgmt.sh, 1 new unit test, 3 e2e stubs |
 | platform     | 7f70533 | session/4: C-34 -- TalosClusterSpec.CAPI changed to *CAPIConfig, CAPIEnabled() helper, deepcopy + controller + test fixes |
 | conductor    | f7c66ad | session/4: C-34 -- remove explicit CAPIConfig{Enabled:false} from management cluster builders, regression test |
+| seam-core    | 91aacd8 | session/14: gate 5 conditions (WrapperRunnerRBACNotReady), TalosCluster Ready printcolumn, CRD update |
+| seam-core    | d6339de | session/14: fix Dockerfile COPY path for seam-core build |
+| conductor    | faf8e72 | session/14: T-2B-9 conductor -- delete old-GVK CRD YAMLs, migrate all dynamic GVR constants to infrastructure.ontai.dev, update all test files; gate 5 SAR RBACChecker hook; all unit tests pass |
+| wrapper      | 2807054 | session/14: T-2B-9 wrapper -- delete infra.ontai.dev CRD YAMLs, migrate reconcilers/tests to infrastructure.ontai.dev; gate 5 rbacAllowedStub, newJob ownerRef fix; all unit tests pass |
+| ontai root   | 67e16c7 | session/14: lab bake patches -- DSNS_SERVICE_IP, dsns LB-IPAM, signing key rotation, wrapper-runner-cluster-scoped ClusterRole; ontai-schema to 9b65995 |

@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: leader-election
     app.kubernetes.io/name: conductor
     ontai.dev/managed-by: compiler
-  name: conductor-ccs-mgmt
+  name: conductor-management
   namespace: ont-system
 spec: {}
 ---

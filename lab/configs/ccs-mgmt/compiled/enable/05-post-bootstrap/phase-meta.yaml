@@ -3,7 +3,7 @@
 ---
 apiVersion: v1
 data:
-  applyOrder: dsns-zone-configmap.yaml,coredns-deployment-patch.yaml,dsns-loadbalancer.yaml,leaderelection.yaml,pack-deploy-queue.yaml,wrapper-runner.yaml
+  applyOrder: dsns-zone-configmap.yaml,coredns-deployment-patch.yaml,dsns-loadbalancer.yaml,leaderelection.yaml
   order: "5"
   phase: post-bootstrap
   readinessGate: No further readiness gate. The management cluster is fully operational

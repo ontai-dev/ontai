@@ -3,7 +3,7 @@
 ---
 apiVersion: v1
 data:
-  applyOrder: platform-wrapper-crds.yaml,platform-wrapper-rbac.yaml,platform-wrapper-rbacprofiles.yaml,platform-wrapper-deployments.yaml,platform-wrapper-metrics-services.yaml
+  applyOrder: platform-wrapper-crds.yaml,platform-wrapper-rbac.yaml,platform-wrapper-rbacprofiles.yaml,platform-executor-role.yaml,platform-wrapper-deployments.yaml,platform-wrapper-metrics-services.yaml
   order: "3"
   phase: platform-wrapper
   readinessGate: Wait for Platform, Wrapper, and seam-core Deployments to reach Available=True.

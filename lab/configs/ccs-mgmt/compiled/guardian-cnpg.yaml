@@ -1,0 +1,198 @@
+# guardian-cnpg.yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: guardian-selfsigned-root
+  namespace: seam-system
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: guardian-ca
+  namespace: seam-system
+spec:
+  commonName: guardian-ca
+  duration: 87600h
+  isCA: true
+  issuerRef:
+    kind: Issuer
+    name: guardian-selfsigned-root
+  privateKey:
+    algorithm: RSA
+    rotationPolicy: Never
+    size: 2048
+  renewBefore: 360h
+  secretName: guardian-ca-secret
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: guardian-ca-issuer
+  namespace: seam-system
+spec:
+  ca:
+    secretName: guardian-ca-secret
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: guardian-cnpg-conn
+  namespace: seam-system
+spec:
+  commonName: guardian
+  dnsNames:
+  - guardian.seam-system.svc.cluster.local
+  duration: 2160h
+  issuerRef:
+    kind: Issuer
+    name: guardian-ca-issuer
+  renewBefore: 180h
+  secretName: guardian-cnpg-conn-tls
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/component: database
+    app.kubernetes.io/name: guardian-db
+    ontai.dev/managed-by: compiler
+  name: guardian-db-credentials
+  namespace: seam-system
+stringData:
+  password: rlPYrtrFdjZFhcJVf-hECz1MU1HkJ2bHNGm0_2Bk9Ws
+  username: guardian
+type: Opaque
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  labels:
+    cnpg.io/reload: ""
+  name: guardian-cnpg
+  namespace: seam-system
+spec:
+  affinity:
+    podAntiAffinityType: required
+  bootstrap:
+    initdb:
+      database: guardian
+      encoding: UTF8
+      localeCType: C
+      localeCollate: C
+      owner: guardian
+      postInitApplicationSQL:
+      - |
+        CREATE SCHEMA guardian AUTHORIZATION guardian;
+        GRANT ALL PRIVILEGES ON DATABASE guardian TO guardian;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO guardian;
+        GRANT ALL ON SCHEMA public TO guardian;
+        GRANT USAGE ON SCHEMA public TO guardian;
+        GRANT CREATE ON SCHEMA public TO guardian;
+        SET search_path TO guardian;
+      secret:
+        name: guardian-db-credentials
+  certificates:
+    serverCASecret: guardian-ca-secret
+    serverTLSSecret: guardian-cnpg-conn-tls
+  description: guardian database cluster
+  enablePDB: true
+  enableSuperuserAccess: true
+  failoverDelay: 0
+  imageName: ghcr.io/cloudnative-pg/postgresql:15.1
+  instances: 2
+  logLevel: info
+  managed:
+    roles:
+    - comment: user for guardian application
+      connectionLimit: -1
+      ensure: present
+      inherit: true
+      login: true
+      name: guardian
+      passwordSecret:
+        name: guardian-db-app
+      superuser: false
+  maxSyncReplicas: 0
+  minSyncReplicas: 0
+  monitoring:
+    customQueriesConfigMap:
+    - key: queries
+      name: cnpg-default-monitoring
+    disableDefaultQueries: false
+    enablePodMonitor: true
+  postgresGID: 26
+  postgresUID: 26
+  postgresql:
+    parameters:
+      archive_mode: "on"
+      archive_timeout: 5min
+      checkpoint_completion_target: "0.9"
+      default_statistics_target: "100"
+      dynamic_shared_memory_type: posix
+      effective_cache_size: 768MB
+      effective_io_concurrency: "200"
+      full_page_writes: "on"
+      huge_pages: "off"
+      log_destination: csvlog
+      log_directory: /controller/log
+      log_filename: postgres
+      log_rotation_age: "0"
+      log_rotation_size: "0"
+      log_truncate_on_rotation: "false"
+      logging_collector: "on"
+      maintenance_work_mem: 64MB
+      max_connections: "200"
+      max_parallel_workers: "32"
+      max_replication_slots: "32"
+      max_wal_size: 4GB
+      max_worker_processes: "32"
+      min_wal_size: 1GB
+      random_page_cost: "1.1"
+      shared_buffers: 256MB
+      shared_memory_type: mmap
+      shared_preload_libraries: ""
+      password_encryption: md5
+      ssl_max_protocol_version: TLSv1.3
+      ssl_min_protocol_version: TLSv1.3
+      wal_buffers: 7865kB
+      wal_keep_size: 512MB
+      wal_level: logical
+      wal_log_hints: "on"
+      wal_receiver_timeout: 5s
+      wal_sender_timeout: 5s
+      work_mem: 655kB
+    pg_hba:
+    - hostssl all all 10.96.0.0/12 md5
+    - hostssl all all 10.244.0.0/16 md5
+    - hostssl all all 127.0.0.1/32 md5
+    - host all all all reject
+    syncReplicaElectionConstraint:
+      enabled: false
+  primaryUpdateMethod: restart
+  primaryUpdateStrategy: unsupervised
+  probes:
+    liveness:
+      isolationCheck:
+        connectionTimeout: 1000
+        enabled: true
+        requestTimeout: 1000
+  replicationSlots:
+    highAvailability:
+      enabled: true
+      slotPrefix: _cnpg_
+    synchronizeReplicas:
+      enabled: true
+    updateInterval: 30
+  resources: {}
+  smartShutdownTimeout: 180
+  startDelay: 30
+  stopDelay: 100
+  storage:
+    resizeInUseVolumes: true
+    size: 10Gi
+    storageClass: local-path
+  superuserSecret:
+    name: pg-superuser
+  switchoverDelay: 3600
