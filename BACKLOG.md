@@ -1,6 +1,6 @@
 # ONT Platform: Backlog
 
-**Last updated:** April 26, 2026 (session/15 round 2 closures)
+**Last updated:** April 26, 2026 (session/15 round 5 closures)
 
 ---
 
@@ -8,7 +8,7 @@
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Required for alpha. Phase B script ready. Promotes all AC-2, AC-4, AC-5 e2e stubs to live. |
+| TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Required for alpha. Phase B script ready. Promotes all AC-2, AC-4, AC-5 e2e stubs to live. T-19 (platform state machine) and T-19a (guardian conductor-tenant profile) implemented in PRs #17 and #18 -- onboarding will no longer stall at ConductorPending. CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION (conductor pull loop) still required for full handshake but not a stall condition. |
 | TCOR-SIZE-BOUND | conductor, platform | TCOR Operations map grows unbounded within a talosVersion epoch. At 500 bytes/entry, 3000 entries reach etcd 1.5MB limit. Mitigation: add mid-epoch flush in AppendOperationRecord when len(operations) >= 1000 (dump to GraphQuery without bumping revision). Blocked on CONDUCTOR-BL-GRAPHQUERY-ARCHIVE. Low risk for production (typical epochs see <100 operations). |
 | TCOR-GRAPHQUERY-LINK | seam-core, GraphQuery | No explicit FK between PackOperationResult and TCOR across revisions. Implicit join key: clusterRef + talosVersion + revision. When GraphQuery archival is implemented, add graphQueryRevisionRef field to TCOR and POR to make the linkage explicit. Blocked on GraphQuery DB implementation. |
 

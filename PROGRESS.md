@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** April 26, 2026
+**Last updated:** April 26, 2026 (session/15 round 5 closures)
 
-**Current state:** Phase 2B complete. Three-layer RBAC hierarchy locked (CS-INV-008). TCOR per-cluster accumulator implemented (TCOR-DESIGN-REVISION closed). Management cluster RBAC audit complete -- all operator pods Running clean. Next gate: TENANT-CLUSTER-E2E (ccs-dev onboarding, awaiting Governor).
+**Current state:** Phase 2B complete. Three-layer RBAC hierarchy locked (CS-INV-008). T-19 and T-19a implemented -- platform drives full conductor state machine for tenant import; guardian provisions conductor-tenant RBACProfile. PRs platform #17 and guardian #18 open. Next gate: TENANT-CLUSTER-E2E (ccs-dev onboarding, awaiting Governor).
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -89,14 +89,23 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 
 ---
 
+## Session/15 Round 5 Closures (2026-04-26)
+
+| Item | Resolution | Reference |
+|------|-----------|-----------|
+| T-19 (platform import conductor state machine) | `EnsureConductorDeploymentOnTargetCluster` extended for import mode (reads `target-cluster-kubeconfig`, creates `ont-system` + conductor SA before Deployment). `reconcileDirectBootstrap` tenant path sets Bootstrapped=True then gates Ready on ConductorReady. Management import unchanged. `transitionToReady` no longer sets Origin; each path sets it explicitly. 4 new unit tests. | platform PR #17 |
+| T-19a (guardian conductor-tenant RBACProfile) | `ClusterRBACPolicyReconciler.reconcileCreate` creates `conductor-tenant` RBACProfile in `seam-tenant-{cluster}` for role=tenant TalosClusters. `reconcileDelete` explicitly deletes it. `LabelValuePolicyTypeSeamOperator` added; backfill sweep ignores it. `guardian-schema.md §20` added (full handshake protocol). 3 new unit tests. | guardian PR #18 |
+
+---
+
 ## Open Work
 
 ### Blocking Alpha
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| TENANT-CLUSTER-E2E | all | ccs-dev onboarding. Phase B script ready. Promotes all AC-2, AC-4, AC-5 e2e stubs to live. Awaiting Governor. |
-| CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull RBACProfile from management cluster and write into ont-system on tenant cluster. Governor design session required. |
+| TENANT-CLUSTER-E2E | all | ccs-dev onboarding. Phase B script ready. Promotes all AC-2, AC-4, AC-5 e2e stubs to live. T-19 and T-19a now implemented. Awaiting Governor. |
+| CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull conductor-tenant RBACProfile from seam-tenant-{cluster} on management cluster and write it into ont-system on the tenant cluster. Guardian side complete (PR #18 pending). Conductor pull loop not yet implemented. |
 
 ### Next Session
 
@@ -104,7 +113,6 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 |----|-----------|-------------|
 | GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | Add RBACProfile validation webhook; route seam-operator label profiles through management-maximum validation. |
 | GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | No reconciler back-fills RBACProfiles for RBAC arriving outside rbac-intake. Governor design session required. |
-| PLATFORM-BL-3-LOCALQUEUE | platform | Platform must create LocalQueue in seam-tenant for tenant clusters. Only management cluster gets it today. |
 | CONDUCTOR-BL-CAPABILITY-WATCH | conductor | ConductorReady gate polls RunnerConfig on 30s requeue. Should watch RunnerConfig status and trigger immediately on capability publication. |
 
 ---
