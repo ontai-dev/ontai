@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** April 26, 2026 (session/15 round 5 closures)
+**Last updated:** April 26, 2026 (session/15 import-wiring)
 
-**Current state:** Phase 2B complete. Three-layer RBAC hierarchy locked (CS-INV-008). T-19 and T-19a implemented -- platform drives full conductor state machine for tenant import; guardian provisions conductor-tenant RBACProfile. PRs platform #17 and guardian #18 open. Next gate: TENANT-CLUSTER-E2E (ccs-dev onboarding, awaiting Governor).
+**Current state:** Phase 2B complete. Three-layer RBAC hierarchy locked (CS-INV-008). T-19 and T-19a implemented -- platform drives full conductor state machine for tenant import; guardian provisions conductor-tenant RBACProfile. PRs platform #17 and guardian #18 open. Import/bootstrap mode architecture corrected (session/15-import-wiring): compiler no longer emits seam-tenant namespace; Platform creates it on CR admission (CP-INV-004). Next gate: TENANT-CLUSTER-E2E (ccs-dev onboarding, awaiting Governor).
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -95,6 +95,19 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 |------|-----------|-----------|
 | T-19 (platform import conductor state machine) | `EnsureConductorDeploymentOnTargetCluster` extended for import mode (reads `target-cluster-kubeconfig`, creates `ont-system` + conductor SA before Deployment). `reconcileDirectBootstrap` tenant path sets Bootstrapped=True then gates Ready on ConductorReady. Management import unchanged. `transitionToReady` no longer sets Origin; each path sets it explicitly. 4 new unit tests. | platform PR #17 |
 | T-19a (guardian conductor-tenant RBACProfile) | `ClusterRBACPolicyReconciler.reconcileCreate` creates `conductor-tenant` RBACProfile in `seam-tenant-{cluster}` for role=tenant TalosClusters. `reconcileDelete` explicitly deletes it. `LabelValuePolicyTypeSeamOperator` added; backfill sweep ignores it. `guardian-schema.md §20` added (full handshake protocol). 3 new unit tests. | guardian PR #18 |
+
+---
+
+## Session/15 Import-Wiring Closures (2026-04-26)
+
+| Item | Resolution | Reference |
+|------|-----------|-----------|
+| CP-INV-004 wiring (namespace creation authority) | Compiler no longer emits seam-tenant namespace manifest for any mode. `writeSeamTenantNamespaceManifest` function removed from compile.go. `compileBootstrap` importExistingCluster block and `compileImportTalosconfigSecret` both updated. platform-schema.md §9 rewritten to document mode-specific machineconfig/namespace provisioning. | conductor session/15-import-wiring |
+| Import circular dependency fix (namespace before kubeconfig) | `reconcileDirectBootstrap` in taloscluster_controller.go now calls `ensureTenantNamespace` for role=tenant BEFORE `ensureKubeconfigSecret`. Eliminates chicken-and-egg: talosconfig Secret lives in seam-tenant-{cluster}; namespace must exist before the Secret is read. | platform session/15-import-wiring |
+| Bootstrap-sequence step descriptions updated | writeBootstrapSequence mode=import step descriptions now document that Secrets live in seam-tenant-{cluster}, that CP-INV-004 governs namespace creation, and that role=tenant clusters must apply TalosCluster CR before the talosconfig Secret. | conductor session/15-import-wiring |
+| Compiler tests updated | TestBootstrap_ImportMode_EmitsSeamTenantNamespaceManifest replaced by TestBootstrap_ImportMode_DoesNotEmitSeamTenantNamespaceManifest. TestBootstrap_ImportMode_NamespaceNameIsSeamTenantNotTenant removed. TestBootstrap_ImportExistingCluster_LocalFilePath namespace-file assertion inverted. All 12 compiler tests pass. | conductor session/15-import-wiring |
+| Platform unit tests verified | All platform unit tests pass after namespace ordering change (T-19 import tests: TestTenantImport_ConductorPending, TestTenantImport_ConductorReady, TestTalosClusterReconcile_TenantImport_CreatesLocalQueue). | platform session/15-import-wiring |
+| BACKLOG updated | PLATFORM-BL-MACHINECONFIG-IMPORT-CAPTURE added. PLATFORM-BL-HARDENINGPROFILE-MERGE updated to note it also blocks bootstrap machineconfig generation from spec. | BACKLOG.md |
 
 ---
 

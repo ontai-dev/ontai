@@ -1,6 +1,6 @@
 # ONT Platform: Backlog
 
-**Last updated:** April 26, 2026 (session/15 round 5 closures)
+**Last updated:** April 26, 2026 (session/15 import-wiring)
 
 ---
 
@@ -36,7 +36,8 @@
 | G-BL-SNAPSHOT-ALIAS | guardian | snapshot-management PermissionSnapshot should cover ccs-mgmt. Eliminates redundant snapshot-ccs-mgmt. |
 | G-BL-IDP-POLLING | guardian | IdentityProviderReconciler must poll OIDC provider for group membership changes and record identitybinding.drift_detected. Requires Keycloak or Dex in lab. |
 | G-BL-SELF-AUDIT-MISSING | guardian | rbac.would_deny audit event absent. rbacprofile.provisioned and lineageIndexRef on governed-object events are wired. rbac.would_deny requires investigation of the deny path in the admission webhook handler. |
-| PLATFORM-BL-HARDENINGPROFILE-MERGE | platform | HardeningProfileRef field absent from TalosClusterSpec. TalosConfigTemplate cannot merge HardeningProfile patches at runtime. Decision 11: schema PR to ontai-schema required before implementation. Governor session needed. |
+| PLATFORM-BL-HARDENINGPROFILE-MERGE | platform | HardeningProfileRef field absent from TalosClusterSpec. TalosConfigTemplate cannot merge HardeningProfile patches at runtime. Decision 11: schema PR to ontai-schema required before implementation. Governor session needed. Also blocks mode=bootstrap machineconfig generation from spec: InfrastructureTalosClusterSpec lacks per-node topology fields (hostnames, roles, installerImage, installDisk). |
+| PLATFORM-BL-MACHINECONFIG-IMPORT-CAPTURE | platform | For mode=import clusters, Platform should capture machineconfigs from running nodes via Talos COSI API GetMachineConfig and write them as seam-mc-{cluster}-{hostname} Secrets in seam-tenant-{cluster}. Requires: node discovery from target kubeconfig, talos goclient per-node call (CP-INV-001 extension for taloscluster_import_helpers.go), new ensureMachineConfigSecrets function. Deferred from session/15-import-wiring (April 2026). |
 | SEAM-CORE-BL-DESCENDANT-LABELS | guardian | PermissionSnapshot lineage wiring deferred by design (no single root RBACPolicy per snapshot). If architectural question resolves, PermissionSnapshot must call SetDescendantLabels. Track until Governor rules. |
 | WRAPPER-BL-ENVTEST-GC | wrapper | TestPackInstance_OwnerRefCascade_DeletedWhenPackExecutionDeleted requires kube-controller-manager GC. envtest does not start GC controller. Promote to live cluster e2e when TENANT-CLUSTER-E2E is established. |
 
