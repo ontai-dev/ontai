@@ -30,6 +30,7 @@
 
 | ID | Component | Description |
 |----|-----------|-------------|
+| GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | No admission webhook intercepts RBACProfile admission on any cluster. RBACProfile is absent from guardian webhook InterceptedKinds. The seam-operator label (ontai.dev/rbac-profile-type=seam-operator) is intended to discriminate seam operator profiles from component profiles, but no webhook routing implements this today. Fix: add a RBACProfile validation webhook that (a) checks the label, (b) routes seam-operator profiles through management-maximum validation, (c) routes all others through cluster-policy. Documented in guardian-schema.md §20 validation bypass note. |
 | GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | No reconciler creates RBACProfiles for RBAC resources arriving outside /rbac-intake/pack (bootstrap apply, kubectl apply, pre-split packs). Sweep must detect governed RBAC with no corresponding RBACProfile and back-fill it. Design question: same PermissionSet/RBACPolicy/RBACProfile path as rbac-intake, or lightweight annotation-only path. Governor session required. |
 | WRAPPER-BL-ILI-DECLARING-PRINCIPAL | guardian, wrapper | MutatingWebhookConfiguration for declaring-principal handler added to compiler enable bundle (session/13-clusterpack-apply-fixes WS5). Needs cluster apply and verification against live admission webhook. |
 | PLATFORM-BL-STATUS-PATCH-CONFLICT | platform | TalosClusterReconciler status patch conflicts under 2-replica deployment. Needs RetryOnConflict. |

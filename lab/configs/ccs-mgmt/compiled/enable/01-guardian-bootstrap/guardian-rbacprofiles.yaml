@@ -24,3 +24,4 @@ spec:
   rbacPolicyRef: management-policy
   targetClusters:
   - management
+  - ccs-mgmt

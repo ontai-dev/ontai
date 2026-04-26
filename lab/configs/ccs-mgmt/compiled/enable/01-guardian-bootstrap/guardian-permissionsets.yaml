@@ -286,18 +286,6 @@ spec:
     - create
     - delete
   - apiGroups:
-    - infrastructure.ontai.dev
-    resources:
-    - infrastructuretalosclusteroperationresults
-    verbs:
-    - get
-    - list
-    - watch
-    - create
-    - update
-    - patch
-    - delete
-  - apiGroups:
     - batch
     resources:
     - jobs
@@ -520,6 +508,14 @@ spec:
     - update
     - patch
     - delete
+  - apiGroups:
+    - infrastructure.ontai.dev
+    resources:
+    - infrastructuretalosclusters/status
+    verbs:
+    - get
+    - update
+    - patch
   - apiGroups:
     - security.ontai.dev
     resources:

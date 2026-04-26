@@ -20,6 +20,7 @@ spec:
   template:
     metadata:
       annotations:
+        platform.ontai.dev/cluster-ref: ccs-mgmt
         platform.ontai.dev/role: management
       labels:
         app.kubernetes.io/component: operator
