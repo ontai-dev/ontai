@@ -2,10 +2,10 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main                                        | b732390     | active (tracking)         |
-| conductor    | main                                        | 26da3fb     | PR #27 merged             |
+| ontai        | main                                        | 770072d     | active (tracking)         |
+| conductor    | session/15-capability-tests                 | 0d51de3     | import-wiring complete    |
 | guardian     | main                                        | 112f99e     | PR #18 merged             |
-| platform     | main                                        | 887a7e9     | PR #17 merged             |
+| platform     | session/15-t19-import-conductor             | 2a5e096     | import-wiring complete    |
 | wrapper      | main                                        | a1b0743     | PR #15 merged             |
 | seam-core    | main                                        | c78d8b2     | active                    |
 | domain-core  | main                                        | f01ca65     | active                    |
@@ -94,3 +94,6 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | faf8e72 | session/14: T-2B-9 conductor -- delete old-GVK CRD YAMLs, migrate all dynamic GVR constants to infrastructure.ontai.dev, update all test files; gate 5 SAR RBACChecker hook; all unit tests pass |
 | wrapper      | 2807054 | session/14: T-2B-9 wrapper -- delete infra.ontai.dev CRD YAMLs, migrate reconcilers/tests to infrastructure.ontai.dev; gate 5 rbacAllowedStub, newJob ownerRef fix; all unit tests pass |
 | ontai root   | 67e16c7 | session/14: lab bake patches -- DSNS_SERVICE_IP, dsns LB-IPAM, signing key rotation, wrapper-runner-cluster-scoped ClusterRole; ontai-schema to 9b65995 |
+| conductor    | 0d51de3 | compiler: remove namespace emission from import paths (CP-INV-004) |
+| platform     | 2a5e096 | platform: fix import path namespace ordering and document machineconfig model |
+| ontai root   | 770072d | root: add PLATFORM-BL-MACHINECONFIG-IMPORT-CAPTURE, update PROGRESS.md |
