@@ -11,12 +11,12 @@ machine:
     interfaces:
       - interface: enp1s0
         addresses:
-          - 10.20.0.2/24
+          - 10.20.0.11/24
         routes:
           - network: 0.0.0.0/0
             gateway: 10.20.0.1
         vip:
-          ip: 10.20.0.10
+          ip: 10.20.0.20
   kernel:
     modules:
       - name: br_netfilter
