@@ -96,6 +96,13 @@ spec:
     - create
     - patch
   - apiGroups:
+    - events.k8s.io
+    resources:
+    - events
+    verbs:
+    - create
+    - patch
+  - apiGroups:
     - ""
     resources:
     - configmaps
@@ -213,6 +220,13 @@ spec:
     - watch
   - apiGroups:
     - ""
+    resources:
+    - events
+    verbs:
+    - create
+    - patch
+  - apiGroups:
+    - events.k8s.io
     resources:
     - events
     verbs:
@@ -385,6 +399,25 @@ spec:
     - watch
     - create
   - apiGroups:
+    - ""
+    resources:
+    - serviceaccounts
+    verbs:
+    - get
+    - list
+    - watch
+    - create
+    - update
+    - patch
+    - delete
+  - apiGroups:
+    - events.k8s.io
+    resources:
+    - events
+    verbs:
+    - create
+    - patch
+  - apiGroups:
     - coordination.k8s.io
     resources:
     - leases
@@ -460,6 +493,25 @@ spec:
     verbs:
     - create
     - patch
+  - apiGroups:
+    - events.k8s.io
+    resources:
+    - events
+    verbs:
+    - create
+    - patch
+  - apiGroups:
+    - ""
+    resources:
+    - configmaps
+    verbs:
+    - get
+    - list
+    - watch
+    - create
+    - update
+    - patch
+    - delete
   - apiGroups:
     - coordination.k8s.io
     resources:
@@ -558,6 +610,13 @@ spec:
     - watch
   - apiGroups:
     - ""
+    resources:
+    - events
+    verbs:
+    - create
+    - patch
+  - apiGroups:
+    - events.k8s.io
     resources:
     - events
     verbs:
