@@ -25,7 +25,7 @@ machine:
                 - network: 0.0.0.0/0
                   gateway: 10.20.0.1
               vip:
-                ip: 10.20.0.10
+                ip: 10.20.0.20
         nameservers:
             - 8.8.4.4
             - 8.8.8.8
