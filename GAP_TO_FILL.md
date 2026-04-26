@@ -482,20 +482,26 @@ This task has no TENANT-CLUSTER-E2E dependency. It is an independent guardian fe
 - Blocked on: design session (short -- webhook routing logic is well-defined). May proceed in a near-term session.
 - Repo: guardian.
 
-**T-25b -- GUARDIAN-BL-RBACPROFILE-SWEEP: verify T-04b coverage (guardian)**
+**T-25b -- GUARDIAN-BL-RBACPROFILE-SWEEP: T-04b gap analysis (RESOLVED 2026-04-26)**
 
-T-04b (COMPLETE 2026-04-24, guardian PR #14) implemented `RBACProfileBackfillRunnable` which scans seam-tenant-* namespaces and calls `EnsurePackRBACProfileCRs` for PermissionSets with missing RBACProfiles.
+Verification completed. T-04b does NOT fully cover GUARDIAN-BL-RBACPROFILE-SWEEP.
 
-Gap check required: T-04b covers the case where a PermissionSet exists but the corresponding RBACProfile is absent. The GUARDIAN-BL-RBACPROFILE-SWEEP backlog item also describes RBAC resources arriving outside /rbac-intake/pack (bootstrap apply, kubectl apply, pre-split packs) with no corresponding RBACProfile at all.
+What T-04b covers (`rbacprofile_backfill.go` `RunOnce`):
+- Lists component-labeled RBACProfiles in each seam-tenant-* namespace
+- For any profile that has `provisioned=false`, calls `EnsurePackRBACProfileCRs` to retry the write
+- This handles: transient write failures at /rbac-intake/pack time, guardian restarts mid-intake
 
-Verification steps:
-1. Confirm `EnsurePackRBACProfileCRs` handles the case where a PermissionSet exists with no corresponding RBACProfile (the T-04b path) -- covered.
-2. Determine whether the sweep also handles raw RBAC objects (ClusterRole, ClusterRoleBinding) that exist in seam-tenant-* with no PermissionSet ancestor -- this was the secondary concern in the backlog item. If T-04b's runnable does not detect this case, a separate sweep reconciler is needed.
-3. If step 2 confirms T-04b is sufficient: close GUARDIAN-BL-RBACPROFILE-SWEEP in BACKLOG.md and record the resolution.
-4. If step 2 finds a gap: design a supplementary path and open a new task.
+What T-04b does NOT cover:
+- Raw RBAC objects (ClusterRole, ClusterRoleBinding) in seam-tenant-* with no corresponding RBACProfile at all
+- The runnable only iterates over existing RBACProfile objects -- if no profile exists, it is invisible to the sweep
+- RBAC arriving via kubectl apply, bootstrap apply before guardian was live, or pre-split packs produces no RBACProfile; the backfill will never detect the gap
 
-This is a verification task, not an implementation task. It requires reading `EnsurePackRBACProfileCRs` in `webhook/rbac_intake.go` and its callers.
-- No blocking conditions. Assign to next guardian session.
+The original GUARDIAN-BL-RBACPROFILE-SWEEP description ("RBAC resources arriving outside /rbac-intake/pack with no corresponding RBACProfile") maps to the second bullet -- not covered.
+
+Resolution: GUARDIAN-BL-RBACPROFILE-SWEEP remains open. A new sweep capability is needed: a reconciler or runnable that lists ClusterRoles/ClusterRoleBindings in seam-tenant-* namespaces, checks for an ontai.dev/rbac-intake label, and for any labeled RBAC object with no corresponding RBACProfile, creates one via the /rbac-intake/pack path. Design question: label-based detection vs. full ClusterRole list scan. Governor session required before implementation.
+
+Updated BACKLOG.md GUARDIAN-BL-RBACPROFILE-SWEEP entry to reflect the confirmed gap.
+- No blocking conditions for the design session.
 - Repo: guardian.
 
 ### Phase 6 -- Day2 Operations. Blocked on TENANT-CLUSTER-E2E and CAPI-PATH-VERIFICATION
