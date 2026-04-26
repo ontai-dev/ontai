@@ -18,7 +18,7 @@ metadata:
 spec:
   domainIdentityRef: platform
   permissionDeclarations:
-  - permissionSetRef: platform-permissions
+  - permissionSetRef: management-maximum
     scope: cluster
   principalRef: system:serviceaccount:seam-system:platform
   rbacPolicyRef: management-policy
@@ -41,7 +41,7 @@ metadata:
 spec:
   domainIdentityRef: wrapper
   permissionDeclarations:
-  - permissionSetRef: wrapper-permissions
+  - permissionSetRef: management-maximum
     scope: cluster
   principalRef: system:serviceaccount:seam-system:wrapper
   rbacPolicyRef: management-policy
@@ -64,7 +64,7 @@ metadata:
 spec:
   domainIdentityRef: seam-core
   permissionDeclarations:
-  - permissionSetRef: seam-core-permissions
+  - permissionSetRef: management-maximum
     scope: cluster
   principalRef: system:serviceaccount:seam-system:seam-core
   rbacPolicyRef: management-policy

@@ -18,7 +18,7 @@ metadata:
 spec:
   domainIdentityRef: guardian
   permissionDeclarations:
-  - permissionSetRef: guardian-permissions
+  - permissionSetRef: management-maximum
     scope: cluster
   principalRef: system:serviceaccount:seam-system:guardian
   rbacPolicyRef: management-policy
