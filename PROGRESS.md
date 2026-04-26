@@ -79,6 +79,16 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 
 ---
 
+## Session/15 Round 2 Closures (2026-04-26)
+
+| Item | Resolution | Reference |
+|------|-----------|-----------|
+| WRAPPER-BL-PACKINSTANCE-WATCH | Phase 2B GVK confirmed correct (InfrastructurePackInstance). MapPackInstanceToClusterPack exported; 4 unit tests added covering cascade delete and namespace guard. | wrapper session/15-wrapper-fixes commit 480fb19 |
+| WRAPPER-BL-PACKINSTANCE-VERSION-DOUBLE-V | Verified post-Phase 2B: version comes directly from ClusterPackRef.Version with no extra prefix. Existing test covers. Closed without code change. | packinstance_reconciler.go line 154 |
+| PLATFORM-BL-STATUS-PATCH-CONFLICT | RetryOnConflict already implemented in taloscluster_controller.go deferred status patch (line 112, PLATFORM-BL-STATUS-PATCH-CONFLICT comment). Closed without code change. | taloscluster_controller.go line 107-130 |
+
+---
+
 ## Open Work
 
 ### Blocking Alpha
@@ -96,11 +106,9 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 | GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | No reconciler back-fills RBACProfiles for RBAC arriving outside rbac-intake. Governor design session required. |
 | PLATFORM-BL-3-LOCALQUEUE | platform | Platform must create LocalQueue in seam-tenant for tenant clusters. Only management cluster gets it today. |
 | CONDUCTOR-BL-CAPABILITY-WATCH | conductor | ConductorReady gate polls RunnerConfig on 30s requeue. Should watch RunnerConfig status and trigger immediately on capability publication. |
-| WRAPPER-BL-PACKINSTANCE-WATCH | wrapper | Verify PackInstance deletion still triggers ClusterPack reconcile with PackExecution cascade after Phase 2B GVK changes. |
 
 ---
 
 ## Next Session Candidates
 
 1. **TENANT-CLUSTER-E2E** -- ccs-dev onboarding (awaiting Governor acknowledgement).
-2. **COMPILER-BL-PERMISSIONSET-DEFECT** -- collapse per-operator PermissionSets to management-maximum reference in RBACProfile; regenerate both cluster enable bundles after fix.

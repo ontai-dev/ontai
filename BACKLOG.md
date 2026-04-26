@@ -33,7 +33,7 @@
 | GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | No admission webhook intercepts RBACProfile admission on any cluster. RBACProfile is absent from guardian webhook InterceptedKinds. The seam-operator label (ontai.dev/rbac-profile-type=seam-operator) is intended to discriminate seam operator profiles from component profiles, but no webhook routing implements this today. Fix: add a RBACProfile validation webhook that (a) checks the label, (b) routes seam-operator profiles through management-maximum validation, (c) routes all others through cluster-policy. Documented in guardian-schema.md §20 validation bypass note. |
 | GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | No reconciler creates RBACProfiles for RBAC resources arriving outside /rbac-intake/pack (bootstrap apply, kubectl apply, pre-split packs). Sweep must detect governed RBAC with no corresponding RBACProfile and back-fill it. Design question: same PermissionSet/RBACPolicy/RBACProfile path as rbac-intake, or lightweight annotation-only path. Governor session required. |
 | WRAPPER-BL-ILI-DECLARING-PRINCIPAL | guardian, wrapper | MutatingWebhookConfiguration for declaring-principal handler added to compiler enable bundle. Needs cluster apply and verification against live admission webhook. |
-| PLATFORM-BL-STATUS-PATCH-CONFLICT | platform | TalosClusterReconciler status patch conflicts under 2-replica deployment. Needs RetryOnConflict. |
+| ~~PLATFORM-BL-STATUS-PATCH-CONFLICT~~ | platform | CLOSED 2026-04-26: RetryOnConflict already implemented in taloscluster_controller.go deferred status patch (line 112). Verified session/15. |
 | PLATFORM-BL-3-LOCALQUEUE | platform | Platform must create LocalQueue in seam-tenant for tenant clusters. Currently only management cluster gets it from compiler phase 05. |
 | CONDUCTOR-BL-CAPABILITY-WATCH | conductor | Wrapper ConductorReady gate should watch RunnerConfig status and trigger immediately when capabilities appear, rather than polling on 30s requeue. |
 | G-BL-SNAPSHOT-ALIAS | guardian | snapshot-management PermissionSnapshot should cover ccs-mgmt. Eliminates redundant snapshot-ccs-mgmt. |
@@ -42,7 +42,7 @@
 | PLATFORM-BL-HARDENINGPROFILE-MERGE | platform | HardeningProfileRef field absent from TalosClusterSpec. TalosConfigTemplate cannot merge HardeningProfile patches at runtime. Decision 11: schema PR to ontai-schema required before implementation. Governor session needed. |
 | SEAM-CORE-BL-DESCENDANT-LABELS | guardian | PermissionSnapshot lineage wiring deferred by design (no single root RBACPolicy per snapshot). If architectural question resolves, PermissionSnapshot must call SetDescendantLabels. Track until Governor rules. |
 | WRAPPER-BL-ENVTEST-GC | wrapper | TestPackInstance_OwnerRefCascade_DeletedWhenPackExecutionDeleted requires kube-controller-manager GC. envtest does not start GC controller. Promote to live cluster e2e when TENANT-CLUSTER-E2E is established. |
-| WRAPPER-BL-PACKINSTANCE-WATCH | wrapper | Verify PackInstance deletion still triggers ClusterPack reconcile with PackExecution cascade delete after Phase 2B GVK changes. |
+| ~~WRAPPER-BL-PACKINSTANCE-WATCH~~ | wrapper | CLOSED 2026-04-26: Watch uses correct Phase 2B GVK (InfrastructurePackInstance). MapPackInstanceToClusterPack exported; 4 unit tests added. wrapper PR session/15-wrapper-fixes. |
 
 ---
 
@@ -51,7 +51,7 @@
 | ID | Component | Description |
 |----|-----------|-------------|
 | CONDUCTOR-BL-EXECUTION-ORDER | conductor | Staged manifest apply confirmed implemented. Verify with multi-manifest pack test. |
-| WRAPPER-BL-PACKINSTANCE-VERSION-DOUBLE-V | wrapper | Ready condition message has vv0.1.2 double-v prefix. Verify fix from 51fd2ec still applies post Phase 2B. |
+| ~~WRAPPER-BL-PACKINSTANCE-VERSION-DOUBLE-V~~ | wrapper | CLOSED 2026-04-26: Verified post-Phase 2B -- version passed directly from ClusterPackRef.Version with no extra prefix. Existing test covers this. |
 
 ---
 
