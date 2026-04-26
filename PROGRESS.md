@@ -69,6 +69,45 @@ conductor `SplitManifests` returns three slices (rbac, clusterScoped, workload).
 - `conductor-signing-key.yaml`: Ed25519 signing key rotated.
 - seam-core lab additions: WrapperRunnerRBACNotReady condition, Ready printcolumn on InfrastructureTalosCluster, Dockerfile COPY path fix.
 
+### session/14-third-party-profiles (guardian -- in progress)
+
+**Guardian crash root cause (CLOSED 2026-04-26):**
+- `ClusterRBACPolicyReconciler` (PR #15) watches InfrastructureTalosCluster and SeamMembership.
+  The compiled guardian-manager-role ClusterRole granted only `get` on infrastructurerunnerconfigs.
+  Missing: list/watch on infrastructuretalosclusters and list/watch/create/update/delete on
+  seammemberships. API server returned 403 causing informer cache sync timeouts. `mgr.Start()` failed.
+- Fix: added two PolicyRule blocks to `operatorClusterRules("guardian")` in compile_enable.go.
+  Regenerated guardian-rbac.yaml for both ccs-mgmt and ccs-dev. conductor PR #25.
+- Apply fix: `kubectl apply --server-side -f lab/configs/ccs-mgmt/compiled/enable/01-guardian-bootstrap/guardian-rbac.yaml`
+
+**Three-layer RBAC hierarchy locked (CLOSED 2026-04-26):**
+- guardian-schema.md §19 completely replaced with authoritative structural specification.
+  Exactly two canonical PermissionSet names: management-maximum (Layer 1) and cluster-maximum (Layer 2).
+  No per-operator and no per-component PermissionSets. Seam operator profiles reference management-maximum.
+  Component profiles reference cluster-maximum. CS-INV-009: cluster-policy validation at creation time only.
+  IdentityProvider chain formally documented. Management cluster dual-layer case documented.
+- guardian/CLAUDE.md CS-INV-008 and CS-INV-009 updated. guardian commit 0fc7333.
+- **Known defect (OPEN):** compiler writeBootstrapPermissionSets still generates per-operator PermissionSets.
+  buildOperatorRBACProfile still emits permissionSetRef: {op.Name}-permissions instead of management-maximum.
+  Named in amendment log. Follow-up compiler fix session required before any enable bundle regeneration.
+
+**§20 Import-Mode Tenant Cluster Onboarding (CLOSED 2026-04-26):**
+- guardian-schema.md §20 added: complete sequencing for import-mode cluster admission.
+  Covers compiler output (InfrastructureTalosCluster CR only), guardian Layer 2 creation,
+  Platform two-site orchestration, conductor RBACProfile as Seam operator profile
+  (rbacPolicyRef: management-policy, permissionSetRef: management-maximum in ont-system),
+  gRPC handshake protocol, PermissionSnapshot delivery/verification, and severance sequence.
+- platform-schema.md §12 extended with import-mode specifics. platform branch session/14-import-mode-docs.
+- conductor-schema.md §15 extended with tenant gRPC handshake sequence. conductor commit 284c051.
+- guardian commit 9e12e02 pushed on session/14-third-party-profiles.
+
+**Lab 3-node CP-only invariant (CLOSED 2026-04-26):**
+- lab/CLAUDE.md updated (gitignored, on disk only):
+  - LAB-INV-001 added: both clusters are 3-node CP-only, no worker nodes.
+  - Cluster registry IP ranges corrected: ccs-mgmt 10.20.0.2-4, ccs-dev 10.20.0.11-13.
+  - ccs-dev VIP corrected from 10.20.0.15 to 10.20.0.20 (matches machineconfig).
+  - Worker MAC table rows removed for ccs-mgmt-w1/w2 and ccs-dev-w1/w2.
+
 ### session/14-bake-lab-patches (conductor -- in progress)
 
 **conductor-execute image split (CLOSED 2026-04-26):**
