@@ -21,7 +21,6 @@ spec:
   - permissionSetRef: guardian-permissions
     scope: cluster
   principalRef: system:serviceaccount:seam-system:guardian
-  rbacPolicyRef: seam-platform-rbac-policy
+  rbacPolicyRef: management-policy
   targetClusters:
   - management
-  - ccs-mgmt

@@ -21,10 +21,9 @@ spec:
   - permissionSetRef: platform-permissions
     scope: cluster
   principalRef: system:serviceaccount:seam-system:platform
-  rbacPolicyRef: seam-platform-rbac-policy
+  rbacPolicyRef: management-policy
   targetClusters:
   - management
-  - ccs-dev
 ---
 apiVersion: security.ontai.dev/v1alpha1
 kind: RBACProfile
@@ -44,10 +43,9 @@ spec:
   - permissionSetRef: wrapper-permissions
     scope: cluster
   principalRef: system:serviceaccount:seam-system:wrapper
-  rbacPolicyRef: seam-platform-rbac-policy
+  rbacPolicyRef: management-policy
   targetClusters:
   - management
-  - ccs-dev
 ---
 apiVersion: security.ontai.dev/v1alpha1
 kind: RBACProfile
@@ -67,7 +65,6 @@ spec:
   - permissionSetRef: seam-core-permissions
     scope: cluster
   principalRef: system:serviceaccount:seam-system:seam-core
-  rbacPolicyRef: seam-platform-rbac-policy
+  rbacPolicyRef: management-policy
   targetClusters:
   - management
-  - ccs-dev

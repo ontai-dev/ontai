@@ -9,15 +9,15 @@
 Seam: open-source, domain-driven Kubernetes management platform on ONT philosophy.
 Seed principle: every component added must make the platform more capable of growing, never harder to govern.
 
-| Component   | Repository  | API Group                | Role                                                     |
-|-------------|-------------|--------------------------|----------------------------------------------------------|
-| Platform    | platform    | platform.ontai.dev       | Cluster and tenant lifecycle                             |
-| Wrapper     | wrapper     | infra.ontai.dev          | Pack compile and delivery                                |
-| Guardian    | guardian    | security.ontai.dev       | RBAC plane, all clusters                                 |
-| Compiler    | conductor   | runner.ontai.dev         | Compile-time intelligence, debian-slim                   |
-| Conductor   | conductor   | runner.ontai.dev         | Runtime intelligence, execute=debian-slim agent=distroless |
-| Seam Core   | seam-core   | infrastructure.ontai.dev | Cross-operator CRD definitions, declared                 |
-| Domain Core | domain-core | core.ontai.dev           | Domain primitive declarations, no controller             |
+| Component   | Repository  | API Group                              | Role                                                     |
+|-------------|-------------|----------------------------------------|----------------------------------------------------------|
+| Platform    | platform    | platform.ontai.dev (operational CRDs)  | Cluster and tenant lifecycle                             |
+| Wrapper     | wrapper     | infrastructure.ontai.dev (via seam-core) | Pack compile and delivery                              |
+| Guardian    | guardian    | security.ontai.dev                     | RBAC plane, all clusters                                 |
+| Compiler    | conductor   | infrastructure.ontai.dev (via seam-core) | Compile-time intelligence, debian-slim                 |
+| Conductor   | conductor   | infrastructure.ontai.dev (via seam-core) | Runtime intelligence, execute=debian-slim agent=distroless |
+| Seam Core   | seam-core   | infrastructure.ontai.dev               | All cross-operator CRD definitions (Decision G)          |
+| Domain Core | domain-core | core.ontai.dev                         | Domain primitive declarations, no controller             |
 
 Screen: reserved. virt.ontai.dev. No implementation until Governor-approved ADR (INV-021).
 
@@ -64,7 +64,7 @@ INV-006 -- No Jobs on the delete path. Deletion triggers events only.
 INV-007 -- Destructive operations require an affirmative CR with human approval gate.
 INV-008 -- CRD names and API groups are never fabricated. Reason from ground-truth files only. Hallucinated resource names cause real damage.
 INV-009 -- RunnerConfig is operator-generated at runtime, never human-authored.
-INV-010 -- The runner shared library is the single source of RunnerConfig schema. All operators and both binaries import it. Owned by the conductor repository.
+INV-010 -- seam-core is the single source of RunnerConfig and all cross-operator CRD type definitions (Decision G). The conductor shared library (pkg/runnerlib) provides generation logic and job-spec builders that import seam-core types; it is not the schema authority. All operators and both binaries import seam-core types via the Go module dependency.
 INV-011 -- Image tag convention: v{talosVersion}-r{revision} stable, dev/dev-rc{N} development. Lab tags never enter the public registry. Compiler and Conductor carry the same tag from the same commit.
 INV-012 -- Conductor image for a cluster must be compatible with that cluster's Talos version. RunnerConfig update precedes any Talos version upgrade.
 INV-013 -- talos goclient is permitted in SeamInfrastructureClusterReconciler and SeamInfrastructureMachineReconciler (Platform only), executor mode, and agent mode. These two reconcilers are the sole named exceptions. All other operator controllers are strictly prohibited from talos goclient access regardless of context.
@@ -75,6 +75,7 @@ INV-019 -- PROGRESS.md, BACKLOG.md, and GIT_TRACKING.md are created by the Gover
 INV-020 -- The bootstrap RBAC window is a named, documented phase. It closes permanently when Guardian's admission webhook becomes operational on the management cluster.
 INV-021 -- Screen is a future operator. No implementation until Governor-approved ADR.
 INV-022 -- Long-lived Deployment images (operator controllers, Conductor agent) are distroless. Execute-mode Kueue Job images are debian-slim. Compiler is debian-slim, never deployed to cluster.
+INV-023 -- Operator Deployments and enable bundles always reference the `:dev` image tag in lab/development environments. Custom per-build tags (e.g., `dev-r86f75ab`, `dev-rff55d9a`) are never written into Deployment YAML, enable bundles, or any committed artifact. The `:dev` tag is the single moving pointer for all local lab deploys. Stable release tags follow the v{talosVersion}-r{revision} convention (INV-011).
 
 ---
 
@@ -127,6 +128,12 @@ Compiler: debian-slim. GitOps pipeline only. Never deployed to cluster.
 Conductor execute mode: debian-slim. Requires shell environment for SOPS, Helm, and Kustomize. Runs as short-lived Kueue-managed Jobs on the management cluster only.
 Conductor agent mode: distroless Go only. Deployed to ont-system on every cluster. No shell. No scripts. Ever.
 The execute image must never be distroless. The agent image must never be debian-slim. These are architectural invariants, not preferences. Existing implementations are grandfathered but must align on next touch.
+
+**Decision G -- All cross-operator CRD schemas are owned exclusively by seam-core (locked April 2026).**
+All CRD type definitions for the Seam platform are declared and owned by seam-core under infrastructure.ontai.dev/v1alpha1. Individual operators own only the status subresource fields and reconciliation behavior within their declared domain boundary. The migrated types are: InfrastructureRunnerConfig, InfrastructurePackReceipt (formerly runner.ontai.dev), InfrastructureClusterPack, InfrastructurePackExecution, InfrastructurePackInstance, InfrastructurePackBuild (formerly infra.ontai.dev), InfrastructureTalosCluster (formerly platform.ontai.dev), and DriftSignal. API group for all migrated types: infrastructure.ontai.dev/v1alpha1. Kind names carry the Infrastructure prefix. Resource names are lowercase plural with the infrastructure prefix retained: infrastructurerunnerconfigs, infrastructurepackreceipts, infrastructureclusterpacks, infrastructurepackexecutions, infrastructurepackinstances, infrastructurepackbuilds, infrastructuretalosclusters, driftsignals. No operator may define a CRD in a non-seam-core-owned group for types consumed by more than one operator. Migration completed Phase 2B, 2026-04-25.
+
+**Decision H -- Conductor drift detection and cluster deletion invariants (locked April 2026).**
+Conductor, regardless of role, is the reconciliation authority for the governance state of its cluster. When it detects a delta between declared state held in the governance CRs -- RBACPolicy, RBACProfile, PermissionSet, PackReceipt, TalosCluster -- and actual deployed resources on the cluster, it writes the drift reason into the relevant CR status and signals the management cluster. It does not remediate directly. The management cluster initiates corrective jobs through the normal operator paths: wrapper for pack redeployment, platform for cluster operations. No resource deployed outside seam awareness survives a reconciliation cycle. This loop is symmetric: conductor role=tenant watches its cluster and signals management; conductor role=management watches the management cluster and handles corrective jobs directly. When a governance CR is deleted from the management cluster, conductor role=management orchestrates a fixed teardown sequence in the tenant cluster: wrapper components first (pack instances, pack executions, runner configs), then guardian components (rbac profiles, permission sets, rbac policies, permission snapshot), then the TalosCluster CR. This order is non-negotiable. For bootstrapped clusters, deletion is permanent -- the cluster is decommissioned and infrastructure torn down. For imported clusters, deletion severs the management relationship only -- the cluster continues to exist but is no longer governed by ONT. This is a divorce, not a destruction. The distinction is derived from the TalosCluster spec mode field: mode=bootstrap means permanent decommission, mode=import means severance only.
 
 ---
 
@@ -184,3 +191,6 @@ Generic TODO comments are an invariant violation. A PR that introduces a spec wi
 2026-04-20 -- e2e CI Contract and Skip-Reason Standard directive established.
 2026-04-20 -- Decision 11 (Schema-First) and Decision 12 (three-image model) locked. INV-022 updated.
 2026-04-20 -- Constitutional refactor: root CLAUDE.md scoped to ROOT content only. Repo CLAUDE.md files updated. domain-core added to component table.
+2026-04-24 -- Decision H locked. Conductor drift detection, deletion cascade order, and bootstrap-versus-import deletion invariants established.
+2026-04-25 -- Decision G locked. All cross-operator CRD schemas migrate to seam-core under infrastructure.ontai.dev. INV-010 updated to reflect seam-core as schema authority. Phase 2B complete.
+2026-04-25 -- INV-023 added. Operator Deployments and enable bundles always use :dev tag in lab/development. Custom per-build tags are never written into any committed artifact.

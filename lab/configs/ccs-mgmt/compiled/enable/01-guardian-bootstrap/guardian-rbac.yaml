@@ -134,9 +134,9 @@ rules:
   - bind
   - escalate
 - apiGroups:
-  - runner.ontai.dev
+  - infrastructure.ontai.dev
   resources:
-  - runnerconfigs
+  - infrastructurerunnerconfigs
   verbs:
   - get
 ---

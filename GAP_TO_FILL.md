@@ -1,7 +1,7 @@
 # Seam Platform Architectural Gap Report and Task Sequence
 
 **Authored:** 2026-04-24
-**Governor decisions incorporated:** A, B, C, D, E, F, G (all open questions resolved)
+**Governor decisions incorporated:** A, B, C, D, E, F, G, H, I (all open questions resolved)
 **Status:** AUTHORIZED. Governor approval granted 2026-04-24. All approval gates in this document are pre-authorized. Implementation may proceed without blocking for further Governor sign-off on individual tasks.
 
 ---
@@ -28,6 +28,9 @@ Guardian always writes RBACProfiles into `seam-tenant-{targetCluster}` regardles
 
 **Decision G -- Seam-core CRD authority invariant.**
 All CRD schemas across the seam family are declared and owned exclusively by seam-core. Guardian, Platform, Wrapper, Conductor, Screen, and Vortex own only the status subresource fields within their declared reconciliation boundary on those CRDs. No operator defines or holds a CRD schema that another operator reconciles. This is an architectural invariant, not a convention. The functional forcing condition is T-18: conductor agent role=tenant must create ClusterPack, PackExecution, and PackInstance mirror CRDs in ont-system on tenant clusters. For conductor to write those objects, the CRD definitions must be installed on tenant clusters. If those CRDs remain in the wrapper repo, their installation is tied to wrapper deployment -- which does not run on tenant clusters. Moving them to seam-core, which is installed on every cluster as the foundational schema layer, resolves this cleanly. Any CRD currently defined in an individual operator repo that carries cross-operator contract semantics must be migrated to seam-core before Phase 5 work begins. RunnerConfig is a confirmed migration candidate: Platform and Wrapper both produce it while Conductor reconciles it.
+
+**Decision I -- Drift signal acknowledgement chain.**
+The conductor drift detection loop defined in Decision H is not complete without a three-state acknowledgement chain. The three states are: delivered, queued, and confirmed. When conductor role=tenant detects drift, it writes the drift reason into the affected CR status and creates a DriftSignal record in ont-system carrying a timestamp and a correlation ID. The DriftSignal state begins as pending. Management cluster conductor acknowledges receipt by writing back to that DriftSignal record through the federation channel, flipping its state from pending to delivered. If tenant conductor does not see a delivered acknowledgement within a configurable deadline, it re-emits the signal. This gives at-least-once delivery with no silent failures. When management conductor triggers corrective jobs through wrapper or platform, it writes the job reference back into the DriftSignal record and advances its state to queued. Tenant conductor can now confirm management has acted and identify what job was created. When the corrective job completes and the relevant CR status reflects the corrected state, tenant conductor reconciles, confirms drift is resolved, and closes the DriftSignal record by advancing its state to confirmed. If the job completed but drift persists, tenant conductor opens a new DriftSignal with an escalation counter incremented. After a configurable number of failed correction attempts, tenant conductor writes a terminal drift condition on the affected CR and stops re-emitting. Terminal drift conditions require human intervention. This is the Human-at-Boundary invariant in the remediation path -- automated correction has a defined retry ceiling and humans are the fallback, not an infinite retry loop. The federation channel must carry DriftSignal acknowledgement traffic in the management-to-tenant return direction alongside PermissionSnapshot and RBACProfile distribution already defined in T-17. All three return-direction traffic classes must be designed together in the T-17 design session.
 
 ---
 
@@ -168,15 +171,15 @@ Ordering rules enforced:
 **T-04c -- Seam-core CRD ownership audit, migration manifest, and domain primitive mapping (all repos)** COMPLETE 2026-04-24. Audit document: CRD_OWNERSHIP_AUDIT.md on ontai/session/seam-core-audit. PR #10 (ontai root).
 - Three-part audit document committed: Part 1 (CRD ownership audit across all repos), Part 2 (domain primitive derivation mapping for 5 migration candidates), Part 3 (ontai-schema gap list: 5 app-core entries, 5 seam-core entries, 2 infra deprecations).
 - Migration candidates confirmed: RunnerConfig (conductor), PackReceipt (conductor), ClusterPack (wrapper), PackExecution (wrapper), PackInstance (wrapper).
+- Additional confirmed candidate added by Decision I: DriftSignal. DriftSignal is written by conductor role=tenant and acknowledged by conductor role=management -- cross-operator contract, Decision G applies, must live in seam-core.
 - All guardian, platform, and seam-core CRDs assessed as compliant.
 - PackReceipt vs PackOperationResult merge decision required at start of migration session.
 - Branch: session/seam-core-audit. Repos: ontai root.
 
-**T-04d -- Seam-core CRD migration session scheduling (Governor gate -- PRE-AUTHORIZED 2026-04-24)** READY 2026-04-24. T-04c complete; awaiting Governor to schedule migration session and assign branch.
-- No engineering work in this task. This is a scheduling anchor only.
-- T-04c complete: CRD_OWNERSHIP_AUDIT.md on ontai/session/seam-core-audit provides the migration manifest and ontai-schema gap list.
+**T-04d -- Seam-core CRD migration session scheduling (Governor gate -- PRE-AUTHORIZED 2026-04-24)** CLOSED 2026-04-25. Branch session/phase2b opened and executed. T-18 unblocked on this gate.
+- Migration session executed on session/phase2b across seam-core, ontai-schema, conductor, wrapper, and platform repos.
 - T-04d closes when the migration session branch is open and assigned. T-18 remains blocked until T-04d closes.
-- Branch: none (scheduling marker only; the migration session itself will carry its own branch).
+- Branch: session/phase2b (migration session branch; carries T-2B-1 through T-2B-9).
 
 ### Phase 1 -- Schema PRs (ontai-schema, must merge before dependent Phase 2, 3, 4 work begins)
 
@@ -280,6 +283,7 @@ After all three ontai-schema PRs (T-2B-1 through T-2B-3) merge, add Go type defi
 - `packreceipt_types.go` -- InfrastructurePackReceipt matching seam-core schema exactly
 - `packbuild_types.go` -- InfrastructurePackBuild matching seam-core schema exactly
 - `taloscluster_types.go` -- InfrastructureTalosCluster matching seam-core schema exactly
+- `driftsignal_types.go` -- DriftSignal matching seam-core schema exactly. DriftSignal is written by conductor role=tenant and acknowledged by conductor role=management -- cross-operator contract, Decision G applies, must live in seam-core. Schema must cover: state enum (pending, delivered, queued, confirmed), correlationID, timestamp, affectedCRRef, driftReason, correctionJobRef, escalationCounter.
 Full unit tests and serialization integrity tests required for each type.
 Branch: session/phase2b. Repo: seam-core. Blocked on T-2B-3.
 
@@ -291,15 +295,23 @@ Branch: session/phase2b. Repo: conductor. Blocked on T-2B-5.
 After T-2B-6 merges: remove ClusterPack, PackExecution, PackInstance, and PackBuild Go type definitions from wrapper. Update all wrapper imports to seam-core/api/v1alpha1. All existing tests must pass.
 Branch: session/phase2b. Repo: wrapper. Blocked on T-2B-6.
 
-**T-2B-8 -- Platform import migration (platform)**
-After T-2B-7 merges: remove the unstructured RunnerConfig workaround in runnerconfig_cr.go. Remove TalosCluster Go type definition from platform and replace with typed seam-core import. Update all platform imports to seam-core/api/v1alpha1. All existing tests must pass.
-Branch: session/phase2b. Repo: platform. Blocked on T-2B-7.
+**T-2B-8 -- Platform import migration (platform)** COMPLETE 2026-04-25. PR #16 (platform/session/phase2b).
+- Replaced platform's local TalosCluster struct hierarchy with Go type aliases to seam-core InfrastructureTalosCluster. GVK shifted from platform.ontai.dev/v1alpha1 to infrastructure.ontai.dev/v1alpha1.
+- Replaced runnerconfig_cr.go AddKnownTypeWithName workaround with thin aliases to seam-core InfrastructureRunnerConfig. GVK shifted from runner.ontai.dev/v1alpha1 to infrastructure.ontai.dev/v1alpha1.
+- Removed controller-gen-generated deepcopy stubs for alias types. Inlined 7 CAPIEnabled() call sites.
+- Updated go.mod seam-core pin to fa4bedc (adds InfrastructureProvider enum, typed Origin, 6-field CAPIConfig, Phase/FailedStep on RunnerConfig status, all TalosCluster condition constants in seam-core/pkg/conditions).
+- All 4 test packages pass: unit, integration, e2e (skipped cleanly), e2e/day2 (skipped cleanly).
+Branch: session/phase2b. Repo: platform.
 
-**T-2B-9 -- CRD manifest migration (seam-core, conductor, wrapper, platform)**
-After T-2B-8 merges: remove generated CRD YAML for RunnerConfig, PackReceipt, ClusterPack, PackExecution, PackInstance, PackBuild, and TalosCluster from conductor, wrapper, and platform Helm charts or kustomize layers. Add these CRD definitions to the seam-core installation manifests. After this step, tenant clusters that install seam-core receive all CRD definitions without needing wrapper, conductor, or platform deployed -- resolving the T-18 forcing condition from Decision G.
-Branch: session/phase2b. Repos: seam-core, conductor, wrapper, platform. Blocked on T-2B-8.
+**T-2B-9 -- CRD manifest migration (seam-core, conductor, wrapper, platform)** COMPLETE 2026-04-25. PR #16 (platform/session/phase2b) + session/14-bake-lab-patches (conductor, wrapper).
+- Platform done: removed platform.ontai.dev_talosclusters.yaml. Replaced integration test testdata with seam-core's infrastructure.ontai.dev_infrastructurerunnerconfigs.yaml.
+- Conductor done: deleted runner.ontai.dev_runnerconfigs.yaml, runner.ontai.dev_packreceipts.yaml from config/crd. Migrated all dynamic GVR constants in signing_loop.go, receipt_reconciler.go, capability_publisher.go, packinstance_pull_loop.go, capability/wrapper.go, capability/guardian.go to infrastructure.ontai.dev with Infrastructure-prefixed resource names. Removed conductor/config/crd and wrapper/config/crd embed imports from compile_launch.go (seam-core covers all). Updated all conductor test files (unit, integration, e2e) to new GVKs.
+- Wrapper done: deleted infra.ontai.dev_clusterpacks.yaml, infra.ontai.dev_packexecutions.yaml, infra.ontai.dev_packinstances.yaml from config/crd and config/crd/bases. Migrated all RBAC markers, annotation keys, label keys, finalizer, and GVK references in all three reconcilers to infrastructure.ontai.dev with Infrastructure-prefixed names. Updated all wrapper test files (unit, e2e) to new GVKs.
+- Seam-core carries all infrastructure.ontai.dev_* CRD YAML files as authoritative source. No seam-core changes required.
+- All six repos build clean. All conductor and wrapper unit tests pass (two fake-client Kind mapping fixes required for newWrapperDynClient and newThreeBucketDynClient; packinstance test scheme scoped to exclude InfrastructurePackReceipt from typed conversion to preserve conductor-written dynamic status fields).
+Branch: session/phase2b (platform), session/14-bake-lab-patches (conductor, wrapper). Repos: seam-core (no change), conductor, wrapper, platform.
 
-When T-2B-9 is merged and all CRD manifests are confirmed installed via seam-core: update GAP_TO_FILL.md to mark T-04d as closed, add Phase 2B completed note with date. Phase 3 may then proceed.
+**Phase 2B completed 2026-04-25 (all items).** All GVK migrations complete across all repos. T-04d is closed. Phase 3 may proceed once Phase 1 schema PRs (T-04a, T-05) and Phase 2 helm metadata tasks (T-07 through T-10) are done.
 
 ### Phase 3 -- Operator implementation dependent on T-05 (PackBuild category)
 
@@ -364,6 +376,7 @@ Prerequisite note: `ont-system` must exist on the tenant cluster before any Phas
   1. PermissionSnapshot: connect to the management cluster, read the PermissionSnapshot for this tenant cluster from `seam-tenant-{tenantCluster}`, write it into `ont-system` on the tenant cluster. Update on each reconciliation cycle if the management cluster version is newer.
   2. Tenant-scoped RBACPolicy: read the RBACPolicy scoped to this tenant cluster from the management cluster, write it into `ont-system`. This is a subset of the full management cluster policy set, scoped to the records relevant to this tenant.
   3. RBACProfile for this cluster: read the RBACProfile for this tenant cluster from `seam-tenant-{tenantCluster}` on the management cluster and write it into `ont-system`. This is the return direction of the existing federation channel, which today carries only audit events from tenant to management and not governance data in the reverse direction.
+- Federation channel design scope (Decision I): the design session for T-17 must account for three return-direction traffic classes through the federation channel: (a) PermissionSnapshot distribution, (b) RBACProfile distribution, and (c) DriftSignal acknowledgement writes from management conductor back to tenant conductor. All three must be designed in the same design session. The channel must provide ordering guarantees sufficient to prevent a stale acknowledgement from closing a newer DriftSignal.
 - Design session required before implementation (CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION).
 - Blocked on: TENANT-CLUSTER-E2E, design session, ont-system existence verified.
 
@@ -378,6 +391,39 @@ Prerequisite note: `ont-system` must exist on the tenant cluster before any Phas
 - Define the mirror CR lifecycle: what creates it, what updates it when the management-cluster copy changes, and what deletes it when the TalosCluster CR is deleted.
 - Design session required before implementation.
 - Blocked on: TENANT-CLUSTER-E2E, design session, ont-system existence verified.
+
+**T-22 (BLOCKED) -- Conductor drift detection reconciliation loop (conductor)**
+- Implement the drift detection loop in conductor agent (both role=tenant and role=management). On each reconciliation cycle: compare actual deployed resources on the local cluster against the declared state held in the governance CRs (RBACPolicy, RBACProfile, PermissionSet, PackReceipt, TalosCluster). On any delta detected: write the drift reason into the relevant CR status field and emit a governance event signal to the management cluster. Conductor does not apply corrections directly. No remediation code lives in conductor.
+- The loop is symmetric: role=tenant signals management; role=management handles corrective actions by triggering jobs through the normal operator paths.
+- Acknowledgement chain (Decision I): the implementation must include the full three-state DriftSignal acknowledgement chain. On emit: create a DriftSignal CR in ont-system with state=pending, a timestamp, and a correlation ID. On management acknowledgement received: advance DriftSignal state to delivered. On corrective job creation by management: advance DriftSignal state to queued, record correctionJobRef. On drift resolved and CR status confirmed clean: advance DriftSignal state to confirmed and close the record. If job completes but drift persists: open a new DriftSignal with escalationCounter incremented. After a configurable escalation ceiling is reached: write a terminal drift condition on the affected CR and stop re-emitting. Terminal drift conditions require human intervention -- this is the Human-at-Boundary invariant in the remediation path.
+- Re-emit deadline and escalation counter threshold must be configurable via conductor agent configuration (not hardcoded).
+- Terminal drift condition must surface as a human-visible Condition entry on the affected CR with type=TerminalDrift and a message describing the affected resource and escalation count.
+- DriftSignal is a new seam-core CR type: it is read and written by both conductor role=tenant and conductor role=management. Decision G applies. DriftSignal must be added to the seam-core CRD migration scope (T-2B-5) alongside the six confirmed candidates from T-04c. T-22 implementation cannot begin until DriftSignal is defined in seam-core.
+- Design session required before implementation (CONDUCTOR-BL-DRIFT-DETECTION).
+- Blocked on: TENANT-CLUSTER-E2E, Decision H design session, DriftSignal seam-core type defined (additional dependency on the seam-core migration session from T-04d).
+- Repo: conductor.
+
+**T-23 (BLOCKED) -- Management cluster corrective job triggering (wrapper, platform)**
+- Implement the management-side response to drift signals received from tenant conductors. Two response paths:
+  1. Pack redeployment: wrapper creates a new PackExecution or requeues an existing one in response to a pack drift signal from conductor.
+  2. Cluster operations: platform creates or updates TalosCluster reconciliation targets in response to cluster state drift signals.
+- Both paths must be idempotent: receiving the same drift signal twice must not result in duplicate Jobs or conflicting reconcile actions.
+- Design session required before implementation.
+- Blocked on: T-22, Decision H design session.
+- Repos: wrapper, platform.
+
+**T-24 (BLOCKED) -- Cluster deletion cascade and severance (platform, conductor)**
+- Implement the fixed teardown sequence in conductor role=management when a governance CR (TalosCluster) is deleted from the management cluster. Teardown order is non-negotiable (Decision H):
+  1. Wrapper components: delete PackInstance, PackExecution, RunnerConfig CRs for the cluster.
+  2. Guardian components: delete RBACProfile, PermissionSet, RBACPolicy, PermissionSnapshot for the cluster.
+  3. TalosCluster CR: delete last.
+- Bootstrap vs import distinction derived from TalosCluster spec.mode field:
+  - mode=bootstrap: permanent decommission. After teardown sequence completes, trigger infrastructure deprovision (platform destroys the cluster nodes).
+  - mode=import: severance only. After teardown sequence completes, the cluster continues to exist but is no longer governed by ONT. No infrastructure action.
+- Admit no variation from this order. Tests must verify the sequence is respected even when intermediate steps fail and are retried.
+- Design session required before implementation.
+- Blocked on: TENANT-CLUSTER-E2E, T-22, Decision H design session.
+- Repos: platform, conductor.
 
 ### Phase 6 -- Day2 Operations. Blocked on TENANT-CLUSTER-E2E and CAPI-PATH-VERIFICATION
 
@@ -427,14 +473,14 @@ Phase 2 (after T-04):
 
 Phase 2B (after T-07 through T-10 merge; mandatory before Phase 3):
   T-2B-0 (merge decision: keep PackReceipt separate)          -- CLOSED 2026-04-24
-  T-2B-1 (ontai-schema: 7 seam-core Infrastructure* schemas)  -- IN PROGRESS (PR #7), blocks T-2B-2
-  T-2B-2 (ontai-schema: PackOperationResult cross-reference)  -- after T-2B-1, blocks T-2B-3
-  T-2B-3 (ontai-schema: deprecation markers on 5 sources)     -- after T-2B-2, blocks T-2B-5
-  T-2B-5 (seam-core: 7 Go type additions)                     -- after T-2B-3, blocks T-2B-6
-  T-2B-6 (conductor: import migration)                        -- after T-2B-5, blocks T-2B-7
-  T-2B-7 (wrapper: import migration)                          -- after T-2B-6, blocks T-2B-8
-  T-2B-8 (platform: import migration + TalosCluster)          -- after T-2B-7, blocks T-2B-9
-  T-2B-9 (CRD manifest migration: all 4 repos)                -- after T-2B-8; closes T-04d on completion
+  T-2B-1 (ontai-schema: 7 seam-core Infrastructure* schemas)  -- COMPLETE 2026-04-24 (PR #7)
+  T-2B-2 (ontai-schema: PackOperationResult cross-reference)  -- COMPLETE 2026-04-24 (PR #7)
+  T-2B-3 (ontai-schema: deprecation markers on 5 sources)     -- COMPLETE 2026-04-24 (PR #7)
+  T-2B-5 (seam-core: 7 Go type additions + conditions pkg)    -- COMPLETE 2026-04-25 (seam-core/main, commit fa4bedc)
+  T-2B-6 (conductor: import migration)                        -- COMPLETE 2026-04-24 (conductor/session/phase2b)
+  T-2B-7 (wrapper: import migration)                          -- COMPLETE 2026-04-24 (wrapper/session/phase2b)
+  T-2B-8 (platform: import migration + TalosCluster)          -- COMPLETE 2026-04-25 (platform PR #16)
+  T-2B-9 (CRD manifest migration: all repos complete)          -- COMPLETE 2026-04-25 (platform PR #16 + session/14-bake-lab-patches); closes T-04d
 
 Phase 3 (after T-05 AND Phase 2B complete):
   T-11  (conductor: PackBuildInput category + helmVersion) -- after T-05 + Phase 2B, blocks T-12 T-13
@@ -450,6 +496,11 @@ Phase 5 (BLOCKED -- TENANT-CLUSTER-E2E):
   T-17  (conductor: tenant pull loops x3)             -- TENANT-CLUSTER-E2E + design
   T-18  (conductor: mirror CRD reconstruction)        -- TENANT-CLUSTER-E2E + design + T-04c + seam-core migration session
   T-19  (platform: TalosCluster mirror projection)    -- TENANT-CLUSTER-E2E + design
+  T-22  (conductor: drift detection + DriftSignal ack chain)      -- TENANT-CLUSTER-E2E + Decision H design session + DriftSignal seam-core type (seam-core migration session)
+  T-23  (wrapper/platform: management corrective job triggering)  -- after T-22 + Decision H design session
+  T-24  (platform/conductor: cluster deletion cascade + severance) -- after T-22 + TENANT-CLUSTER-E2E + Decision H design session
+
+  Note: all three (T-22, T-23, T-24) blocked on TENANT-CLUSTER-E2E and Decision H design session; T-23 additionally blocked on T-22; T-24 additionally blocked on T-22. DriftSignal seam-core type must be added to seam-core before T-22 implementation begins -- this is an additional dependency on the seam-core migration session.
 
 Phase 6 (BLOCKED -- TENANT-CLUSTER-E2E + CAPI-PATH-VERIFICATION):
   T-20  (platform: Day2 node-aware scheduling)        -- design session required
