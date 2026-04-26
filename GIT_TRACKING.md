@@ -4,8 +4,8 @@
 |---|---|---|---|
 | ontai        | main                                        | b732390     | active (tracking)         |
 | conductor    | main                                        | 26da3fb     | PR #27 merged             |
-| guardian     | session/15-t19a-conductor-rbacprofile       | 112f99e     | PR #18 open (CI pending)  |
-| platform     | session/15-t19-import-conductor             | 887a7e9     | PR #17 open (CI pending)  |
+| guardian     | main                                        | 112f99e     | PR #18 merged             |
+| platform     | main                                        | 887a7e9     | PR #17 merged             |
 | wrapper      | main                                        | a1b0743     | PR #15 merged             |
 | seam-core    | main                                        | c78d8b2     | active                    |
 | domain-core  | main                                        | f01ca65     | active                    |
