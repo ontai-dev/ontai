@@ -1,6 +1,6 @@
 # ONT Platform: Backlog
 
-**Last updated:** April 26, 2026 (session/15 round 1 closures)
+**Last updated:** April 26, 2026 (session/15 round 2 closures)
 
 ---
 
@@ -18,9 +18,8 @@
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| ~~COMPILER-BL-PERMISSIONSET-DEFECT~~ | conductor (compiler) | CLOSED 2026-04-26: writeBootstrapPermissionSets now emits only management-maximum. buildOperatorRBACProfile now emits permissionSetRef: management-maximum. Both enable bundles regenerated. Per-operator PermissionSets deleted from live cluster. conductor PR #26 merged. |
 | CONDUCTOR-BL-CAPABILITY-IMPL | conductor | Named capability handlers need completion. Implemented and validated: etcd-defrag, node-reboot, pki-rotate (GetMachineConfig+staged), machine config capture after node-patch. Remaining stubs: etcd-backup, etcd-restore, node-scale-up, node-decommission, credential-rotate, cluster-reset, hardening-apply, upgrade, pack-deploy. |
-| CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull RBACProfile for its cluster from management cluster seam-tenant-{tenantCluster} and write it into ont-system on the tenant cluster. Management conductor (role=management) retains signing. Requires: conductor role field, federation pull path, ont-system write. Governor design session required before implementation. |
+| CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull RBACProfile for its cluster from management cluster seam-tenant-{tenantCluster} and write it into ont-system on the tenant cluster. Management conductor (role=management) retains signing. Requires: conductor role field, federation pull path, ont-system write. Governor design session required before implementation. See GAP_TO_FILL.md T-19a. |
 | DAY2-OPS-MGMT | conductor, platform | Remaining day-2 live gaps on ccs-mgmt: node-patch needs patchSecretRef secret provisioned; cluster-reset not live-tested (requires reset-approved annotation); upgrade, credential-rotate, hardening-apply not yet live-tested. etcd-defrag, node-reboot, pki-rotate already validated. |
 
 ---
@@ -29,11 +28,9 @@
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| ~~GUARDIAN-BL-PERMISSIONSET-WATCH~~ | guardian | CLOSED 2026-04-26: Watches(PermissionSet, MapPermissionSetToProfiles) added to RBACProfileReconciler.SetupWithManager. 5 unit tests added. guardian branch session/15-guardian-fixes commit 1881ccf. |
-| GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | No admission webhook intercepts RBACProfile admission on any cluster. RBACProfile is absent from guardian webhook InterceptedKinds. The seam-operator label (ontai.dev/rbac-profile-type=seam-operator) is intended to discriminate seam operator profiles from component profiles, but no webhook routing implements this today. Fix: add a RBACProfile validation webhook that (a) checks the label, (b) routes seam-operator profiles through management-maximum validation, (c) routes all others through cluster-policy. Documented in guardian-schema.md §20 validation bypass note. |
-| GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | No reconciler creates RBACProfiles for RBAC resources arriving outside /rbac-intake/pack (bootstrap apply, kubectl apply, pre-split packs). Sweep must detect governed RBAC with no corresponding RBACProfile and back-fill it. Design question: same PermissionSet/RBACPolicy/RBACProfile path as rbac-intake, or lightweight annotation-only path. Governor session required. |
+| GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | No admission webhook intercepts RBACProfile admission on any cluster. RBACProfile is absent from guardian webhook InterceptedKinds. The seam-operator label (ontai.dev/rbac-profile-type=seam-operator) is intended to discriminate seam operator profiles from component profiles, but no webhook routing implements this today. Fix: add a RBACProfile validation webhook that (a) checks the label, (b) routes seam-operator profiles through management-maximum validation, (c) routes all others through cluster-policy. See GAP_TO_FILL.md T-25a. |
+| GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | T-04b (guardian PR #14) implemented RBACProfileBackfillRunnable which covers PermissionSet-with-no-RBACProfile. Verify T-25b: does the sweep also cover raw RBAC objects (ClusterRole, ClusterRoleBinding) in seam-tenant-* with no PermissionSet ancestor? See GAP_TO_FILL.md T-25b for verification steps. |
 | WRAPPER-BL-ILI-DECLARING-PRINCIPAL | guardian, wrapper | MutatingWebhookConfiguration for declaring-principal handler added to compiler enable bundle. Needs cluster apply and verification against live admission webhook. |
-| ~~PLATFORM-BL-STATUS-PATCH-CONFLICT~~ | platform | CLOSED 2026-04-26: RetryOnConflict already implemented in taloscluster_controller.go deferred status patch (line 112). Verified session/15. |
 | PLATFORM-BL-3-LOCALQUEUE | platform | Platform must create LocalQueue in seam-tenant for tenant clusters. Currently only management cluster gets it from compiler phase 05. |
 | CONDUCTOR-BL-CAPABILITY-WATCH | conductor | Wrapper ConductorReady gate should watch RunnerConfig status and trigger immediately when capabilities appear, rather than polling on 30s requeue. |
 | G-BL-SNAPSHOT-ALIAS | guardian | snapshot-management PermissionSnapshot should cover ccs-mgmt. Eliminates redundant snapshot-ccs-mgmt. |
@@ -42,7 +39,6 @@
 | PLATFORM-BL-HARDENINGPROFILE-MERGE | platform | HardeningProfileRef field absent from TalosClusterSpec. TalosConfigTemplate cannot merge HardeningProfile patches at runtime. Decision 11: schema PR to ontai-schema required before implementation. Governor session needed. |
 | SEAM-CORE-BL-DESCENDANT-LABELS | guardian | PermissionSnapshot lineage wiring deferred by design (no single root RBACPolicy per snapshot). If architectural question resolves, PermissionSnapshot must call SetDescendantLabels. Track until Governor rules. |
 | WRAPPER-BL-ENVTEST-GC | wrapper | TestPackInstance_OwnerRefCascade_DeletedWhenPackExecutionDeleted requires kube-controller-manager GC. envtest does not start GC controller. Promote to live cluster e2e when TENANT-CLUSTER-E2E is established. |
-| ~~WRAPPER-BL-PACKINSTANCE-WATCH~~ | wrapper | CLOSED 2026-04-26: Watch uses correct Phase 2B GVK (InfrastructurePackInstance). MapPackInstanceToClusterPack exported; 4 unit tests added. wrapper PR session/15-wrapper-fixes. |
 
 ---
 
@@ -51,7 +47,6 @@
 | ID | Component | Description |
 |----|-----------|-------------|
 | CONDUCTOR-BL-EXECUTION-ORDER | conductor | Staged manifest apply confirmed implemented. Verify with multi-manifest pack test. |
-| ~~WRAPPER-BL-PACKINSTANCE-VERSION-DOUBLE-V~~ | wrapper | CLOSED 2026-04-26: Verified post-Phase 2B -- version passed directly from ClusterPackRef.Version with no extra prefix. Existing test covers this. |
 
 ---
 
@@ -80,3 +75,15 @@
 | SCREEN | VirtCluster and VirtMachine CRDs. CAPI path to QEMU/KVM via libvirt and KubeVirt. INV-021: no implementation until Governor-approved ADR. |
 | SERVICEMONITOR | Prometheus ServiceMonitor CRDs for all five operators. Deferred to post-e2e observability session. |
 | CAPI-E2E-TESTS | e2e tests for SeamInfrastructureCluster/Machine full lifecycle against live cluster. |
+
+---
+
+## Closed
+
+| ID | Component | Closed | Resolution |
+|----|-----------|--------|------------|
+| COMPILER-BL-PERMISSIONSET-DEFECT | conductor (compiler) | 2026-04-26 | writeBootstrapPermissionSets now emits only management-maximum. buildOperatorRBACProfile now emits permissionSetRef: management-maximum. Both enable bundles regenerated. Per-operator PermissionSets deleted from live cluster. conductor PR #26. |
+| GUARDIAN-BL-PERMISSIONSET-WATCH | guardian | 2026-04-26 | Watches(PermissionSet, MapPermissionSetToProfiles) added to RBACProfileReconciler.SetupWithManager. 5 unit tests added. guardian session/15-guardian-fixes commit 1881ccf. |
+| PLATFORM-BL-STATUS-PATCH-CONFLICT | platform | 2026-04-26 | RetryOnConflict already implemented in taloscluster_controller.go deferred status patch (line 112). Verified session/15 -- no code change required. |
+| WRAPPER-BL-PACKINSTANCE-WATCH | wrapper | 2026-04-26 | Phase 2B GVK (InfrastructurePackInstance) was correct. MapPackInstanceToClusterPack exported; 4 unit tests added. wrapper PR #15. |
+| WRAPPER-BL-PACKINSTANCE-VERSION-DOUBLE-V | wrapper | 2026-04-26 | Verified post-Phase 2B: version comes directly from ClusterPackRef.Version with no extra prefix. Existing test covers. No code change required. |

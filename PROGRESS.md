@@ -37,7 +37,7 @@ Four RBAC gaps found in `compile_enable.go` and fixed (conductor commits `136c42
 | `configmaps` missing from `seam-core-permissions` | Added allVerbs rule |
 | `infrastructuretalosclusters/status` missing from `conductor-permissions` | Added get/update/patch rule |
 
-Guardian webhook deadlock during apply resolved by temporarily setting `failurePolicy: Ignore`. All five `seam:*` ClusterRoles manually patched on cluster (workaround for GUARDIAN-BL-PERMISSIONSET-WATCH). Enable bundle regenerated and applied; committed to ontai root (`0ec966e`). All operator pods Running clean.
+Guardian admission webhook running with `failurePolicy: Fail` (confirmed session/15 Round 1). All five `seam:*` ClusterRoles auto-updated by guardian reconciler after enable bundle apply -- no manual patching required (GUARDIAN-BL-PERMISSIONSET-WATCH closed). Enable bundle regenerated and applied; committed to ontai root (`0ec966e`). All operator pods Running clean.
 
 ---
 

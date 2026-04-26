@@ -395,11 +395,43 @@ Prerequisite note: `ont-system` must exist on the tenant cluster before any Phas
 - Design session required before implementation.
 - Blocked on: TENANT-CLUSTER-E2E, design session, ont-system existence verified, T-04c (audit and mapping complete), T-04d (migration session open and branch assigned -- pre-authorized per Governor directive 2026-04-24, does not require a separate approval gate), and ontai-schema primitives confirmed or authored per T-04c part three output -- migrated CRDs must have their full domain primitive chain declared in ontai-schema before seam-core migration begins.
 
-**T-19 (BLOCKED) -- Area 6: platform TalosCluster mirror projection (platform)**
-- In `TalosClusterReconciler`, import reconciliation path: when mode=import, project a read-only mirror of the TalosCluster CR into `ont-system` on the tenant cluster using the tenant cluster's kubeconfig (Decision D).
-- Define the mirror CR lifecycle: what creates it, what updates it when the management-cluster copy changes, and what deletes it when the TalosCluster CR is deleted.
-- Design session required before implementation.
+**T-19 (BLOCKED) -- Area 6: platform TalosCluster mode=import state machine and mirror projection (platform)**
+
+Full import state machine:
+
+State 1 -- Pending: TalosCluster CR created on management cluster with mode=import. Platform reconciler reads the kubeconfig secret referenced in spec. Writes TalosCluster condition ImportPending=True. No changes to tenant cluster.
+
+State 2 -- Connecting: Platform reconciler establishes connectivity to the tenant cluster using the kubeconfig secret. Verifies ont-system namespace exists or creates it. Writes condition ImportConnecting=True, ImportPending=False.
+
+State 3 -- Projecting: Platform reconciler writes a read-only mirror of the TalosCluster CR into ont-system on the tenant cluster. Mirror carries the management cluster's UID in an annotation (ontai.dev/management-uid) so tenant-side components can detect which management cluster governs them. Mirror is marked with label ontai.dev/mirror=true and an ownerReference back to the management cluster TalosCluster (by name, not UID -- the tenant cluster has no access to management cluster objects). Writes condition ImportProjected=True, ImportConnecting=False.
+
+State 4 -- Ready: Guardian RBACProfile for the tenant cluster reaches provisioned=true on the management cluster (TENANT-CLUSTER-E2E onboarding gate). Platform writes condition ImportReady=True.
+
+State 5 -- Severance (on TalosCluster deletion with mode=import): Teardown sequence per Decision H. After wrapper, guardian, and conductor components are torn down: platform removes the TalosCluster mirror from ont-system on the tenant cluster and removes the kubeconfig secret. The tenant cluster continues to run unchanged. Platform writes condition ImportSevered=True on the management cluster TalosCluster CR before the CR is deleted.
+
+Mirror CR lifecycle:
+- Created: State 3 transition.
+- Updated: Any reconcile cycle where the management-cluster TalosCluster spec has changed since the mirror was last written. Reconciler computes a content hash of the spec and re-projects only when the hash differs.
+- Deleted: State 5 severance path.
+
+Design session required before implementation. T-19a must be designed in the same session.
 - Blocked on: TENANT-CLUSTER-E2E, design session, ont-system existence verified.
+
+**T-19a (BLOCKED) -- Area 6: guardian signing and distribution of tenant conductor RBACProfile (guardian, conductor)**
+
+Gap: when conductor agent role=tenant starts on a tenant cluster, it must have an RBACProfile in ont-system on that cluster before it can begin its pull loops (T-17) or mirror reconstruction (T-18). Today no mechanism distributes the RBACProfile from management cluster seam-tenant-{cluster} to ont-system on the tenant cluster.
+
+Sequence:
+1. Management cluster guardian compiles RBACProfile for the conductor tenant component in seam-tenant-{tenantCluster} (already happens via enable bundle).
+2. Guardian on management cluster signs the RBACProfile (existing signing infrastructure).
+3. Conductor role=tenant pull loop (T-17) reads the signed RBACProfile from management cluster seam-tenant-{cluster} and writes it into ont-system on the tenant cluster.
+4. The RBACProfile in ont-system carries the management cluster signature annotation. Any local admission on the tenant cluster must accept the pre-signed object without re-signing.
+5. Guardian on the tenant cluster (role=observer, no compiler) validates the signature on admission but does not require a local PermissionSet.
+
+Design question: does conductor role=tenant write the RBACProfile before or after its own RBAC gate is satisfied? If conductor cannot start until its RBACProfile is provisioned, there is a bootstrapping dependency. Resolution: the bootstrap RBAC window for the tenant cluster (INV-020) must cover the period before the tenant conductor RBACProfile is projected. Platform creates ont-system and writes a minimal service account for conductor during the import reconciliation path before conductor is deployed. Design session required.
+
+Implementation dependencies: T-17 (pull loops), T-19 (platform import state machine), guardian signing loop.
+- Blocked on: TENANT-CLUSTER-E2E, design session.
 
 **T-22 (BLOCKED) -- Conductor drift detection reconciliation loop (conductor)**
 - Implement the drift detection loop in conductor agent (both role=tenant and role=management). On each reconciliation cycle: compare actual deployed resources on the local cluster against the declared state held in the governance CRs (RBACPolicy, RBACProfile, PermissionSet, PackReceipt, TalosCluster). On any delta detected: write the drift reason into the relevant CR status field and emit a governance event signal to the management cluster. Conductor does not apply corrections directly. No remediation code lives in conductor.
@@ -433,6 +465,38 @@ Prerequisite note: `ont-system` must exist on the tenant cluster before any Phas
 - Design session required before implementation.
 - Blocked on: TENANT-CLUSTER-E2E, T-22, Decision H design session.
 - Repos: platform, conductor.
+
+**T-25a (BLOCKED) -- GUARDIAN-BL-RBACPROFILE-WEBHOOK: RBACProfile validation webhook (guardian)**
+
+Gap: RBACProfile is absent from guardian's InterceptedKinds. No admission webhook intercepts RBACProfile creation or mutation on any cluster. The seam-operator label (ontai.dev/rbac-profile-type=seam-operator) is defined in guardian-schema.md to discriminate seam operator profiles from component profiles, but no webhook routing implements this today.
+
+Required webhook behavior:
+1. On RBACProfile admission: check for the ontai.dev/rbac-profile-type label.
+2. If label value is seam-operator: validate that permissionDeclarations[].permissionSetRef references management-maximum only (CS-INV-008). Reject any seam-operator RBACProfile that references a PermissionSet other than management-maximum.
+3. If label is absent or value is not seam-operator: route through the existing cluster policy validation path (permissionSetRef must reference a PermissionSet that exists in the same namespace).
+4. On management cluster: block any RBACProfile write from a principal that is not the guardian manager service account or an authorized operator service account listed in the OperatorAuthority CRD.
+
+Implementation: add RBACProfile to guardian webhook InterceptedKinds. Add a new webhook handler in the guardian webhook package that implements the two-path routing described above. Unit tests: 5 minimum (seam-operator with management-maximum: admit; seam-operator with other PS: reject; non-seam-operator with present PS: admit; non-seam-operator with absent PS: reject; non-seam-operator on wrong cluster: policy route).
+
+This task has no TENANT-CLUSTER-E2E dependency. It is an independent guardian feature that improves admission safety on the management cluster.
+- Blocked on: design session (short -- webhook routing logic is well-defined). May proceed in a near-term session.
+- Repo: guardian.
+
+**T-25b -- GUARDIAN-BL-RBACPROFILE-SWEEP: verify T-04b coverage (guardian)**
+
+T-04b (COMPLETE 2026-04-24, guardian PR #14) implemented `RBACProfileBackfillRunnable` which scans seam-tenant-* namespaces and calls `EnsurePackRBACProfileCRs` for PermissionSets with missing RBACProfiles.
+
+Gap check required: T-04b covers the case where a PermissionSet exists but the corresponding RBACProfile is absent. The GUARDIAN-BL-RBACPROFILE-SWEEP backlog item also describes RBAC resources arriving outside /rbac-intake/pack (bootstrap apply, kubectl apply, pre-split packs) with no corresponding RBACProfile at all.
+
+Verification steps:
+1. Confirm `EnsurePackRBACProfileCRs` handles the case where a PermissionSet exists with no corresponding RBACProfile (the T-04b path) -- covered.
+2. Determine whether the sweep also handles raw RBAC objects (ClusterRole, ClusterRoleBinding) that exist in seam-tenant-* with no PermissionSet ancestor -- this was the secondary concern in the backlog item. If T-04b's runnable does not detect this case, a separate sweep reconciler is needed.
+3. If step 2 confirms T-04b is sufficient: close GUARDIAN-BL-RBACPROFILE-SWEEP in BACKLOG.md and record the resolution.
+4. If step 2 finds a gap: design a supplementary path and open a new task.
+
+This is a verification task, not an implementation task. It requires reading `EnsurePackRBACProfileCRs` in `webhook/rbac_intake.go` and its callers.
+- No blocking conditions. Assign to next guardian session.
+- Repo: guardian.
 
 ### Phase 6 -- Day2 Operations. Blocked on TENANT-CLUSTER-E2E and CAPI-PATH-VERIFICATION
 
@@ -502,14 +566,19 @@ Phase 4 (after T-06):
   T-16  (wrapper: revision-aware result read)         -- after T-15
 
 Phase 5 (BLOCKED -- TENANT-CLUSTER-E2E):
-  T-17  (conductor: tenant pull loops x3)             -- TENANT-CLUSTER-E2E + design
-  T-18  (conductor: mirror CRD reconstruction)        -- TENANT-CLUSTER-E2E + design + T-04c + seam-core migration session
-  T-19  (platform: TalosCluster mirror projection)    -- TENANT-CLUSTER-E2E + design
-  T-22  (conductor: drift detection + DriftSignal ack chain)      -- TENANT-CLUSTER-E2E + Decision H design session + DriftSignal seam-core type (seam-core migration session)
-  T-23  (wrapper/platform: management corrective job triggering)  -- after T-22 + Decision H design session
-  T-24  (platform/conductor: cluster deletion cascade + severance) -- after T-22 + TENANT-CLUSTER-E2E + Decision H design session
+  T-17   (conductor: tenant pull loops x3)              -- TENANT-CLUSTER-E2E + design
+  T-18   (conductor: mirror CRD reconstruction)         -- TENANT-CLUSTER-E2E + design + T-04c + seam-core migration session
+  T-19   (platform: TalosCluster mode=import state machine + mirror)  -- TENANT-CLUSTER-E2E + design
+  T-19a  (guardian/conductor: tenant conductor RBACProfile distribution) -- TENANT-CLUSTER-E2E + T-17 + T-19 + design
+  T-22   (conductor: drift detection + DriftSignal ack chain)      -- TENANT-CLUSTER-E2E + Decision H design session + DriftSignal seam-core type
+  T-23   (wrapper/platform: management corrective job triggering)  -- after T-22 + Decision H design session
+  T-24   (platform/conductor: cluster deletion cascade + severance) -- after T-22 + TENANT-CLUSTER-E2E + Decision H design session
+  T-25b  (guardian: verify T-04b covers GUARDIAN-BL-RBACPROFILE-SWEEP) -- no blocking conditions; assign to next guardian session
 
-  Note: all three (T-22, T-23, T-24) blocked on TENANT-CLUSTER-E2E and Decision H design session; T-23 additionally blocked on T-22; T-24 additionally blocked on T-22. DriftSignal seam-core type must be added to seam-core before T-22 implementation begins -- this is an additional dependency on the seam-core migration session.
+  Note: T-22, T-23, T-24 blocked on TENANT-CLUSTER-E2E and Decision H design session; T-23 additionally blocked on T-22; T-24 additionally blocked on T-22. DriftSignal seam-core type must be added to seam-core before T-22 implementation begins.
+
+No-cluster guardian work:
+  T-25a  (guardian: RBACProfile validation webhook)    -- design session only; no TENANT-CLUSTER-E2E dependency
 
 Phase 6 (BLOCKED -- TENANT-CLUSTER-E2E + CAPI-PATH-VERIFICATION):
   T-20  (platform: Day2 node-aware scheduling)        -- design session required
