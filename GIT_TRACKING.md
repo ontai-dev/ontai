@@ -7,7 +7,7 @@
 | guardian     | main                                        | 112f99e     | PR #18 merged             |
 | platform     | session/15-t19-import-conductor             | d2c49db     | Option B restore clean    |
 | wrapper      | main                                        | a1b0743     | PR #15 merged             |
-| seam-core    | main                                        | c78d8b2     | active                    |
+| seam-core    | main                                        | 3f5a0b4     | Dockerfile fix committed      |
 | domain-core  | main                                        | f01ca65     | active                    |
 
 ## Branch Convention
