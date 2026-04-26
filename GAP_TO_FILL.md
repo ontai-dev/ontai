@@ -365,6 +365,15 @@ Branch: session/phase2b (platform), session/14-bake-lab-patches (conductor, wrap
 - Branch: session/area5. Repo: wrapper. File: `internal/controller/packexecution_reconciler.go`.
 - Blocked on T-15.
 
+### TENANT-CLUSTER-E2E: Found-and-Fixed Defects (pre-onboarding)
+
+**Defect: Compiler conductorOp() hardcoded role=management for all enable bundles (FIXED 2026-04-26)**
+- Root cause: `conductorOp()` in `compile_enable.go` had no `clusterRole` parameter; the string `"management"` was hardcoded in the pod annotation `platform.ontai.dev/role`. The downward API maps this annotation to the `CONDUCTOR_ROLE` env var, so every ccs-dev Conductor pod ran as management even after a ccs-dev enable bundle was applied.
+- Impact: would have caused conductor agent on ccs-dev to execute management-mode reconciliation paths (drift correction jobs, corrective orchestration) instead of tenant-mode paths (pull loops, local write).
+- Fix: added `clusterRole string` parameter to `conductorOp()` and `--cluster-role` CLI flag to `compiler enable`. ccs-dev enable bundle regenerated with `CONDUCTOR_ROLE=tenant`.
+- Caught during: ccs-dev tenant cluster onboarding preparation, session/14-bake-lab-patches.
+- conductor commit `e18cdf5`
+
 ### Phase 5 -- Blocked on TENANT-CLUSTER-E2E
 
 Do not schedule these tasks until `TENANT-CLUSTER-E2E` backlog item is closed and a tenant cluster is available for integration testing. All tasks in this phase require live cluster access.

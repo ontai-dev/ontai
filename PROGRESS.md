@@ -94,6 +94,19 @@ conductor `SplitManifests` returns three slices (rbac, clusterScoped, workload).
 - `guardian-permissionsets.yaml`: `platform-permissions` PermissionSet gains TCOR get/list/watch/create/update/patch/delete
 - Root ontai commit `bff1081`
 
+**Compiler Phase 2B type migration and cluster-role fix (CLOSED 2026-04-26):**
+- `compile.go` and `compile_packbuild_helm.go`: import migrated from `wrapper/api/v1alpha1` to `seam-core/api/v1alpha1`; ClusterPack struct and spec types updated to InfrastructureClusterPack (infrastructure.ontai.dev). Phase 2B had emptied the wrapper package but the compiler still referenced it.
+- `compile_enable.go`: `conductorOp()` hardcoded `role: management` -- silent misbehavior for tenant clusters. Added `clusterRole string` parameter and `--cluster-role` CLI flag. Compiler now emits CONDUCTOR_ROLE=tenant for ccs-dev enable bundle.
+- `compile_packbuild_test.go`, `compile_launch_test.go`: stale API group expectations updated from infra.ontai.dev/runner.ontai.dev to infrastructure.ontai.dev.
+- `compile_enable_test.go`: all 43 call sites updated to pass eighth argument (defaults to management).
+- conductor commit `e18cdf5`
+
+**Phase B script: enable bundle wiring for ccs-dev (CLOSED 2026-04-26):**
+- `lab/scripts/phase-b-dev-import.sh`: step 4.5 inserted between API-reachable check and AC-2 wrapper e2e run. Applies all six enable phases from `lab/configs/ccs-dev/compiled/enable/` to ccs-dev via DEV_KUBECONFIG.
+- `lab/Makefile`: `dev-tenant-enable` target added -- applies compiled enable bundle to ccs-dev standalone.
+- `lab/configs/ccs-dev/compiled/enable/04-conductor/conductor-deployment.yaml`: annotation fixed from `role: management` to `role: tenant`; comment updated from CONDUCTOR_ROLE=management to CONDUCTOR_ROLE=tenant.
+- ontai root commit to follow.
+
 **TCOR design correction (OPEN -- Governor directive 2026-04-26):**
 - Current implementation treats TCOR as a per-operation CR (one per Job). This is incorrect.
 - Correct design: one TCOR per cluster, created on InfrastructureTalosCluster admission, operations appended as a list. Revision tied to talosVersion. On version upgrade, N-1 revision data dumped to graphQuery DB and deleted. Revisions linked across InfrastructureTalosCluster and InfrastructureClusterPacks. Dumped data = infrastructure memory.

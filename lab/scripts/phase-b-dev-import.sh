@@ -97,6 +97,24 @@ else
   log_info "  WARN: DEV_KUBECONFIG not found at ${DEV_KUBECONFIG} -- skipping API wait"
 fi
 
+# ── Step 4.5: Apply enable bundle to ccs-dev ──────────────────────────────────
+# Applies all six enable phases to ccs-dev so Seam operators are running before
+# acceptance tests execute. Uses DEV_KUBECONFIG so resources land on ccs-dev.
+
+ENABLE_DIR="${SCRIPT_DIR}/../configs/ccs-dev/compiled/enable"
+if [ -d "$ENABLE_DIR" ]; then
+  log_info "phase-b step=4.5 Applying enable bundle to ccs-dev (${ENABLE_DIR})"
+  for phase_dir in "${ENABLE_DIR}"/*/; do
+    phase=$(basename "$phase_dir")
+    log_info "  applying phase ${phase}"
+    $KUBECTL_DEV apply --server-side --force-conflicts -R -f "$phase_dir" \
+      || fail_phase "enable-phase-${phase}"
+  done
+  log_info "  enable bundle applied"
+else
+  log_info "  WARN: enable bundle not found at ${ENABLE_DIR} -- skipping (TENANT-CLUSTER-E2E)"
+fi
+
 # ── Step 5: AC-2 wrapper deploy gate acceptance contract ──────────────────────
 
 log_info "phase-b step=5 Running AC-2 (wrapper e2e)"

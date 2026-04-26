@@ -113,6 +113,22 @@ dev-bootstrap: check-tools
 dev-capi: check-tools
 	@MODE=capi bash "$(SCRIPTS)/dev-up.sh" ccs-dev
 
+# ── dev-tenant-enable ─────────────────────────────────────────────────────────
+# Apply compiled enable bundle to ccs-dev (role=tenant).
+# Prerequisites: ccs-dev API reachable, DEV_KUBECONFIG set or default (~/.kube/ccs-dev.yaml).
+# Applies all six enable phases from lab/configs/ccs-dev/compiled/enable/.
+
+DEV_KUBECONFIG ?= $(HOME)/.kube/ccs-dev.yaml
+
+.PHONY: dev-tenant-enable
+dev-tenant-enable: check-tools
+	@echo "==> [dev-tenant-enable] Applying enable bundle to ccs-dev"
+	@for phase_dir in $(dir $(abspath $(lastword $(MAKEFILE_LIST))))../configs/ccs-dev/compiled/enable/*/; do \
+	  echo "  applying phase $$(basename $$phase_dir)"; \
+	  kubectl --kubeconfig "$(DEV_KUBECONFIG)" apply --server-side --force-conflicts -R -f "$$phase_dir" || exit 1; \
+	done
+	@echo "==> [dev-tenant-enable] done"
+
 # ── help ──────────────────────────────────────────────────────────────────────
 
 .PHONY: help
