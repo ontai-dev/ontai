@@ -10,6 +10,14 @@ machine:
     certSANs: []
     kubelet:
         image: ghcr.io/siderolabs/kubelet:v1.32.3
+        extraMounts:
+            - destination: /var/local-path-provisioner
+              type: bind
+              source: /var/local-path-provisioner
+              options:
+                - bind
+                - rshared
+                - rw
         defaultRuntimeSeccompProfileEnabled: true
         nodeIP:
             validSubnets:
@@ -19,6 +27,7 @@ machine:
         hostname: ccs-dev-cp1
         interfaces:
             - interface: enp1s0
+              dhcp: false
               addresses:
                 - 10.20.0.11/24
               routes:
@@ -30,7 +39,7 @@ machine:
             - 8.8.4.4
             - 8.8.8.8
     install:
-        disk: /dev/sda
+        disk: /dev/vda
         image: ghcr.io/siderolabs/installer:v1.9.3
         wipe: false
     sysctls:
@@ -68,6 +77,7 @@ machine:
     nodeLabels:
         node.kubernetes.io/exclude-from-external-load-balancers: ""
 cluster:
+    allowSchedulingOnControlPlanes: true
     id: HdSGEeaAFHKNBImR5yUJkOX56sS837DKJvcJK2SKELk=
     secret: pZ6GhYExDKIuYtY8b9SwF5EhMnid+E6dy/t5YuFtsCI=
     controlPlane:
@@ -79,6 +89,8 @@ cluster:
             - 10.244.0.0/16
         serviceSubnets:
             - 10.96.0.0/12
+        cni:
+            name: none
     token: j33lzd.i44b566555fwk1xe
     secretboxEncryptionSecret: sGaPMezYN1E9aJYknkEop2L0CZq1Z+B3PDwr4CUwBg0=
     ca:
@@ -117,9 +129,9 @@ cluster:
             rules:
                 - level: Metadata
     controllerManager:
-        image: registry.k8s.io/kube-controller-manager:v1.32.3
+        image: registry.k8s.io/kube-controller-manager:v1.32.3    
     proxy:
-        image: registry.k8s.io/kube-proxy:v1.32.3
+        disabled: true
     scheduler:
         image: registry.k8s.io/kube-scheduler:v1.32.3
     discovery:

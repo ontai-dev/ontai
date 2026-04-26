@@ -134,11 +134,37 @@ rules:
   - bind
   - escalate
 - apiGroups:
-  - runner.ontai.dev
+  - infrastructure.ontai.dev
   resources:
-  - runnerconfigs
+  - infrastructurerunnerconfigs
   verbs:
   - get
+- apiGroups:
+  - infrastructure.ontai.dev
+  resources:
+  - infrastructuretalosclusters
+  - infrastructuretalosclusters/status
+  - infrastructuretalosclusters/finalizers
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+- apiGroups:
+  - infrastructure.ontai.dev
+  resources:
+  - seammemberships
+  - seammemberships/status
+  - seammemberships/finalizers
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
