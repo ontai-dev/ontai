@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** April 30, 2026 (session/15 live tenant onboarding)
+**Last updated:** May 1, 2026 (session/15 PackReceipt write complete)
 
-**Current state:** Full pack delivery chain verified end-to-end. nginx-ingress ClusterPack deployed to ccs-dev via PackExecution -> Kueue Job -> conductor-execute (with tenant kubeconfig) -> ingress-nginx/controller running on ccs-dev. PackInstance created on management cluster. PackReceipt not yet written (next gap). Platform operator now auto-creates wrapper-runner RBAC at tenant onboarding. Conductor management now publishes capabilities to all RunnerConfigs (PublishAllWithRetry). Next: implement PackReceipt write, test drift detection, validate management conductor retrigger.
+**Current state:** Full pack delivery chain verified end-to-end including PackReceipt. nginx-ingress ClusterPack deployed to ccs-dev. InfrastructurePackReceipt written to ont-system on ccs-dev with correct packSignature after each successful conductor-execute Job. PackInstance on management cluster, PackReceipt on tenant cluster. Platform operator auto-creates wrapper-runner RBAC at tenant onboarding. Next: PackReceipt drift detection by conductor role=tenant, management conductor retrigger test, CONDUCTOR-BL-DRIFT-SIGNAL.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -144,14 +144,22 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 
 ---
 
+## Session/15 PackReceipt Write Closure (2026-05-01)
+
+| Item | Resolution | Reference |
+|------|-----------|-----------|
+| PACKRECEIPT-WRITE | `writePackReceipt` added to all three success paths in pack-deploy: single-pass staged, single-pass direct, and split path (`executeSplitPath`). `packSignature` propagated from ClusterPack status through all paths. `TenantDynamicClient` used for all tenant writes. SSA patch via `conductor-pack-deploy` field manager. Verified: `InfrastructurePackReceipt/nginx-ccs-dev` exists in `ont-system` on ccs-dev with correct packSignature. | conductor session/15 6fe4d5c |
+| wrapper-runner RBAC lifecycle | `ensureWrapperRunnerResources` added to `ensureTenantOnboarding` in platform (`taloscluster_helpers.go`). Creates SA/Role/RoleBinding/ClusterRoleBinding per tenant at namespace creation time. Manual lab YAML (`wrapper-runner-ccs-dev.yaml`) applied for immediate unblock; operator code now owns this permanently. Deletion path (ClusterRoleBinding cleanup on TalosCluster deletion) tracked as PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE. | platform main 3d39e92 |
+
+---
+
 ## Open Work
 
 ### Blocking Alpha
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| TENANT-CLUSTER-E2E | all | Pack delivery chain verified end-to-end (2026-04-30): nginx-ingress deployed to ccs-dev, PackInstance created on management cluster. Remaining: PackReceipt write to tenant cluster, drift detection, management conductor retrigger test. |
-| PACKRECEIPT-WRITE | conductor | Conductor-execute (pack-deploy capability) must write InfrastructurePackReceipt into ont-system on the tenant cluster after successful manifest apply. PackReceipt is the sole local desired-state reference on tenant clusters. Currently not written -- OperationResultSpec DeployedResources field is populated but no PackReceipt CR is created. |
+| TENANT-CLUSTER-E2E | all | Pack delivery chain fully verified (2026-05-01): nginx-ingress deployed to ccs-dev, PackInstance created on management cluster, PackReceipt written to ont-system on ccs-dev. Remaining: drift detection, management conductor retrigger test. |
 | PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE | platform | wrapper-runner ClusterRoleBinding must be deleted on TalosCluster deletion (tenant offboarding). ensureWrapperRunnerResources creates it at onboarding; no corresponding cleanup. Track in deletion path. |
 | CLUSTERPACK-BL-VERSION-CLEANUP | conductor, seam-core | PackReceipt must carry full resource inventory (GVK + name + namespace per deployed resource). When new PackInstance arrives on tenant cluster, conductor role=tenant diffs old PackReceipt inventory vs new PackInstance manifests and deletes orphaned resources (present in old receipt, absent in new manifests). This ensures clean version upgrades and prevents resource stranding when components are removed. |
 | CONDUCTOR-BL-DRIFT-SIGNAL | conductor | Conductor role=tenant drift signal mechanism: max 3 retrigger attempts to management conductor. On 3rd failure: record drift reason in ClusterPack status on BOTH management cluster (by conductor role=management) and tenant cluster (by conductor role=tenant). After 3 failures: manual intervention required, no further automatic retriggering. Federation channel is the signal path. |

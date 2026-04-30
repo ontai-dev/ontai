@@ -2,10 +2,10 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main                                        | 770072d     | active (tracking)         |
-| conductor    | session/15-capability-tests                 | 66c875e     | Option B restore clean    |
+| ontai        | main                                        | (pending)   | active (tracking)         |
+| conductor    | session/15-capability-tests                 | 6fe4d5c     | PackReceipt write complete |
 | guardian     | main                                        | 112f99e     | PR #18 merged             |
-| platform     | session/15-t19-import-conductor             | d2c49db     | Option B restore clean    |
+| platform     | main                                        | 3d39e92     | ensureWrapperRunnerResources merged |
 | wrapper      | main                                        | a1b0743     | PR #15 merged             |
 | seam-core    | main                                        | 3f5a0b4     | Dockerfile fix committed      |
 | domain-core  | main                                        | f01ca65     | active                    |
@@ -99,3 +99,6 @@ No pushes to remote until Platform Governor authorizes.
 | ontai root   | 770072d | root: add PLATFORM-BL-MACHINECONFIG-IMPORT-CAPTURE, update PROGRESS.md |
 | conductor    | 66c875e | compiler: restore seam-tenant namespace manifest for mode=import (Option B) |
 | platform     | d2c49db | platform: restore original import reconcile ordering and fix schema doc |
+| conductor    | f1148ec | conductor: PublishAllWithRetry, TenantDynamicClient for pack-deploy, packbuild ccs-dev spec |
+| platform     | 3d39e92 | platform: ensureWrapperRunnerResources in ensureTenantOnboarding |
+| conductor    | 6fe4d5c | conductor: writePackReceipt in executeSplitPath success path |
