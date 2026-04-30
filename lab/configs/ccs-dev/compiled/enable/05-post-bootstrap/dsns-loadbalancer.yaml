@@ -9,6 +9,7 @@ kind: Service
 metadata:
   annotations:
     governance.infrastructure.ontai.dev/owner: seam-core
+    lbipam.cilium.io/ips: 10.20.0.225
   name: dsns-loadbalancer
   namespace: kube-system
 spec:

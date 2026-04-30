@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** April 26, 2026 (session/15 import-wiring)
+**Last updated:** April 30, 2026 (session/15 live tenant onboarding)
 
-**Current state:** Phase 2B complete. Three-layer RBAC hierarchy locked (CS-INV-008). T-19 and T-19a implemented -- platform drives full conductor state machine for tenant import; guardian provisions conductor-tenant RBACProfile. PRs platform #17 and guardian #18 open. Import/bootstrap mode architecture corrected (session/15-import-wiring): compiler no longer emits seam-tenant namespace; Platform creates it on CR admission (CP-INV-004). Next gate: TENANT-CLUSTER-E2E (ccs-dev onboarding, awaiting Governor).
+**Current state:** Phase 2B complete. ccs-dev InfrastructureTalosCluster admitted and conducting under management. Platform bootstrap window refactored: platform creates ont-system namespace + conductor RBAC only (no Deployment). Enable bundle is sole conductor Deployment authority. Conductor role=tenant running on ccs-dev with no RBAC errors. Architecture locked: no RunnerConfig on tenant clusters; capability publisher is management-only. Next: deploy InfrastructureClusterPack to ccs-dev, verify PackExecution/PackInstance/PackReceipt chain, test drift detection and management conductor retrigger.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -119,13 +119,39 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 
 ---
 
+## Session/15 Live Tenant Onboarding (2026-04-30)
+
+### Architecture Clarifications (locked this session)
+
+- **No RunnerConfig on tenant clusters.** RunnerConfig is management-only for day2 ops and ClusterPack delivery. Conductor role=tenant has no RunnerConfig.
+- **Capability publisher is role=management only.** Conductor role=tenant skips capability publication entirely.
+- **Platform bootstrap window scope (INV-020).** Platform's sole responsibility for any InfrastructureTalosCluster (role=tenant, mode=import or mode=bootstrap): `ont-system` namespace + conductor ServiceAccount + ClusterRole/ClusterRoleBinding + InfrastructureTalosCluster CR copy. No Deployment creation. Enable bundle is the sole conductor Deployment authority for all cluster roles.
+- **Conductor role=tenant responsibilities.** Watches InfrastructureTalosCluster (copy in ont-system) and PackReceipts. Detects drift vs live deployed resources. Reconstructs ClusterPack/PackExecution/PackInstance from PackReceipts. Signals conductor role=management on drift. Drift retrigger: max 3 attempts. On 3rd failure: records drift reason in ClusterPack status on both management and tenant clusters. No remediation without management cluster confirmation.
+- **ClusterPack version cleanup.** When a new PackInstance version removes components, orphaned resources from the old version must be deleted from the tenant cluster. PackReceipt must carry a full resource inventory (GVK + name + namespace). Conductor role=tenant diffs old PackReceipt inventory vs new PackInstance manifests and deletes orphans. Tracked as CLUSTERPACK-BL-VERSION-CLEANUP.
+
+### Work Completed (2026-04-30)
+
+| Item | Resolution | Reference |
+|------|-----------|-----------|
+| seam-core conditions rename | `ReasonConductorDeploymentAvailable/Unavailable` → `ReasonConductorBootstrapComplete/Pending`. `ConditionTypeConductorReady` now means bootstrap window complete, not Deployment available. | seam-core main 43e48f3 |
+| Platform bootstrap window refactor | `EnsureConductorDeploymentOnTargetCluster` → `EnsureRemoteConductorBootstrap`. Returns (true, nil) when namespace+SA+RBAC+InfrastructureTalosCluster copy done. `BuildConductorAgentDeployment` removed. `RemoteConductorAvailableFn` → `RemoteConductorBootstrapDoneFn`. All tests updated. | platform session/15 f372d57 |
+| Conductor ClusterRole conductor-agent-tenant | Added `coordination.k8s.io/leases` (full verbs, leader election) and `rbac.authorization.k8s.io` roles/rolebindings/clusterroles/clusterrolebindings (get/list/watch/update/patch, drift detection + bootstrap sweep). | platform session/15 f372d57 |
+| Conductor role-aware enable bundle | Compiler `--cluster-role=tenant` emits phases 00a, 00 (seam-core CRDs), 04 (conductor), 05 (DSNS). Guardian and platform-wrapper phases 01-03 skipped. No seam-tenant namespace in 00a. No RBACProfile in 04. No Kueue resources in 05. | conductor session/15 1708bab |
+| Conductor capability publisher gated | `agent.NewCapabilityPublisher` only created when `role == RoleManagement`. `onLeaderStart` nil-guards the call. role=tenant startup produces no RunnerConfig errors. | conductor session/15 1708bab |
+| ccs-dev enable bundle applied | Phases 00a, 00, 04, 05 applied to ccs-dev. seam-core CRDs installed. Conductor running clean -- leader elected, bootstrap sweep completing, no forbidden errors. | live cluster |
+| InfrastructureTalosCluster copy in ont-system | EnsureRemoteTalosClusterCopy confirmed working: InfrastructureTalosCluster exists in ccs-dev's ont-system, conductor role=tenant watching it. | live cluster |
+
+---
+
 ## Open Work
 
 ### Blocking Alpha
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| TENANT-CLUSTER-E2E | all | ccs-dev onboarding. Phase B script ready. Promotes all AC-2, AC-4, AC-5 e2e stubs to live. T-19 and T-19a now implemented. Awaiting Governor. |
+| TENANT-CLUSTER-E2E | all | ccs-dev InfrastructureTalosCluster admitted and conductor running. Remaining: deploy InfrastructureClusterPack, verify PackExecution/PackInstance/PackReceipt chain, test drift detection, validate management conductor retrigger. |
+| CLUSTERPACK-BL-VERSION-CLEANUP | conductor, seam-core | PackReceipt must carry full resource inventory (GVK + name + namespace per deployed resource). When new PackInstance arrives on tenant cluster, conductor role=tenant diffs old PackReceipt inventory vs new PackInstance manifests and deletes orphaned resources (present in old receipt, absent in new manifests). This ensures clean version upgrades and prevents resource stranding when components are removed. |
+| CONDUCTOR-BL-DRIFT-SIGNAL | conductor | Conductor role=tenant drift signal mechanism: max 3 retrigger attempts to management conductor. On 3rd failure: record drift reason in ClusterPack status on BOTH management cluster (by conductor role=management) and tenant cluster (by conductor role=tenant). After 3 failures: manual intervention required, no further automatic retriggering. Federation channel is the signal path. |
 | CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull conductor-tenant RBACProfile from seam-tenant-{cluster} on management cluster and write it into ont-system on the tenant cluster. Guardian side complete (PR #18 pending). Conductor pull loop not yet implemented. |
 
 ### Next Session
@@ -133,8 +159,7 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 | ID | Component | Description |
 |----|-----------|-------------|
 | GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | Add RBACProfile validation webhook; route seam-operator label profiles through management-maximum validation. |
-| GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | No reconciler back-fills RBACProfiles for RBAC arriving outside rbac-intake. Governor design session required. |
-| CONDUCTOR-BL-CAPABILITY-WATCH | conductor | ConductorReady gate polls RunnerConfig on 30s requeue. Should watch RunnerConfig status and trigger immediately on capability publication. |
+| CONDUCTOR-BL-SIGNING-KEY-TENANT | conductor | Enable bundle for tenant clusters (role=tenant) should not mount the signing PRIVATE key. Public key only for PackInstance signature verification (INV-026). The compiler currently generates and mounts a full signing keypair for all clusters. For tenant clusters: only the management cluster's public key should be present (for verifying signed PackInstances). This is a compiler + enable bundle change. |
 
 ---
 

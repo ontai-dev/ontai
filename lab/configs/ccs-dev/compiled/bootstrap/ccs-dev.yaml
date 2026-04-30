@@ -1,5 +1,5 @@
-apiVersion: platform.ontai.dev/v1alpha1
-kind: TalosCluster
+apiVersion: infrastructure.ontai.dev/v1alpha1
+kind: InfrastructureTalosCluster
 metadata:
   annotations:
     ontai.dev/owns-runnerconfig: "true"
@@ -7,6 +7,7 @@ metadata:
   namespace: seam-system
 spec:
   clusterEndpoint: 10.20.0.20:6443
+  kubernetesVersion: 1.32.3
   mode: import
   role: tenant
   talosVersion: v1.9.3

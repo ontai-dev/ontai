@@ -1,6 +1,6 @@
 # ONT Platform: Backlog
 
-**Last updated:** April 26, 2026 (session/15 import-wiring)
+**Last updated:** April 30, 2026 (session/15 live tenant onboarding)
 
 ---
 
@@ -8,7 +8,9 @@
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| TENANT-CLUSTER-E2E | all | ccs-dev never onboarded as tenant cluster. Required for alpha. Phase B script ready. Promotes all AC-2, AC-4, AC-5 e2e stubs to live. T-19 (platform state machine) and T-19a (guardian conductor-tenant profile) implemented in PRs #17 and #18 -- onboarding will no longer stall at ConductorPending. CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION (conductor pull loop) still required for full handshake but not a stall condition. |
+| TENANT-CLUSTER-E2E | all | ccs-dev InfrastructureTalosCluster admitted, enable bundle applied, conductor running clean (2026-04-30). Remaining in session: deploy InfrastructureClusterPack, verify PackExecution/PackInstance/PackReceipt chain, test drift (manual resource mutation), validate management conductor retrigger, verify PackReceipt drift round-trip. T-19 and T-19a implemented in PRs #17 and #18. |
+| CLUSTERPACK-BL-VERSION-CLEANUP | conductor, seam-core | When a new PackInstance version removes components that were in the previous version, orphaned resources must be cleaned up from the tenant cluster. PackReceipt must carry a full resource inventory (GVK + name + namespace per deployed resource). Conductor role=tenant: on new PackInstance arrival, diff old PackReceipt inventory vs new PackInstance manifests, delete orphans. This is critical to prevent resource stranding across ClusterPack upgrades. Requires: InfrastructurePackReceipt spec field `resourceInventory []ResourceRef` (seam-core change), conductor role=tenant orphan detection loop in PackInstance pull loop. |
+| CONDUCTOR-BL-DRIFT-SIGNAL | conductor | Drift detection and retrigger protocol: conductor role=tenant detects drift (resource mutated/deleted vs PackReceipt) → signals management conductor via federation channel → management conductor retriggers ClusterPack (same version) → max 3 attempts per drift event → on 3rd failure: record drift reason and last-attempt timestamp in ClusterPack status on BOTH clusters (management writes via normal reconcile, tenant writes via federation signal). After 3 failures: drift flagged as ManualInterventionRequired, no further auto-retrigger. Some drift reasons (StorageClass PVC failures) are recognizable as manual cases from attempt 1. |
 | TCOR-SIZE-BOUND | conductor, platform | TCOR Operations map grows unbounded within a talosVersion epoch. At 500 bytes/entry, 3000 entries reach etcd 1.5MB limit. Mitigation: add mid-epoch flush in AppendOperationRecord when len(operations) >= 1000 (dump to GraphQuery without bumping revision). Blocked on CONDUCTOR-BL-GRAPHQUERY-ARCHIVE. Low risk for production (typical epochs see <100 operations). |
 | TCOR-GRAPHQUERY-LINK | seam-core, GraphQuery | No explicit FK between PackOperationResult and TCOR across revisions. Implicit join key: clusterRef + talosVersion + revision. When GraphQuery archival is implemented, add graphQueryRevisionRef field to TCOR and POR to make the linkage explicit. Blocked on GraphQuery DB implementation. |
 
@@ -32,6 +34,7 @@
 | GUARDIAN-BL-RBACPROFILE-SWEEP | guardian | T-04b covers unprovisioned RBACProfiles only (retry failed intake writes). CONFIRMED GAP (T-25b, 2026-04-26): raw RBAC objects (ClusterRole, ClusterRoleBinding) arriving outside /rbac-intake/pack with no RBACProfile are invisible to the backfill runnable. Needs a new sweep reconciler that lists governed RBAC in seam-tenant-* and creates missing RBACProfiles. Design session required. GAP_TO_FILL.md T-25b. |
 | WRAPPER-BL-ILI-DECLARING-PRINCIPAL | guardian, wrapper | MutatingWebhookConfiguration for declaring-principal handler added to compiler enable bundle. Needs cluster apply and verification against live admission webhook. |
 | ~~PLATFORM-BL-3-LOCALQUEUE~~ | platform | CLOSED 2026-04-26: ensureTenantOnboarding creates LocalQueue pack-deploy-queue in seam-tenant-{cluster} on each tenant cluster import. Unit test TestTalosClusterReconcile_TenantImport_CreatesLocalQueue covers this. |
+| CONDUCTOR-BL-SIGNING-KEY-TENANT | conductor, compiler | Enable bundle for tenant clusters (role=tenant) must not mount the signing PRIVATE key. Only the management cluster's PUBLIC key should be present for PackInstance signature verification (INV-026). The compiler currently generates a full keypair for all clusters. Fix: compiler distinguish management vs tenant for signing-key Secret generation: tenant gets public-key-only Secret. Executor deploy and signing loop remain management-only. |
 | CONDUCTOR-BL-CAPABILITY-WATCH | conductor | Wrapper ConductorReady gate should watch RunnerConfig status and trigger immediately when capabilities appear, rather than polling on 30s requeue. |
 | G-BL-SNAPSHOT-ALIAS | guardian | snapshot-management PermissionSnapshot should cover ccs-mgmt. Eliminates redundant snapshot-ccs-mgmt. |
 | G-BL-IDP-POLLING | guardian | IdentityProviderReconciler must poll OIDC provider for group membership changes and record identitybinding.drift_detected. Requires Keycloak or Dex in lab. |
@@ -55,8 +58,9 @@
 
 | Area | Component | Description |
 |------|-----------|-------------|
-| PackReceipt | conductor | Conductor agent on tenant cluster creating PackReceipt. Never deployed on a tenant cluster. |
-| Drift detection | conductor | PackInstance Drifted condition when manifests diverge from PackReceipt. Requires tenant conductor deployed and active. |
+| PackReceipt | conductor | Conductor role=tenant on ccs-dev creating PackReceipt after PackInstance arrives. Pending ClusterPack deployment this session. |
+| Drift detection | conductor | PackInstance Drifted condition when manifests diverge from PackReceipt. Conductor running on ccs-dev. Pending manual drift injection this session. |
+| ClusterPack version cleanup | conductor | Orphaned resource deletion when new PackInstance removes components. PackReceipt resource inventory field required (CLUSTERPACK-BL-VERSION-CLEANUP). |
 | Federation channel | conductor | Audit forwarding from tenant conductor to management guardian. Implemented, never tested. |
 | CAPI path | platform | SeamInfrastructureCluster and SeamInfrastructureMachine full lifecycle. Unit tests exist. e2e on live cluster pending TENANT-CLUSTER-E2E. |
 | IdentityBinding | guardian | IdentityProvider and IdentityBinding e2e with Keycloak or Dex. No lab IdP provisioned. |

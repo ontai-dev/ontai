@@ -9,9 +9,6 @@
 # ont-system: Conductor agent namespace (management and target clusters).
 #   restricted PSA, webhook-mode=governed.
 #
-# seam-tenant-ccs-dev: pack delivery namespace for the management cluster.
-#   managed-by=platform, webhook-mode=governed. wrapper-schema.md §9.
-#
 ---
 apiVersion: v1
 kind: Namespace
@@ -32,18 +29,5 @@ metadata:
     pod-security.kubernetes.io/warn: restricted
     seam.ontai.dev/webhook-mode: governed
   name: ont-system
-spec: {}
-status: {}
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    ontai.dev/managed-by: platform
-    platform.ontai.dev/cluster: ccs-dev
-    pod-security.kubernetes.io/enforce: restricted
-    pod-security.kubernetes.io/warn: restricted
-    seam.ontai.dev/webhook-mode: governed
-  name: seam-tenant-ccs-dev
 spec: {}
 status: {}

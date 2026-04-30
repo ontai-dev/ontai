@@ -3,14 +3,13 @@
 ---
 apiVersion: v1
 data:
-  applyOrder: prerequisites.yaml
+  applyOrder: prerequisites.yaml,seam-core-crds.yaml
   order: "0"
   phase: infrastructure-dependencies
   readinessGate: 'All prerequisites listed in prerequisites.yaml must be satisfied
-    by the operator before applying phase 1 (01-guardian-bootstrap). Verify: CNPG
-    operator running in cnpg-system, guardian-db Cluster Ready in seam-system, guardian-db-credentials
-    Secret present in seam-system, Kueue ClusterQueue and LocalQueue CRDs registered,
-    default StorageClass present.'
+    by the operator before applying phase 4 (04-conductor). Verify: default StorageClass
+    present. seam-core-crds.yaml installs the infrastructure.ontai.dev CRD group required
+    by Conductor.'
 kind: ConfigMap
 metadata:
   labels:
