@@ -449,9 +449,29 @@ Comprehensive codebase audit of all open tasks in GAP_TO_FILL.md. All CODEBASE.m
 
 ---
 
+## Session/15 GAP_TO_FILL Closure (2026-05-02)
+
+All open GAP_TO_FILL tasks (except Phase 6 T-20/T-21 excluded by directive, and T-23/T-24 requiring design sessions) were closed in a single session. Conductor branch `session/15-capability-tests`.
+
+| Task | Item | Resolution |
+|------|------|-----------|
+| T-25a | Guardian RBACProfile webhook (seam-operator label routing) | RBACProfile added to InterceptedKinds; Gate 4a validates seam-operator profiles reference management-maximum only. 5 new tests. Committed prior session. |
+| PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE | CRB cleanup finalizer on TalosCluster deletion | `finalizerWrapperRunnerCRBCleanup` added; Step 3 in `handleTalosClusterDeletion` deletes `wrapper-runner-cluster-scoped-{tc.Name}`. Fake-client status-stripping bug fixed (all finalizer Updates moved to Step C0 before any Status assignments). Committed prior session. |
+| CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | RBACProfile pull loop for role=tenant | `RBACProfilePullLoop` in `rbacprofile_pull_loop.go`. Wired into `kernel/agent.go`. 4 unit tests. Committed prior session. |
+| CLUSTERPACK-BL-VERSION-CLEANUP | Version-upgrade orphan resource deletion | `deleteOrphanedResources()` + `deployedResourceKey()` added to `packinstance_pull_loop.go`. Fixed `[]map[string]interface{}` deep-copy panic (converted to `[]interface{}` in `buildReceiptSpecPayload`). `extractPackMetadataFromArtifact` populates `DeployedResources`. 2 unit tests. |
+| T-04a | TalosCluster CEL validation for mode=import | Already in CRD YAML (`x-kubernetes-validations` line 291). Closed without code change. |
+| T-05/T-11/T-13 | PackBuildInput Category discriminator + HelmVersion override | `Category string` field on `PackBuildInput`. Cross-contamination validation in `readPackBuildInput`. `HelmVersion string` on `HelmSource` with `helmVersionOrDefault()`. Category-driven dispatch in `compilePackBuild`. Backward-compatible nil-check retained. 6 unit tests. |
+| T-12 | Kustomize packbuild path | `KustomizeSource` struct + `kustomizeCompilePackBuild()` in `compile_packbuild_kustomize.go`. Uses `sigs.k8s.io/kustomize/api/krusty` (INV-014). kustomizeSource early return in validation. 3 unit tests. |
+| T-17 | Scoped RBACPolicy pull loop for role=tenant | `RBACPolicyPullLoop` in `rbacpolicy_pull_loop.go`. Pulls `cluster-policy` from `seam-tenant-{cluster}` on mgmt, SSA-patches into `ont-system`. Wired into `kernel/agent.go`. 4 unit tests. |
+
+Remaining open (design sessions required): T-23 (platform DriftSignal handling), T-24 (TalosCluster deletion cascade order per Decision H). Phase 6 (T-20, T-21) excluded by directive.
+
+GAP_TO_FILL.md updated to mark completed items.
+
+---
+
 ## Next Session Candidates
 
-1. **CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION** -- conductor pull loop for conductor-tenant RBACProfile (guardian side already complete PR #18).
-2. **PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE** -- ClusterRoleBinding cleanup on TalosCluster deletion.
-3. **CLUSTERPACK-BL-VERSION-CLEANUP** -- version-upgrade orphan diff loop in `packinstance_pull_loop.go` (schema done; implementation absent).
-4. **T-25a (GUARDIAN-BL-RBACPROFILE-WEBHOOK)** -- RBACProfile validation webhook with seam-operator label routing.
+1. **T-23** -- Platform DriftSignal handling for cluster-state drift (design session required).
+2. **T-24** -- TalosCluster deletion cascade per Decision H order (design session required).
+3. **Phase 6 (T-20, T-21)** -- Day2 scheduling with node awareness; CAPI-path Day2 parity (Phase 6, design session required).

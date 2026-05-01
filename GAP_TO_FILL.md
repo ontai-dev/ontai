@@ -1,6 +1,6 @@
 # Seam Platform: Open Work and Remaining Tasks
 
-**Last updated:** 2026-05-01
+**Last updated:** 2026-05-02
 **Original authored:** 2026-04-24. Audited against codebase 2026-05-01 -- all tasks verified at file/function level.
 **Governor decisions incorporated:** A, B, C, D, E, F, G, H, I (all locked)
 **Status:** AUTHORIZED. All approval gates pre-authorized 2026-04-24.
@@ -54,51 +54,25 @@ The following tasks were listed as open but are confirmed complete by direct cod
 
 ### Phase 1 -- Schema PRs (ontai-schema)
 
-**T-04a -- TalosCluster CEL validation for mode=import (seam-core CRD)**
-- Current state: `seam-core/config/crd/infrastructure.ontai.dev_infrastructuretalosclusters.yaml` has NO `x-kubernetes-validations` rules. Go struct comments say "Mandatory on mode=import" but this is not enforced at admission.
-- Required: CEL rule `self.mode != 'import' || (has(self.role) && self.role != '')` on `InfrastructureTalosClusterSpec`.
-- Run `make generate-crd` in seam-core after adding `+kubebuilder:validation:XValidation` marker.
-- Repo: seam-core (not ontai-schema -- schema lives in seam-core CRD YAML per Decision G).
+**T-04a -- CLOSED.** CEL rule `self.mode != 'import' || (has(self.role) && self.role != '')` confirmed present in CRD YAML at line 291. No code change required.
 
-**T-05 -- PackBuild category discriminator (conductor compiler)**
-- Current state: `InfrastructurePackBuildCategory` enum (helm/kustomize/raw) exists in `seam-core/api/v1alpha1/packbuild_types.go` L7-15. `PackBuildInput` struct in `conductor/cmd/compiler/compile.go` has NO `Category` field. Dispatch is by nil-check on `HelmSource`/`RawSource` pointer fields.
-- Required: Add `Category string` to `PackBuildInput`. Validate at `readPackBuildInput()` time. Enum enforcement: helm requires HelmSource present, kustomize requires KustomizeSource, raw requires RawSource.
-- Note: kustomize path (T-12) does not exist yet, so `category=kustomize` will be a parse-only gate until T-12 ships.
-- Repo: conductor.
+**T-05 -- CLOSED.** `Category string` added to `PackBuildInput`. Cross-contamination validation in `readPackBuildInput`. Category-driven dispatch in `compilePackBuild`. 6 unit tests. conductor session/15-capability-tests d2f117b.
 
 ---
 
-### Phase 3 -- PackBuild categories (blocked on T-05)
+### Phase 3 -- PackBuild categories (CLOSED)
 
-**T-11 -- Conductor: PackBuildInput category validation (conductor)**
-- Directly follows T-05. Once `Category` field exists, add validation: cross-category field contamination rejected (e.g., HelmSource present when category=raw).
-- `HelmVersion string` to be added to `HelmSource` struct (currently absent from the struct).
-- Tests: unit tests for all three category validation paths.
+**T-11 -- CLOSED.** `HelmVersion string` added to `HelmSource`. Cross-category contamination validated in `readPackBuildInput`. 6 unit tests. conductor session/15-capability-tests d2f117b.
 
-**T-12 -- Conductor: kustomize packbuild path (conductor)**
-- No kustomize implementation exists anywhere in `conductor/cmd/compiler/`.
-- Required: `KustomizeSource` struct, `kustomizeCompilePackBuild()`, kustomize go client in `conductor/go.mod`, new file `compile_packbuild_kustomize.go`.
-- Blocked on T-11.
+**T-12 -- CLOSED.** `KustomizeSource` struct and `kustomizeCompilePackBuild()` in `compile_packbuild_kustomize.go`. Uses krusty (INV-014). kustomizeSource early return in validation. 3 unit tests. conductor session/15-capability-tests 47aff29.
 
-**T-13 -- Conductor: raw packbuild category enforcement (conductor)**
-- `compile_packbuild_raw.go` `rawCompilePackBuild()` is unconditional -- no check that `category=raw` is set.
-- Wire the category discriminator: raw path selected only when `category=raw` explicitly set.
-- Blocked on T-11.
+**T-13 -- CLOSED.** Category-driven dispatch in `compilePackBuild` (switch on `in.Category`). Raw path only when `category=raw`. Backward-compatible nil-check retained. conductor session/15-capability-tests d2f117b.
 
 ---
 
 ### Phase 5 -- Tenant cluster work
 
-**T-17 -- Conductor tenant pull loops: remaining (conductor)**
-
-Current state from `conductor/internal/kernel/agent.go`:
-- SnapshotPullLoop: PRESENT. Pulls PermissionSnapshot from management cluster into local SnapshotStore for gRPC service.
-- PackInstancePullLoop: PRESENT. Verifies signed artifacts, writes PackReceipt.
-- PackReceiptDriftLoop: PRESENT. Detects resource drift, emits DriftSignals.
-- RBACProfile pull loop: ABSENT. No code reads `seam-tenant-{cluster}` RBACProfile from management and writes to `ont-system` on tenant cluster.
-- Scoped RBACPolicy pull: ABSENT. No code reads tenant-scoped RBACPolicy from management and writes to `ont-system`.
-
-Both absent items are tracked as CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION below. Decision C requires both. The PermissionService gRPC server (port 50051) is present and operational; this is not a pull loop gap.
+**T-17 -- CLOSED.** All five conductor role=tenant pull loops now present: SnapshotPullLoop, PackInstancePullLoop, PackReceiptDriftLoop, RBACProfilePullLoop (conductor-tenant), RBACPolicyPullLoop (cluster-policy). Both new loops wired in `kernel/agent.go`. 4 unit tests each. conductor session/15-capability-tests 6d9009f.
 
 **T-23 (PARTIAL) -- Management corrective job triggering: platform path (platform)**
 
@@ -121,17 +95,7 @@ Not covered (Decision H order is non-negotiable):
 
 The current deletion also means conductor role=tenant on the tenant cluster becomes orphaned (its `InfrastructureTalosCluster` copy in `ont-system` disappears when `seam-tenant-{name}` is deleted, but conductor keeps running). Manual conductor Deployment deletion on the tenant cluster is required today. Design session required for the coordinator.
 
-**T-25a -- Guardian RBACProfile validation webhook (guardian)**
-
-Current state: `guardian/internal/webhook/decision.go` `InterceptedKinds` contains only K8s RBAC primitives (Role, ClusterRole, RoleBinding, ClusterRoleBinding, ServiceAccount). RBACProfile is NOT in this map. RBACProfile writes are not gated by the admission webhook.
-
-Required:
-- Add `RBACProfile` to `InterceptedKinds`.
-- Two-path routing on `ontai.dev/rbac-profile-type=seam-operator` label: seam-operator profiles must reference `management-maximum` only (CS-INV-008); reject any other PermissionSet reference.
-- Non-seam-operator profiles route through normal cluster policy validation path.
-- 5 unit tests minimum.
-- No design session required -- logic is well-defined.
-- Repo: guardian.
+**T-25a -- CLOSED.** RBACProfile added to InterceptedKinds. Gate 4a validates seam-operator profiles reference management-maximum only. 5 unit tests. guardian session/15-capability-tests (prior session).
 
 ---
 
@@ -150,50 +114,24 @@ Required:
 
 ## New Open Items
 
-**CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION (conductor) -- PRIORITY**
-- ABSENT from codebase. No pull loop in `conductor/internal/agent/` reads `seam-tenant-{cluster}` RBACProfile from management cluster and writes to `ont-system`.
-- Guardian side is complete (ClusterRBACPolicyReconciler creates conductor-tenant RBACProfile in `seam-tenant-{cluster}` on management cluster, guardian PR #18).
-- Required: add fourth pull loop to `conductor/internal/kernel/agent.go` for role=tenant. Connect to management cluster mgmtClient, GET RBACProfile named `conductor-tenant` from `seam-tenant-{clusterRef}`, write/SSA-patch into `ont-system` on local cluster. Decision C requires this.
-- Feeds into T-17.
+**CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION -- CLOSED.** `RBACProfilePullLoop` in `rbacprofile_pull_loop.go`. conductor session/15-capability-tests (prior session).
 
-**PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE (platform)**
-- `ensureWrapperRunnerResources()` in `taloscluster_helpers.go` creates SA/Role/RoleBinding/ClusterRoleBinding at tenant onboarding. `handleTalosClusterDeletion()` does NOT delete them.
-- Required: delete `ClusterRoleBinding` named `wrapper-runner-{cluster}` on TalosCluster deletion.
+**PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE -- CLOSED.** `finalizerWrapperRunnerCRBCleanup` + Step 3 in `handleTalosClusterDeletion`. Fake-client bug fixed. platform session/15-capability-tests (prior session).
 
-**CLUSTERPACK-BL-VERSION-CLEANUP (conductor)**
-- Current state: `InfrastructurePackReceiptSpec` has `DeployedResources []PackReceiptDeployedResource` (seam-core `packreceipt_types.go` L74). Schema is in place.
-- `teardownOrphanedReceipt()` in `pack_receipt_drift_loop.go` handles full cleanup when ClusterPack is DELETED -- this covers the deletion case, not the version-upgrade case.
-- Missing: when a new PackInstance version N+1 arrives on tenant cluster, compare version N's `PackReceipt.spec.deployedResources` against version N+1's new manifests. Resources in N but not in N+1 are orphans; delete them from the tenant cluster before writing the N+1 PackReceipt.
-- Implementation location: `packinstance_pull_loop.go` after successful N+1 apply, before `buildReceiptSpecPayload()` writes the new receipt.
-- No schema addition needed (DeployedResources field already exists).
-- Repo: conductor only.
+**CLUSTERPACK-BL-VERSION-CLEANUP -- CLOSED.** `deleteOrphanedResources()` + `deployedResourceKey()` in `packinstance_pull_loop.go`. `buildReceiptSpecPayload` converts `[]map[string]interface{}` to `[]interface{}` to avoid unstructured deep-copy panic. 2 unit tests. conductor session/15-capability-tests 409e3f2.
 
 ---
 
-## Open Task Dependency Graph
+## Open Task Dependency Graph (2026-05-02)
+
+All previously active items closed. Remaining open items require design sessions or are Phase 6.
 
 ```
-Active (no blockers):
-  T-04a  (seam-core: TalosCluster CEL validation)          -- independent
-  T-05   (conductor: PackBuildInput Category field)         -- independent, blocks T-11 T-12 T-13
-  T-25a  (guardian: RBACProfile webhook)                   -- independent
-
-After T-05:
-  T-11   (conductor: category validation)                  -- after T-05, blocks T-12 T-13
-  T-12   (conductor: kustomize path)                       -- after T-11
-  T-13   (conductor: raw category enforcement)             -- after T-11
-
-Phase 5 (TENANT-CLUSTER-E2E unblocked; design sessions required for T-23 T-24):
-  T-17   (conductor: scoped RBACPolicy pull + T-17 remaining) -- feeds CONDUCTOR-BL item
+Design session required (Phase 5):
   T-23   (platform: cluster-state drift corrective jobs)   -- design session
   T-24   (platform/conductor: TalosCluster deletion cascade) -- design session
 
-No ordering dependency:
-  CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION        -- PRIORITY, feeds T-17
-  PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE                -- independent
-  CLUSTERPACK-BL-VERSION-CLEANUP                           -- independent (schema done)
-
-Phase 6 (design sessions required):
+Phase 6 (excluded by directive -- design sessions required):
   T-20   (platform: Day2 node-aware scheduling)            -- CAPI-PATH-VERIFICATION + design
   T-21   (platform: CAPI-path Day2 parity)                 -- CAPI-PATH-VERIFICATION + design
 ```
