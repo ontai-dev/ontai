@@ -3,7 +3,7 @@
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
 | ontai        | main                                        | a3045cb     | CODEBASE.md rewritten, GAP_TO_FILL.md updated |
-| conductor    | session/15-capability-tests                 | 1e481af     | TenantBootstrapSweep deleted, agent.go updated, e2e sweep test updated, pre-PR |
+| conductor    | session/15-capability-tests                 | 34602eb     | helm hook filtering, slog JSON handler, remove spec dump from POR log |
 | guardian     | session/15-t19a-conductor-rbacprofile       | 2b3b24c     | CODEBASE.md added with precise code references |
 | platform     | session/15-t19-import-conductor             | 0474770     | CODEBASE.md added with precise code references |
 | seam-core    | main                                        | d5289c3     | CODEBASE.md added with precise code references |
@@ -114,5 +114,6 @@ No pushes to remote until Platform Governor authorizes.
 | wrapper      | 51039d6 | wrapper: N-step rollback -- handleRollback reads target POR directly, no N-1 guard |
 | conductor    | 1e481af | session/15: fix pack-deploy RBAC apply to tenant cluster and helm namespace rendering |
 | conductor    | 7563ebe | session/15: tenant role wiring, INV-026 signing key enforcement, raw packbuild split, TenantBootstrapSweep deleted |
+| conductor    | 34602eb | conductor: helm hook filtering, slog JSON handler, remove spec dump from POR log |
 | guardian     | 693ba7d | session/15: GUARDIAN-BL-RBACPROFILE-TENANT-PROVISIONING -- tenant snapshot path in RBACProfileReconciler, TenantProfileRunnable clears RBACPolicyRef |
 | ontai root   | 52c4d36 | session/15 close: CODEBASE.md across all repos, GAP_TO_FILL cleanup, ccs-dev INV-026 bundle fix, ccs-mgmt signing key rotation |
