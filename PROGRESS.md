@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 1, 2026 (session/15 PackReceipt write complete)
+**Last updated:** May 1, 2026 (session/15 TENANT-CLUSTER-E2E + CONDUCTOR-BL-DRIFT-SIGNAL closed)
 
-**Current state:** Full pack delivery chain verified end-to-end including PackReceipt. nginx-ingress ClusterPack deployed to ccs-dev. InfrastructurePackReceipt written to ont-system on ccs-dev with correct packSignature after each successful conductor-execute Job. PackInstance on management cluster, PackReceipt on tenant cluster. Platform operator auto-creates wrapper-runner RBAC at tenant onboarding. Next: PackReceipt drift detection by conductor role=tenant, management conductor retrigger test, CONDUCTOR-BL-DRIFT-SIGNAL.
+**Current state:** Full drift detection and circuit breaker loop verified end-to-end. PackReceipt signature verification passes (Ed25519). Conductor role=tenant detects missing Deployment and emits DriftSignal to management cluster. Management conductor handler retriggeres (deletes PackExecution, wrapper creates new one, pack-deploy restores nginx). Three-cycle escalation counter confirmed. TerminalDrift condition set at escalationThreshold=3 with no further retriggering. TENANT-CLUSTER-E2E and CONDUCTOR-BL-DRIFT-SIGNAL closed. Next: CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION, PR series.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -153,16 +153,68 @@ Management cluster treated as a tenant for pack delivery (`seam-tenant-ccs-mgmt`
 
 ---
 
+## Session/15 Drift Detection E2E Closure (2026-05-01)
+
+### New Components
+
+| Component | File | Role |
+|-----------|------|------|
+| PackReceiptDriftLoop | conductor/internal/agent/pack_receipt_drift_loop.go | role=tenant: verifies PackReceipt signature, checks deployedResources against live cluster, emits/manages DriftSignal on management cluster |
+| DriftSignalHandler | conductor/internal/agent/drift_signal_handler.go | role=management: processes pending DriftSignals, deletes PackExecution to retrigger, sets TerminalDrift at escalationThreshold |
+
+### State Machine
+
+Tenant conductor DriftSignal lifecycle (Decision H):
+- No signal + drift: CREATE (pending, counter=0)
+- Signal pending + drift: UPDATE (counter+1, keep pending)
+- Signal queued + drift persists: UPDATE (counter+1, reset to pending -- retrigger failed)
+- Signal queued + no drift: SET confirmed (retrigger succeeded)
+- Signal confirmed: DELETE on next drift (fresh cycle)
+- counter >= escalationThreshold: STOP emitting (terminal)
+
+Management conductor: state=pending + counter < threshold → RETRIGGER (delete PE, set queued). state=pending + counter >= threshold → SET TerminalDrift.
+
+### Live E2E Results (ccs-dev)
+
+| # | Step | Result |
+|---|------|--------|
+| 1 | Signature verification: packSignature patched signatureVerified=true | PASS |
+| 2 | Drift detection: Deployment deleted, DriftSignal emitted (pending, counter=0) | PASS |
+| 3 | Management handler: PackExecution deleted, new PE created, state=queued | PASS |
+| 4 | pack-deploy Job: nginx-ingress-controller restored (1/1 Running) | PASS |
+| 5 | Drift resolved: DriftSignal set to confirmed after nginx restored | PASS (new) |
+| 6 | Second deletion: queued+drift → counter=1, pending | PASS (new state machine) |
+| 7 | Third deletion: queued+drift → counter=2, pending | PASS |
+| 8 | Circuit breaker: counter=3 (=escalationThreshold), TerminalDrift set | PASS |
+| 9 | No PackExecution after TerminalDrift | PASS |
+
+### RBAC Fixes Applied
+
+| SA | Cluster | Change |
+|----|---------|--------|
+| conductor (ont-system) | ccs-dev | `"" *` get/list/watch for drift detection (was limited to 4 resources); `create` added to infrastructure.ontai.dev; `apps *`, `networking.k8s.io *`, `batch *` added |
+| conductor-tenant-ccs-dev (seam-tenant-ccs-dev) | ccs-mgmt | Role widened: `infrastructure.ontai.dev *` get/list/watch/create/update/patch; `security.ontai.dev *` get/list/watch |
+
+Both changes also applied to `EnsureRemoteConductorRBAC` in `platform/internal/controller/taloscluster_helpers.go` so future bootstrap deploys get wide RBAC.
+
+### Unit Tests
+
+14 tests passing in `conductor/internal/agent`:
+- 3 DriftSignalHandler tests (pending retrigger, escalation threshold, non-pending ignored)
+- 11 PackReceiptDriftLoop tests (bootstrap window, valid sig, invalid sig, drift detected, no drift, threshold stops emitting, drift persists queued increments counter, drift resolved confirms signal, pluralizeKind, GVR core group, GVR named group)
+
+---
+
 ## Open Work
 
 ### Blocking Alpha
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| TENANT-CLUSTER-E2E | all | Pack delivery chain fully verified (2026-05-01): nginx-ingress deployed to ccs-dev, PackInstance created on management cluster, PackReceipt written to ont-system on ccs-dev. Remaining: drift detection, management conductor retrigger test. |
+| TENANT-CLUSTER-E2E | all | CLOSED 2026-05-01: full drift detection loop verified. See Session/15 Drift Detection E2E Closure section. |
 | PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE | platform | wrapper-runner ClusterRoleBinding must be deleted on TalosCluster deletion (tenant offboarding). ensureWrapperRunnerResources creates it at onboarding; no corresponding cleanup. Track in deletion path. |
 | CLUSTERPACK-BL-VERSION-CLEANUP | conductor, seam-core | PackReceipt must carry full resource inventory (GVK + name + namespace per deployed resource). When new PackInstance arrives on tenant cluster, conductor role=tenant diffs old PackReceipt inventory vs new PackInstance manifests and deletes orphaned resources (present in old receipt, absent in new manifests). This ensures clean version upgrades and prevents resource stranding when components are removed. |
-| CONDUCTOR-BL-DRIFT-SIGNAL | conductor | Conductor role=tenant drift signal mechanism: max 3 retrigger attempts to management conductor. On 3rd failure: record drift reason in ClusterPack status on BOTH management cluster (by conductor role=management) and tenant cluster (by conductor role=tenant). After 3 failures: manual intervention required, no further automatic retriggering. Federation channel is the signal path. |
+| CONDUCTOR-BL-DRIFT-SIGNAL | conductor | CLOSED 2026-05-01: DriftSignal mechanism fully implemented and tested. PackReceiptDriftLoop + DriftSignalHandler. 14 unit tests. Live E2E: 3 retrigger cycles, TerminalDrift at threshold. See Session/15 Drift Detection E2E Closure. |
 | CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull conductor-tenant RBACProfile from seam-tenant-{cluster} on management cluster and write it into ont-system on the tenant cluster. Guardian side complete (PR #18 pending). Conductor pull loop not yet implemented. |
 
 ### Next Session

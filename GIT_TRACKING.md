@@ -3,9 +3,9 @@
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
 | ontai        | main                                        | (pending)   | active (tracking)         |
-| conductor    | session/15-capability-tests                 | 6fe4d5c     | PackReceipt write complete |
+| conductor    | session/15-capability-tests                 | (pending)   | drift detection + circuit breaker complete, pre-PR |
 | guardian     | main                                        | 112f99e     | PR #18 merged             |
-| platform     | main                                        | 3d39e92     | ensureWrapperRunnerResources merged |
+| platform     | main                                        | (pending)   | EnsureRemoteConductorRBAC widened, pre-PR |
 | wrapper      | main                                        | a1b0743     | PR #15 merged             |
 | seam-core    | main                                        | 3f5a0b4     | Dockerfile fix committed      |
 | domain-core  | main                                        | f01ca65     | active                    |
