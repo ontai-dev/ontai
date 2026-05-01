@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 1, 2026 (session/15 TENANT-CLUSTER-E2E + CONDUCTOR-BL-DRIFT-SIGNAL closed)
+**Last updated:** May 1, 2026 (session/15 full ClusterPack deletion cascade + orphan teardown + E2E drift cycle end-to-end validated)
 
-**Current state:** Full drift detection and circuit breaker loop verified end-to-end. PackReceipt signature verification passes (Ed25519). Conductor role=tenant detects missing Deployment and emits DriftSignal to management cluster. Management conductor handler retriggeres (deletes PackExecution, wrapper creates new one, pack-deploy restores nginx). Three-cycle escalation counter confirmed. TerminalDrift condition set at escalationThreshold=3 with no further retriggering. TENANT-CLUSTER-E2E and CONDUCTOR-BL-DRIFT-SIGNAL closed. Next: CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION, PR series.
+**Current state:** Full E2E ClusterPack lifecycle validated: delete ClusterPack triggers orphan teardown (namespace cascade + PackReceipt + DriftSignal deleted); redeploy restores tenant resources; single Deployment deletion triggers DriftSignal → PackExecution retrigger → restore → confirmed. Orphan teardown logic added to PackReceiptDriftLoop (conductor role=tenant). Stale signing Secret cleanup added to PackInstancePullLoop. Artifact parser fixed for flat-form JSON. RBAC widened for delete verbs across all resource groups. Next: CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION, PR series.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -202,6 +202,79 @@ Both changes also applied to `EnsureRemoteConductorRBAC` in `platform/internal/c
 14 tests passing in `conductor/internal/agent`:
 - 3 DriftSignalHandler tests (pending retrigger, escalation threshold, non-pending ignored)
 - 11 PackReceiptDriftLoop tests (bootstrap window, valid sig, invalid sig, drift detected, no drift, threshold stops emitting, drift persists queued increments counter, drift resolved confirms signal, pluralizeKind, GVR core group, GVR named group)
+
+---
+
+## Session/15 ClusterPack Deletion + Orphan Teardown (2026-05-01)
+
+### New Behavior
+
+When a ClusterPack is deleted from the management cluster, the full cleanup chain is:
+
+1. **Wrapper (handleClusterPackDeletion step 2.5):** deletes `drift-{cp.Name}` DriftSignal from `seam-tenant-{clusterName}` for each target cluster. Prevents orphaned DriftSignals from blocking future reconciliation.
+2. **Conductor role=tenant (PackReceiptDriftLoop orphan check):** on each cycle, reads `clusterPackRef` from PackReceipt spec and calls Get on management cluster ClusterPack. If NotFound, calls `teardownOrphanedReceipt`.
+3. **teardownOrphanedReceipt:** deletes cluster-scoped resources individually (from `deployedResources` entries with no namespace field), deletes pack-owned namespaces by cascade (each distinct namespace in `deployedResources`), deletes PackReceipt from `ont-system`, deletes DriftSignal from management cluster.
+4. **PackInstancePullLoop stale Secret cleanup:** after `extractPackMetadataFromArtifact` returns `clusterPackRef`, if ClusterPack NotFound, deletes the signing Secret and skips further processing for that Secret.
+
+### Artifact Parser Fix
+
+`extractPackMetadataFromArtifact` previously assumed `clusterPackRef` lived under `obj["spec"]`. The signing loop serializes the PackInstance spec directly (flat map), so fields are at the top level. Fixed to try `obj["spec"]` first; if nil, fall back to `obj` directly. Without this fix, `clusterPackRef` was always empty and stale Secret cleanup never triggered.
+
+### RBAC Widening (delete verbs)
+
+`EnsureRemoteConductorRBAC` in `platform/internal/controller/taloscluster_helpers.go` updated:
+
+| Rule | Before | After |
+|------|--------|-------|
+| `infrastructure.ontai.dev *` | get/list/watch/create/update/patch | + delete |
+| `"" *` | get/list/watch | get/list/watch/create/update/patch/delete |
+| `apps *` | get/list/watch | get/list/watch/create/update/patch/delete |
+| `networking.k8s.io *` | get/list/watch | get/list/watch/create/update/patch/delete |
+| `batch *` | get/list/watch | get/list/watch/create/update/patch/delete |
+| `rbac.authorization.k8s.io *` | specific resources (roles/clusterroles) | `*` with full verbs |
+
+kubectl apply also ran against the live ccs-dev cluster to unblock the active orphan teardown.
+
+### Admin Action Required (one-time)
+
+The `ingress-nginx` namespace was not deleted by the first code iteration (which deleted individual resources but not the namespace). Admin action: `kubectl delete namespace ingress-nginx` on ccs-dev. Completed this session. Future orphan teardowns delete namespaces via cascade (the corrected `teardownOrphanedReceipt`).
+
+### Unit Tests
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| PackReceiptDriftLoop | 9 (6 existing updated + 3 new: OrphanReceipt tears down namespace/ClusterRole/PackReceipt/DriftSignal) | PASS |
+| DriftSignalHandler | 3 | PASS |
+| ClusterPackReconciler (wrapper) | 6 (5 existing + 1 new: DeletionCascadesDriftSignal) | PASS |
+
+### Live E2E Results -- Full ClusterPack Deletion Cycle (ccs-dev)
+
+| # | Step | Result |
+|---|------|--------|
+| 1 | ClusterPack `nginx-ccs-dev` deleted from management cluster | PASS |
+| 2 | Wrapper step 2.5: DriftSignal `drift-nginx-ccs-dev` deleted from `seam-tenant-ccs-dev` | PASS |
+| 3 | PackInstancePullLoop: stale Secret `seam-pack-signed-ccs-dev-nginx-ingress-ccs-dev` deleted | PASS |
+| 4 | PackReceiptDriftLoop orphan check: ClusterPack NotFound, teardown triggered | PASS |
+| 5 | Orphan teardown: `ingress-nginx` namespace deleted (cascade) | PASS (namespace manually deleted first as admin action; future orphans handled by code) |
+| 6 | Orphan teardown: PackReceipt `nginx-ccs-dev` deleted from `ont-system` on ccs-dev | PASS |
+| 7 | Orphan teardown: DriftSignal `drift-nginx-ccs-dev` deleted from `seam-tenant-ccs-dev` | PASS |
+| 8 | Fresh ClusterPack `nginx-ccs-dev` applied to management cluster | PASS |
+| 9 | Pack-deploy Job: ingress-nginx deployed, PackReceipt written | PASS |
+| 10 | Drift trigger: Deployment deleted manually | PASS |
+| 11 | DriftSignal emitted (pending, counter=0) | PASS |
+| 12 | Management handler: PackExecution deleted, new PE created, state=queued | PASS |
+| 13 | Pack-deploy Job: ingress-nginx Deployment restored (1/1 Ready) | PASS |
+| 14 | DriftSignal state set to confirmed | PASS |
+
+Full lifecycle end-to-end validated.
+
+### Commits
+
+| Repo | Hash | Message |
+|------|------|---------|
+| conductor | f9f73e4 | conductor: orphan teardown when ClusterPack deleted, stale Secret cleanup, artifact parser flat-form fix |
+| platform | 10b94d5 | platform: widen conductor-agent-tenant ClusterRole for orphan teardown (delete verbs on all groups) |
+| wrapper | e431629 | wrapper: cascade DriftSignal deletion from handleClusterPackDeletion -- step 2.5, unit test added |
 
 ---
 

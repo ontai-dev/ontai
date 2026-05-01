@@ -3,9 +3,9 @@
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
 | ontai        | main                                        | (pending)   | active (tracking)         |
-| conductor    | session/15-capability-tests                 | (pending)   | drift detection + circuit breaker complete, pre-PR |
+| conductor    | session/15-capability-tests                 | f9f73e4     | orphan teardown + stale Secret cleanup, pre-PR |
 | guardian     | main                                        | 112f99e     | PR #18 merged             |
-| platform     | main                                        | (pending)   | EnsureRemoteConductorRBAC widened, pre-PR |
+| platform     | session/15-t19-import-conductor             | 10b94d5     | ClusterRole widened for orphan teardown delete verbs, pre-PR |
 | wrapper      | session/15-wrapper-fixes                    | e431629     | DriftSignal cascade deletion, pre-PR |
 | seam-core    | main                                        | 3f5a0b4     | Dockerfile fix committed      |
 | domain-core  | main                                        | f01ca65     | active                    |
@@ -103,3 +103,5 @@ No pushes to remote until Platform Governor authorizes.
 | platform     | 3d39e92 | platform: ensureWrapperRunnerResources in ensureTenantOnboarding |
 | conductor    | 6fe4d5c | conductor: writePackReceipt in executeSplitPath success path |
 | wrapper      | e431629 | wrapper: cascade DriftSignal deletion from handleClusterPackDeletion — step 2.5, unit test added |
+| conductor    | f9f73e4 | conductor: orphan teardown when ClusterPack deleted, stale Secret cleanup, artifact parser flat-form fix, 3 new unit tests |
+| platform     | 10b94d5 | platform: widen conductor-agent-tenant ClusterRole for orphan teardown (delete verbs on all groups, rbac.authorization.k8s.io) |
