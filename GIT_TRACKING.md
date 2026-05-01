@@ -6,7 +6,7 @@
 | conductor    | session/15-capability-tests                 | (pending)   | drift detection + circuit breaker complete, pre-PR |
 | guardian     | main                                        | 112f99e     | PR #18 merged             |
 | platform     | main                                        | (pending)   | EnsureRemoteConductorRBAC widened, pre-PR |
-| wrapper      | main                                        | a1b0743     | PR #15 merged             |
+| wrapper      | session/15-wrapper-fixes                    | e431629     | DriftSignal cascade deletion, pre-PR |
 | seam-core    | main                                        | 3f5a0b4     | Dockerfile fix committed      |
 | domain-core  | main                                        | f01ca65     | active                    |
 
@@ -102,3 +102,4 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | f1148ec | conductor: PublishAllWithRetry, TenantDynamicClient for pack-deploy, packbuild ccs-dev spec |
 | platform     | 3d39e92 | platform: ensureWrapperRunnerResources in ensureTenantOnboarding |
 | conductor    | 6fe4d5c | conductor: writePackReceipt in executeSplitPath success path |
+| wrapper      | e431629 | wrapper: cascade DriftSignal deletion from handleClusterPackDeletion — step 2.5, unit test added |
