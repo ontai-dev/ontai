@@ -46,8 +46,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.annotations['platform.ontai.dev/cluster-ref']
-        - name: SIGNING_PRIVATE_KEY_PATH
-          value: /etc/conductor/signing/private.pem
         - name: SIGNING_PUBLIC_KEY_PATH
           value: /etc/conductor/signing/public.pem
         image: 10.20.0.1:5000/ontai-dev/conductor:dev

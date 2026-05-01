@@ -162,6 +162,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: DSNS_SERVICE_IP
+          value: 10.20.0.241
         image: 10.20.0.1:5000/ontai-dev/seam-core:dev
         imagePullPolicy: Always
         name: seam-core

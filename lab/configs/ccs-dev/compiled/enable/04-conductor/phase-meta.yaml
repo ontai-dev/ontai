@@ -3,7 +3,7 @@
 ---
 apiVersion: v1
 data:
-  applyOrder: conductor-crds.yaml,conductor-rbac.yaml,conductor-signing-key.yaml,conductor-deployment.yaml,conductor-metrics-service.yaml
+  applyOrder: conductor-crds.yaml,conductor-rbac.yaml,conductor-signing-key.yaml,conductor-deployment.yaml,conductor-metrics-service.yaml,conductor-permission-service.yaml
   order: "4"
   phase: conductor
   readinessGate: Wait for the Conductor Deployment to reach Available=True (kubectl

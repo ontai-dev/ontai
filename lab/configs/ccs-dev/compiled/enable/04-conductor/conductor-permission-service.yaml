@@ -1,0 +1,26 @@
+# PermissionService NodePort -- conductor in ont-system (role=tenant)
+# Exposes the gRPC PermissionService started by the tenant conductor agent.
+# Port 50051 (in-cluster) exposed via NodePort 30051 (accessible from lab host).
+# conductor-schema.md §10 step 6. CONDUCTOR-PERMISSION-SERVICE-E2E.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: permission-service
+    app.kubernetes.io/name: conductor
+    ontai.dev/managed-by: compiler
+  name: conductor-permission-service
+  namespace: ont-system
+spec:
+  type: NodePort
+  ports:
+  - name: grpc
+    port: 50051
+    protocol: TCP
+    targetPort: 50051
+    nodePort: 30051
+  selector:
+    app.kubernetes.io/name: conductor
+status:
+  loadBalancer: {}

@@ -35,7 +35,7 @@ Claude proposes. The Platform Governor approves. Human-at-Boundary principle. Ab
 Step 1 -- If LOCAL-CONTEXT.md exists, read it first and resume from the recorded next step. Otherwise read CONTEXT.md.
 Step 2 -- Read AGENTS.md in full.
 Step 3 -- Read CLAUDE.md in full.
-Step 4 -- Read the in-scope repo CLAUDE.md for repo-specific constraints. Read schema documents from docs/ in each operator repo before any design or implementation work.
+Step 4 -- Read the in-scope repo CLAUDE.md for repo-specific constraints. Read schema documents from docs/ in each operator repo before any design or implementation work. Read CODEBASE.md in the root and in the target repo before any implementation or investigation.
 Step 5 -- Execute within assigned role authority. Surface every phase boundary for Governor approval.
 Step 6 -- Update CONTEXT.md (Governor only), PROGRESS.md, GIT_TRACKING.md, BACKLOG.md at session close.
 A session without Step 6 is aborted. The next Governor session must reconstruct state before proceeding.
@@ -51,6 +51,7 @@ A session without Step 6 is aborted. The next Governor session must reconstruct 
 - Markdown steps only in responses, no inline code except git, kubectl YAML, Talos machineconfig patches
 - Ask before inventing or assuming
 - Unit tests required for all new functionality
+- **After every implementation or feature change**: Update the CODEBASE.md in any repo you modified. If cross-repo relationships changed, update the parent CODEBASE.md. This is not optional.
 
 ---
 

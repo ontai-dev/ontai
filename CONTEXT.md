@@ -226,3 +226,20 @@ cd ~/ontai/conductor && go build -o bin/compiler ./cmd/compiler
   --dsns-ip 10.20.0.240 \
   --output ~/ontai/lab/configs/ccs-mgmt/compiled/enable
 ```
+
+---
+
+## Codebase Understanding
+
+Before any implementation or investigation, read `CODEBASE.md` in the root. For repo-specific work, read the CODEBASE.md in that repo directory. These files represent the pre-computed mental model of the codebase. After any implementation, update the relevant CODEBASE.md sections that were affected.
+
+| File | Covers |
+|------|--------|
+| `CODEBASE.md` | System architecture, dependency graph, namespace model, operational sequences |
+| `conductor/CODEBASE.md` | Compiler, 16 capabilities, execute/agent mode, rawSource packbuild |
+| `guardian/CODEBASE.md` | RBAC governance, EPG, PermissionSnapshot, admission webhook |
+| `platform/CODEBASE.md` | Cluster lifecycle, CAPI provider, day-2 operational CRDs |
+| `seam-core/CODEBASE.md` | Schema authority, LineageIndex, DSNS, shared libraries |
+| `wrapper/CODEBASE.md` | Pack delivery pipeline, 5-gate gatekeeper, PackInstance |
+| `domain-core/CODEBASE.md` | Layer 0 abstract schema, no controller |
+| `app-core/CODEBASE.md` | Application governance specification only |

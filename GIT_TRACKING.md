@@ -113,5 +113,6 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | fdfa63d | conductor: N-step rollback -- superseded POR retention replaces predecessor deletion |
 | wrapper      | 51039d6 | wrapper: N-step rollback -- handleRollback reads target POR directly, no N-1 guard |
 | conductor    | 1e481af | session/15: fix pack-deploy RBAC apply to tenant cluster and helm namespace rendering |
-| conductor    | (uncommitted) | Guardian role=tenant wiring: TenantBootstrapSweep deleted, agent.go onLeaderStart tenantSweep removed, e2e sweep test updated to GUARDIAN-TENANT-E2E |
-| guardian     | (uncommitted) | Guardian role=tenant wiring: TenantSnapshotRunnable, TenantProfileRunnable, setupTenantControllers updated, 13 unit tests |
+| conductor    | 7563ebe | session/15: tenant role wiring, INV-026 signing key enforcement, raw packbuild split, TenantBootstrapSweep deleted |
+| guardian     | 693ba7d | session/15: GUARDIAN-BL-RBACPROFILE-TENANT-PROVISIONING -- tenant snapshot path in RBACProfileReconciler, TenantProfileRunnable clears RBACPolicyRef |
+| ontai root   | (this commit) | session/15 close: CODEBASE.md across all repos, GAP_TO_FILL cleanup, ccs-dev INV-026 bundle fix, ccs-mgmt signing key rotation |

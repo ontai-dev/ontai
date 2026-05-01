@@ -396,7 +396,7 @@ Two-phase enable bundle created and applied to ccs-dev:
 |------|------|---------|
 | guardian | 89c7c57 | guardian: wire TenantSnapshotRunnable and TenantProfileRunnable for role=tenant |
 | guardian | 65ac2b9 | guardian: skip third-party profile creation in BootstrapAnnotationRunnable for role=tenant |
-| ontai-root | (pending) | lab: add guardian-tenant enable bundle for ccs-dev (phases 01 and 02) |
+| ontai-root | this session | lab: ccs-dev conductor INV-026 fix (public key only), permission service NodePort, enable bundle cleanup |
 
 ---
 
@@ -410,19 +410,24 @@ Two-phase enable bundle created and applied to ccs-dev:
 | CLUSTERPACK-BL-VERSION-CLEANUP | conductor, seam-core | PackReceipt must carry full resource inventory (GVK + name + namespace per deployed resource). When new PackInstance arrives on tenant cluster, conductor role=tenant diffs old PackReceipt inventory vs new PackInstance manifests and deletes orphaned resources (present in old receipt, absent in new manifests). This ensures clean version upgrades and prevents resource stranding when components are removed. |
 | CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull conductor-tenant RBACProfile from seam-tenant-{cluster} on management cluster and write it into ont-system on the tenant cluster. Guardian side complete (PR #18 merged). Conductor pull loop not yet implemented. |
 
+### Closed This Session
+
+| ID | Component | Resolution | Reference |
+|----|-----------|------------|-----------|
+| GUARDIAN-BL-RBACPROFILE-TENANT-PROVISIONING | guardian | `reconcileTenantSnapshotPath()` added to RBACProfileReconciler. Profiles with empty RBACPolicyRef route through tenant path: skips ceiling validation, checks for local mirrored PermissionSnapshot (labeled `ontai.dev/snapshot-type=mirrored`), sets Provisioned=True when snapshot present. TenantProfileRunnable clears RBACPolicyRef. | guardian 693ba7d |
+| CONDUCTOR-BL-SIGNING-KEY-TENANT | conductor | `--signing-private-key` and `--output-public-key` flags added. `--signing-private-key` rejected at validation when `--cluster-role=tenant` (INV-026 enforcement). ccs-dev enable bundle updated: private key removed from conductor-deployment.yaml env vars and conductor-signing-key.yaml Secret. Public key only on tenant clusters. | conductor 7563ebe |
+
 ### Next Session
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| GUARDIAN-BL-CLUSTER-POLICY-TENANT | guardian | On tenant clusters, RBACProfiles reference `cluster-policy` in `ont-system` (not in `seam-tenant-ccs-dev` on management). `cluster-policy` RBACPolicy must be created in `ont-system` by guardian role=tenant or pushed from management. cert-manager RBACProfile shows Provisioned=False/PolicyNotFound. |
-| GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | Add RBACProfile validation webhook; route seam-operator label profiles through management-maximum validation. |
-| CONDUCTOR-BL-SIGNING-KEY-TENANT | conductor | Enable bundle for tenant clusters (role=tenant) should not mount the signing PRIVATE key. Public key only for PackInstance signature verification (INV-026). |
+| GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | Add RBACProfile validation webhook; route seam-operator label profiles through management-maximum validation. T-25a in GAP_TO_FILL.md. |
 
 ---
 
 ## Next Session Candidates
 
-1. **GUARDIAN-BL-CLUSTER-POLICY-TENANT** -- cluster-policy RBACPolicy must exist in ont-system on tenant clusters so RBACProfiles reach Provisioned=True.
-2. **CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION** -- conductor pull loop for conductor-tenant RBACProfile (guardian side already complete PR #18).
-3. **PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE** -- ClusterRoleBinding cleanup on TalosCluster deletion.
-4. **CLUSTERPACK-BL-VERSION-CLEANUP** -- PackReceipt resource inventory field and orphan diff loop on version upgrade.
+1. **CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION** -- conductor pull loop for conductor-tenant RBACProfile (guardian side already complete PR #18).
+2. **PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE** -- ClusterRoleBinding cleanup on TalosCluster deletion.
+3. **CLUSTERPACK-BL-VERSION-CLEANUP** -- PackReceipt resource inventory field and orphan diff loop on version upgrade.
+4. **T-25a (GUARDIAN-BL-RBACPROFILE-WEBHOOK)** -- RBACProfile validation webhook with seam-operator label routing.
