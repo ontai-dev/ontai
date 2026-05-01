@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Last updated:** May 1, 2026 (session/15 full ClusterPack deletion cascade + orphan teardown + E2E drift cycle end-to-end validated)
+**Last updated:** May 1, 2026 (session/15 rollback implemented + signatureVerified SSA conflict fixed)
 
 **Current state:** Full E2E ClusterPack lifecycle validated: delete ClusterPack triggers orphan teardown (namespace cascade + PackReceipt + DriftSignal deleted); redeploy restores tenant resources; single Deployment deletion triggers DriftSignal → PackExecution retrigger → restore → confirmed. Orphan teardown logic added to PackReceiptDriftLoop (conductor role=tenant). Stale signing Secret cleanup added to PackInstancePullLoop. Artifact parser fixed for flat-form JSON. RBAC widened for delete verbs across all resource groups. Next: CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION, PR series.
 
@@ -275,6 +275,51 @@ Full lifecycle end-to-end validated.
 | conductor | f9f73e4 | conductor: orphan teardown when ClusterPack deleted, stale Secret cleanup, artifact parser flat-form fix |
 | platform | 10b94d5 | platform: widen conductor-agent-tenant ClusterRole for orphan teardown (delete verbs on all groups) |
 | wrapper | e431629 | wrapper: cascade DriftSignal deletion from handleClusterPackDeletion -- step 2.5, unit test added |
+
+---
+
+## Session/15 Rollback Implementation (2026-05-01)
+
+Governor-approved rollback design and implementation. Schema-first: seam-core types updated before implementation.
+
+### Schema Additions (seam-core 33e786a)
+
+`PackOperationResultSpec` additions:
+- `clusterPackVersion` -- version string deployed in this operation (rollback anchor)
+- `rbacDigest`, `workloadDigest` -- OCI layer digests deployed (rollback restoration anchors)
+- `previousClusterPackVersion`, `previousRBACDigest`, `previousWorkloadDigest` -- copied from predecessor before deletion; one-step rollback without retaining deleted POR objects
+
+`InfrastructureClusterPackSpec` addition:
+- `rollbackToRevision int64` -- Governor-controlled. When > 0, triggers one-step rollback to revision N-1.
+
+New POR label: `ontai.dev/cluster-pack={clusterPackRef}` -- allows wrapper to find current POR by ClusterPack name without knowing the PackExecution ref.
+
+### Conductor Changes (9de3e78)
+
+- `runnerlib.OperationResultSpec`: added `ClusterPackRef`, `ClusterPackVersion`, `RBACDigest`, `WorkloadDigest`.
+- `buildPackOperationResultSpec`: maps all new fields to `PackOperationResultSpec`.
+- `WriteResult`: copies `prev.Spec.ClusterPackVersion/RBACDigest/WorkloadDigest` into `PreviousClusterPackVersion/PreviousRBACDigest/PreviousWorkloadDigest` before deleting predecessor.
+- `wrapper.go` (`executeSplitPath`): `clusterPackVersion` threaded through signature; all three success returns populate `ClusterPackRef`, `ClusterPackVersion`, `RBACDigest` (split path only), `WorkloadDigest` (split path only).
+- `writePackReceipt`: `Force: true` added to SSA patch to reclaim `signatureVerified` field ownership on retrigger, resolving SSA conflict with `conductor` field manager.
+
+### Wrapper Changes (9e0baae)
+
+`ClusterPackReconciler.handleRollback`:
+- Placed at Step A2 (before spec-snapshot annotation) so it runs as a Governor override before any content checks.
+- Lists PORs by `ontai.dev/cluster-pack` label, finds highest revision, validates `rollbackToRevision == revision - 1`.
+- Patches `ClusterPack.spec.version`, `spec.rbacDigest`, `spec.workloadDigest` to previous values.
+- Removes `spec-checksum-snapshot` annotation so immutability check re-records from rolled-back spec on next pass.
+- Clears `rollbackToRevision`. Normal PE creation fires on next reconcile.
+- 3 unit tests: successful rollback, no POR, wrong revision.
+
+### Rollback Operator Usage
+
+```
+kubectl patch icp nginx-ccs-dev -n seam-tenant-ccs-dev \
+  --type=merge -p '{"spec":{"rollbackToRevision":1}}'
+```
+
+Wrapper reconciler reads POR's `previousClusterPackVersion` (v4.9.0-r1) and restores the ClusterPack spec. New PackExecution created targeting vN-1 OCI artifacts. New POR records `upgradeDirection=Rollback`. PackReceipt on tenant overwritten with previous version's resource inventory.
 
 ---
 
