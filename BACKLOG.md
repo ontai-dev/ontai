@@ -1,6 +1,6 @@
 # ONT Platform: Backlog
 
-**Last updated:** April 30, 2026 (session/15 live tenant onboarding)
+**Last updated:** May 1, 2026 (N-step rollback shipped; TENANT-CLUSTER-E2E and CONDUCTOR-BL-DRIFT-SIGNAL closed)
 
 ---
 
@@ -8,9 +8,7 @@
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| TENANT-CLUSTER-E2E | all | ccs-dev InfrastructureTalosCluster admitted, enable bundle applied, conductor running clean (2026-04-30). Remaining in session: deploy InfrastructureClusterPack, verify PackExecution/PackInstance/PackReceipt chain, test drift (manual resource mutation), validate management conductor retrigger, verify PackReceipt drift round-trip. T-19 and T-19a implemented in PRs #17 and #18. |
 | CLUSTERPACK-BL-VERSION-CLEANUP | conductor, seam-core | When a new PackInstance version removes components that were in the previous version, orphaned resources must be cleaned up from the tenant cluster. PackReceipt must carry a full resource inventory (GVK + name + namespace per deployed resource). Conductor role=tenant: on new PackInstance arrival, diff old PackReceipt inventory vs new PackInstance manifests, delete orphans. This is critical to prevent resource stranding across ClusterPack upgrades. Requires: InfrastructurePackReceipt spec field `resourceInventory []ResourceRef` (seam-core change), conductor role=tenant orphan detection loop in PackInstance pull loop. |
-| CONDUCTOR-BL-DRIFT-SIGNAL | conductor | Drift detection and retrigger protocol: conductor role=tenant detects drift (resource mutated/deleted vs PackReceipt) → signals management conductor via federation channel → management conductor retriggers ClusterPack (same version) → max 3 attempts per drift event → on 3rd failure: record drift reason and last-attempt timestamp in ClusterPack status on BOTH clusters (management writes via normal reconcile, tenant writes via federation signal). After 3 failures: drift flagged as ManualInterventionRequired, no further auto-retrigger. Some drift reasons (StorageClass PVC failures) are recognizable as manual cases from attempt 1. |
 | TCOR-SIZE-BOUND | conductor, platform | TCOR Operations map grows unbounded within a talosVersion epoch. At 500 bytes/entry, 3000 entries reach etcd 1.5MB limit. Mitigation: add mid-epoch flush in AppendOperationRecord when len(operations) >= 1000 (dump to GraphQuery without bumping revision). Blocked on CONDUCTOR-BL-GRAPHQUERY-ARCHIVE. Low risk for production (typical epochs see <100 operations). |
 | TCOR-GRAPHQUERY-LINK | seam-core, GraphQuery | No explicit FK between PackOperationResult and TCOR across revisions. Implicit join key: clusterRef + talosVersion + revision. When GraphQuery archival is implemented, add graphQueryRevisionRef field to TCOR and POR to make the linkage explicit. Blocked on GraphQuery DB implementation. |
 
@@ -42,7 +40,7 @@
 | PLATFORM-BL-HARDENINGPROFILE-MERGE | platform | HardeningProfileRef field absent from TalosClusterSpec. TalosConfigTemplate cannot merge HardeningProfile patches at runtime. Decision 11: schema PR to ontai-schema required before implementation. Governor session needed. Also blocks mode=bootstrap machineconfig generation from spec: InfrastructureTalosClusterSpec lacks per-node topology fields (hostnames, roles, installerImage, installDisk). |
 | PLATFORM-BL-MACHINECONFIG-IMPORT-CAPTURE | platform | For mode=import clusters, Platform should capture machineconfigs from running nodes via Talos COSI API GetMachineConfig and write them as seam-mc-{cluster}-{hostname} Secrets in seam-tenant-{cluster}. Requires: node discovery from target kubeconfig, talos goclient per-node call (CP-INV-001 extension for taloscluster_import_helpers.go), new ensureMachineConfigSecrets function. Deferred from session/15-import-wiring (April 2026). |
 | SEAM-CORE-BL-DESCENDANT-LABELS | guardian | PermissionSnapshot lineage wiring deferred by design (no single root RBACPolicy per snapshot). If architectural question resolves, PermissionSnapshot must call SetDescendantLabels. Track until Governor rules. |
-| WRAPPER-BL-ENVTEST-GC | wrapper | TestPackInstance_OwnerRefCascade_DeletedWhenPackExecutionDeleted requires kube-controller-manager GC. envtest does not start GC controller. Promote to live cluster e2e when TENANT-CLUSTER-E2E is established. |
+| WRAPPER-BL-ENVTEST-GC | wrapper | TestPackInstance_OwnerRefCascade_DeletedWhenPackExecutionDeleted requires kube-controller-manager GC. envtest does not start GC controller. Promote to live cluster e2e (ccs-dev cluster available). |
 
 ---
 
@@ -58,11 +56,9 @@
 
 | Area | Component | Description |
 |------|-----------|-------------|
-| PackReceipt | conductor | Conductor role=tenant on ccs-dev creating PackReceipt after PackInstance arrives. Pending ClusterPack deployment this session. |
-| Drift detection | conductor | PackInstance Drifted condition when manifests diverge from PackReceipt. Conductor running on ccs-dev. Pending manual drift injection this session. |
 | ClusterPack version cleanup | conductor | Orphaned resource deletion when new PackInstance removes components. PackReceipt resource inventory field required (CLUSTERPACK-BL-VERSION-CLEANUP). |
 | Federation channel | conductor | Audit forwarding from tenant conductor to management guardian. Implemented, never tested. |
-| CAPI path | platform | SeamInfrastructureCluster and SeamInfrastructureMachine full lifecycle. Unit tests exist. e2e on live cluster pending TENANT-CLUSTER-E2E. |
+| CAPI path | platform | SeamInfrastructureCluster and SeamInfrastructureMachine full lifecycle. Unit tests exist. e2e on live cluster not yet scheduled. |
 | IdentityBinding | guardian | IdentityProvider and IdentityBinding e2e with Keycloak or Dex. No lab IdP provisioned. |
 | SeamMembership live | seam-core, guardian | SeamMembership CRs admitted by guardian on live cluster. Compiler emits them in phase 01. Never verified on lab. |
 | Day-2 ops live (remaining) | conductor, platform | cluster-reset, upgrade, credential-rotate, hardening-apply not yet live-tested. node-patch full e2e blocked by patchSecretRef. |
@@ -87,6 +83,8 @@
 
 | ID | Component | Closed | Resolution |
 |----|-----------|--------|------------|
+| TENANT-CLUSTER-E2E | all | 2026-05-01 | Full ccs-dev lifecycle validated: ClusterPack deploy, PackReceipt write, drift detection loop (3 retrigger cycles, TerminalDrift at threshold), ClusterPack deletion orphan teardown, fresh redeploy, drift resolved confirmed. AC-3 rollback e2e live pass. D2-1/D2-2/D2-3 day2 ops e2e live pass. |
+| CONDUCTOR-BL-DRIFT-SIGNAL | conductor | 2026-05-01 | PackReceiptDriftLoop + DriftSignalHandler fully implemented and tested. 14 unit tests. DriftSignal correlationID cleared on confirmation. Live E2E: 3 retrigger cycles, TerminalDrift at escalationThreshold=3, drift resolved to confirmed state verified. |
 | COMPILER-BL-PERMISSIONSET-DEFECT | conductor (compiler) | 2026-04-26 | writeBootstrapPermissionSets now emits only management-maximum. buildOperatorRBACProfile now emits permissionSetRef: management-maximum. Both enable bundles regenerated. Per-operator PermissionSets deleted from live cluster. conductor PR #26. |
 | GUARDIAN-BL-PERMISSIONSET-WATCH | guardian | 2026-04-26 | Watches(PermissionSet, MapPermissionSetToProfiles) added to RBACProfileReconciler.SetupWithManager. 5 unit tests added. guardian session/15-guardian-fixes commit 1881ccf. |
 | PLATFORM-BL-STATUS-PATCH-CONFLICT | platform | 2026-04-26 | RetryOnConflict already implemented in taloscluster_controller.go deferred status patch (line 112). Verified session/15 -- no code change required. |

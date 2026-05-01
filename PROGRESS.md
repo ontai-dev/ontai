@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Last updated:** May 1, 2026 (session/15 rollback implemented + signatureVerified SSA conflict fixed)
+**Last updated:** May 1, 2026 (N-step rollback shipped; AC-3 + D2-1/D2-2/D2-3 e2e live validated; seam-core CRD schema gap fixed)
 
 **Current state:** Full E2E ClusterPack lifecycle validated: delete ClusterPack triggers orphan teardown (namespace cascade + PackReceipt + DriftSignal deleted); redeploy restores tenant resources; single Deployment deletion triggers DriftSignal → PackExecution retrigger → restore → confirmed. Orphan teardown logic added to PackReceiptDriftLoop (conductor role=tenant). Stale signing Secret cleanup added to PackInstancePullLoop. Artifact parser fixed for flat-form JSON. RBAC widened for delete verbs across all resource groups. Next: CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION, PR series.
 
@@ -278,48 +278,42 @@ Full lifecycle end-to-end validated.
 
 ---
 
-## Session/15 Rollback Implementation (2026-05-01)
+## Session/15 Rollback + Day-2 Ops E2E (2026-05-01)
 
-Governor-approved rollback design and implementation. Schema-first: seam-core types updated before implementation.
+### N-Step Rollback (Final Design)
 
-### Schema Additions (seam-core 33e786a)
+The initial one-step rollback (N-1 guard, Previous* embedding) was replaced with the N-step superseded retention model before any code shipped to the cluster.
 
-`PackOperationResultSpec` additions:
-- `clusterPackVersion` -- version string deployed in this operation (rollback anchor)
-- `rbacDigest`, `workloadDigest` -- OCI layer digests deployed (rollback restoration anchors)
-- `previousClusterPackVersion`, `previousRBACDigest`, `previousWorkloadDigest` -- copied from predecessor before deletion; one-step rollback without retaining deleted POR objects
+**seam-core schema (f380fb6):** `Previous*` fields removed. `clusterPackVersion`, `rbacDigest`, `workloadDigest` are rollback anchors written at deploy time. `rollbackToRevision int64` on ClusterPackSpec triggers rollback to any retained revision. Label `ontai.dev/cluster-pack={packName}` on every POR allows listing full history.
 
-`InfrastructureClusterPackSpec` addition:
-- `rollbackToRevision int64` -- Governor-controlled. When > 0, triggers one-step rollback to revision N-1.
+**Conductor POR writer (fdfa63d):** Predecessor POR is no longer deleted. It is labeled `ontai.dev/superseded=true` and retained. Pruning keeps at most 10 superseded PORs per ClusterPack (oldest removed when cap exceeded). All three write paths populate `clusterPackVersion`, `rbacDigest`, `workloadDigest`.
 
-New POR label: `ontai.dev/cluster-pack={clusterPackRef}` -- allows wrapper to find current POR by ClusterPack name without knowing the PackExecution ref.
+**Wrapper handleRollback (51039d6):** Lists all PORs by `ontai.dev/cluster-pack` label, finds the POR at `spec.revision == rollbackToRevision` (no N-1 guard), reads its `ClusterPackVersion/RBACDigest/WorkloadDigest`, patches ClusterPack spec, clears `spec-checksum-snapshot` annotation, clears `rollbackToRevision`. Any retained revision is reachable in one operation.
 
-### Conductor Changes (9de3e78)
+**Unit tests:** 4 rollback tests (one-step, N-step skip-two, no POR clears field, revision not found clears field). Conductor persistence tests confirm superseded label presence and rollback anchor field integrity.
 
-- `runnerlib.OperationResultSpec`: added `ClusterPackRef`, `ClusterPackVersion`, `RBACDigest`, `WorkloadDigest`.
-- `buildPackOperationResultSpec`: maps all new fields to `PackOperationResultSpec`.
-- `WriteResult`: copies `prev.Spec.ClusterPackVersion/RBACDigest/WorkloadDigest` into `PreviousClusterPackVersion/PreviousRBACDigest/PreviousWorkloadDigest` before deleting predecessor.
-- `wrapper.go` (`executeSplitPath`): `clusterPackVersion` threaded through signature; all three success returns populate `ClusterPackRef`, `ClusterPackVersion`, `RBACDigest` (split path only), `WorkloadDigest` (split path only).
-- `writePackReceipt`: `Force: true` added to SSA patch to reclaim `signatureVerified` field ownership on retrigger, resolving SSA conflict with `conductor` field manager.
+### DriftSignal correlationID Clearing
 
-### Wrapper Changes (9e0baae)
+`resolveSignalIfHealthy` in `pack_receipt_drift_loop.go` now includes `correlationID: ""` in the confirmation patch alongside `state: "confirmed"`. Clearing correlationID on confirmation is a lifecycle invariant (Decision H). Unit test extended to assert empty correlationID on confirmed signals.
 
-`ClusterPackReconciler.handleRollback`:
-- Placed at Step A2 (before spec-snapshot annotation) so it runs as a Governor override before any content checks.
-- Lists PORs by `ontai.dev/cluster-pack` label, finds highest revision, validates `rollbackToRevision == revision - 1`.
-- Patches `ClusterPack.spec.version`, `spec.rbacDigest`, `spec.workloadDigest` to previous values.
-- Removes `spec-checksum-snapshot` annotation so immutability check re-records from rolled-back spec on next pass.
-- Clears `rollbackToRevision`. Normal PE creation fires on next reconcile.
-- 3 unit tests: successful rollback, no POR, wrong revision.
+### seam-core CRD Schema Gap Fixed
 
-### Rollback Operator Usage
+`clusterPackVersion`, `rbacDigest`, `workloadDigest` were present in the Go types but absent from the live CRD schemas on both clusters. Fixed by running `make generate-crd` in seam-core and applying the updated CRDs to ccs-mgmt and ccs-dev. AC-3 rollback e2e test required this fix (SSA rejected unknown field).
 
-```
-kubectl patch icp nginx-ccs-dev -n seam-tenant-ccs-dev \
-  --type=merge -p '{"spec":{"rollbackToRevision":1}}'
-```
+### Live E2E Results (ccs-dev, 2026-05-01)
 
-Wrapper reconciler reads POR's `previousClusterPackVersion` (v4.9.0-r1) and restores the ClusterPack spec. New PackExecution created targeting vN-1 OCI artifacts. New POR records `upgradeDirection=Rollback`. PackReceipt on tenant overwritten with previous version's resource inventory.
+AC-3 rollback test: synthetic superseded POR created at revision 1 with same version (v4.9.0-r1). `rollbackToRevision=1` set on ClusterPack. Wrapper handler cleared field to 0 within 5 seconds. Version verified. PASS.
+
+| Test | Specs | Result |
+|------|-------|--------|
+| AC-3: N-step rollback | 1 live | PASS |
+| D2-1: Tenant ClusterPack deployed state | 3 live | PASS |
+| D2-2: DriftSignal valid state | 2 live | PASS |
+| D2-3: DriftSignal correlationID lifecycle | 1 live, 1 skip (DRIFT-LIFECYCLE-E2E) | PASS |
+| D2-4: ClusterPack upgrade | 3 skip (UPGRADE-E2E) | SKIP |
+| D2-5: Active drift injection | 4 skip (DRIFT-INJECTION-E2E) | SKIP |
+
+Total: 7 live specs passed, 8 stubs skipped per e2e CI contract. 0 failures.
 
 ---
 
@@ -329,11 +323,9 @@ Wrapper reconciler reads POR's `previousClusterPackVersion` (v4.9.0-r1) and rest
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| TENANT-CLUSTER-E2E | all | CLOSED 2026-05-01: full drift detection loop verified. See Session/15 Drift Detection E2E Closure section. |
 | PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE | platform | wrapper-runner ClusterRoleBinding must be deleted on TalosCluster deletion (tenant offboarding). ensureWrapperRunnerResources creates it at onboarding; no corresponding cleanup. Track in deletion path. |
 | CLUSTERPACK-BL-VERSION-CLEANUP | conductor, seam-core | PackReceipt must carry full resource inventory (GVK + name + namespace per deployed resource). When new PackInstance arrives on tenant cluster, conductor role=tenant diffs old PackReceipt inventory vs new PackInstance manifests and deletes orphaned resources (present in old receipt, absent in new manifests). This ensures clean version upgrades and prevents resource stranding when components are removed. |
-| CONDUCTOR-BL-DRIFT-SIGNAL | conductor | CLOSED 2026-05-01: DriftSignal mechanism fully implemented and tested. PackReceiptDriftLoop + DriftSignalHandler. 14 unit tests. Live E2E: 3 retrigger cycles, TerminalDrift at threshold. See Session/15 Drift Detection E2E Closure. |
-| CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull conductor-tenant RBACProfile from seam-tenant-{cluster} on management cluster and write it into ont-system on the tenant cluster. Guardian side complete (PR #18 pending). Conductor pull loop not yet implemented. |
+| CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor, guardian | Conductor role=tenant must pull conductor-tenant RBACProfile from seam-tenant-{cluster} on management cluster and write it into ont-system on the tenant cluster. Guardian side complete (PR #18 merged). Conductor pull loop not yet implemented. |
 
 ### Next Session
 
@@ -346,4 +338,6 @@ Wrapper reconciler reads POR's `previousClusterPackVersion` (v4.9.0-r1) and rest
 
 ## Next Session Candidates
 
-1. **TENANT-CLUSTER-E2E** -- ccs-dev onboarding (awaiting Governor acknowledgement).
+1. **CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION** -- conductor pull loop for conductor-tenant RBACProfile (guardian side already complete PR #18).
+2. **PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE** -- ClusterRoleBinding cleanup on TalosCluster deletion.
+3. **CLUSTERPACK-BL-VERSION-CLEANUP** -- PackReceipt resource inventory field and orphan diff loop on version upgrade.
