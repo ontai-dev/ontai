@@ -115,4 +115,4 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | 1e481af | session/15: fix pack-deploy RBAC apply to tenant cluster and helm namespace rendering |
 | conductor    | 7563ebe | session/15: tenant role wiring, INV-026 signing key enforcement, raw packbuild split, TenantBootstrapSweep deleted |
 | guardian     | 693ba7d | session/15: GUARDIAN-BL-RBACPROFILE-TENANT-PROVISIONING -- tenant snapshot path in RBACProfileReconciler, TenantProfileRunnable clears RBACPolicyRef |
-| ontai root   | (this commit) | session/15 close: CODEBASE.md across all repos, GAP_TO_FILL cleanup, ccs-dev INV-026 bundle fix, ccs-mgmt signing key rotation |
+| ontai root   | 52c4d36 | session/15 close: CODEBASE.md across all repos, GAP_TO_FILL cleanup, ccs-dev INV-026 bundle fix, ccs-mgmt signing key rotation |
