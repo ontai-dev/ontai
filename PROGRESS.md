@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 1, 2026 (N-step rollback shipped; AC-3 + D2-1/D2-2/D2-3 e2e live validated; seam-core CRD schema gap fixed)
+**Last updated:** May 1, 2026 (cert-manager deployed to ccs-dev via ClusterPack; RBAC direct-apply step added to pack-deploy; helm namespace rendering fixed)
 
-**Current state:** Full E2E ClusterPack lifecycle validated: delete ClusterPack triggers orphan teardown (namespace cascade + PackReceipt + DriftSignal deleted); redeploy restores tenant resources; single Deployment deletion triggers DriftSignal → PackExecution retrigger → restore → confirmed. Orphan teardown logic added to PackReceiptDriftLoop (conductor role=tenant). Stale signing Secret cleanup added to PackInstancePullLoop. Artifact parser fixed for flat-form JSON. RBAC widened for delete verbs across all resource groups. Next: CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION, PR series.
+**Current state:** cert-manager v1.14.0 deployed and running on ccs-dev via ClusterPack. Pack-deploy RBAC direct-apply step (step 5b) added to executeSplitPath -- guardian intake approves governance CRs, then RBAC manifests applied directly to tenant cluster via TenantDynamicClient. Helm namespace rendering fixed. Next: Guardian tenant deployment to ccs-dev, PR series.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -314,6 +314,20 @@ AC-3 rollback test: synthetic superseded POR created at revision 1 with same ver
 | D2-5: Active drift injection | 4 skip (DRIFT-INJECTION-E2E) | SKIP |
 
 Total: 7 live specs passed, 8 stubs skipped per e2e CI contract. 0 failures.
+
+---
+
+### cert-manager Deployed to ccs-dev via ClusterPack (2026-05-01)
+
+cert-manager v1.14.0 successfully deployed to ccs-dev tenant cluster via the ClusterPack mechanism. Three fixes were required:
+
+1. **Helm namespace rendering bug**: `HelmSource` struct in `compile_packbuild_helm.go` had no `Namespace` field; `chartutil.ReleaseOptions` hardcoded `"default"`. Added `Namespace` field; packbuild YAML now specifies `namespace: cert-manager`. All cert-manager resources render into the `cert-manager` namespace.
+
+2. **RBAC direct apply to tenant cluster**: Guardian's `/rbac-intake/pack` creates governance CRs on the management cluster only; it does not apply Kubernetes RBAC objects to tenant clusters (no kubeconfig mounted). Added step 5b to `executeSplitPath`: after `WaitForRBACProfileProvisioned`, parse each RBAC YAML and apply directly to tenant cluster via TenantDynamicClient.
+
+3. **file:// URL support**: Added `file://` scheme handling to `fetchURL` for local chart tarballs.
+
+cert-manager ClusterPack status: `Available=true, signed=true`. All pods Running on ccs-dev.
 
 ---
 

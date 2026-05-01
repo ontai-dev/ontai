@@ -3,7 +3,7 @@
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
 | ontai        | main                                        | (pending)   | active (tracking)         |
-| conductor    | session/15-capability-tests                 | fdfa63d     | N-step rollback superseded retention, pre-PR |
+| conductor    | session/15-capability-tests                 | 1e481af     | pack-deploy RBAC apply fix + helm namespace fix, pre-PR |
 | guardian     | main                                        | 112f99e     | PR #18 merged             |
 | platform     | session/15-t19-import-conductor             | 10b94d5     | ClusterRole widened for orphan teardown delete verbs, pre-PR |
 | seam-core    | main                                        | f380fb6     | N-step rollback: Previous* fields removed, §7.8 retention model |
@@ -112,3 +112,4 @@ No pushes to remote until Platform Governor authorizes.
 | seam-core    | f380fb6 | seam-core: N-step rollback schema -- remove Previous* fields, update §7.8 retention model |
 | conductor    | fdfa63d | conductor: N-step rollback -- superseded POR retention replaces predecessor deletion |
 | wrapper      | 51039d6 | wrapper: N-step rollback -- handleRollback reads target POR directly, no N-1 guard |
+| conductor    | 1e481af | session/15: fix pack-deploy RBAC apply to tenant cluster and helm namespace rendering |
