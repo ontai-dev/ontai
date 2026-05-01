@@ -3,12 +3,11 @@
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
 | ontai        | main                                        | (pending)   | active (tracking)         |
-| conductor    | session/15-capability-tests                 | 9de3e78     | rollback anchor + SSA fix, pre-PR |
+| conductor    | session/15-capability-tests                 | fdfa63d     | N-step rollback superseded retention, pre-PR |
 | guardian     | main                                        | 112f99e     | PR #18 merged             |
 | platform     | session/15-t19-import-conductor             | 10b94d5     | ClusterRole widened for orphan teardown delete verbs, pre-PR |
-| seam-core    | main                                        | 33e786a     | rollback schema committed  |
-| wrapper      | session/15-wrapper-fixes                    | 9e0baae     | DriftSignal cascade + rollback handler, pre-PR |
-| seam-core    | main                                        | 3f5a0b4     | Dockerfile fix committed      |
+| seam-core    | main                                        | f380fb6     | N-step rollback: Previous* fields removed, §7.8 retention model |
+| wrapper      | session/15-wrapper-fixes                    | 51039d6     | N-step handleRollback, 4 rollback tests, pre-PR |
 | domain-core  | main                                        | f01ca65     | active                    |
 
 ## Branch Convention
@@ -110,3 +109,6 @@ No pushes to remote until Platform Governor authorizes.
 | seam-core    | 33e786a | seam-core: rollback schema -- POR Previous* fields, ClusterPackVersion/RBACDigest/WorkloadDigest, RollbackToRevision on ClusterPackSpec |
 | conductor    | 9de3e78 | conductor: rollback anchor -- populate POR rollback fields, ontai.dev/cluster-pack label, previous-state embedding, 2 new tests |
 | wrapper      | 9e0baae | wrapper: ClusterPackReconciler handleRollback -- patches spec to previous version/digests, clears annotation, 3 unit tests |
+| seam-core    | f380fb6 | seam-core: N-step rollback schema -- remove Previous* fields, update §7.8 retention model |
+| conductor    | fdfa63d | conductor: N-step rollback -- superseded POR retention replaces predecessor deletion |
+| wrapper      | 51039d6 | wrapper: N-step rollback -- handleRollback reads target POR directly, no N-1 guard |
