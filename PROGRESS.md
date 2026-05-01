@@ -425,9 +425,33 @@ Two-phase enable bundle created and applied to ccs-dev:
 
 ---
 
+## Session/16 CODEBASE.md Audit (2026-05-01)
+
+Comprehensive codebase audit of all open tasks in GAP_TO_FILL.md. All CODEBASE.md files rewritten with precise code references (file paths, function names, line numbers, struct field names, what is present vs absent). Findings:
+
+- Phase 2 (T-07 through T-10) and Phase 4 (T-14 through T-16): all confirmed complete by direct code inspection. Moved to verified-complete table in GAP_TO_FILL.md.
+- Phase 3 (T-11 through T-13): entirely absent from codebase. seam-core schema has `InfrastructurePackBuildCategory` enum and `KustomizeSource` struct; conductor `PackBuildInput` has no `Category` field.
+- T-24: `handleTalosClusterDeletion()` at `platform/internal/controller/taloscluster_helpers.go:1073` only covers RunnerConfig + Secrets + namespace. Decision H order (wrapper components first, guardian components second, TalosCluster CR last) not implemented.
+- T-25a: `"RBACProfile"` confirmed absent from `InterceptedKinds` at `guardian/internal/webhook/decision.go:24`.
+- CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION: No pull loop exists in `conductor/internal/kernel/agent.go` for reading conductor-tenant RBACProfile from management and writing to `ont-system`.
+- CLUSTERPACK-BL-VERSION-CLEANUP: `DeployedResources` field exists in seam-core schema at `packreceipt_types.go:74`. Version-upgrade orphan diff logic absent from `packinstance_pull_loop.go`.
+
+### Commits
+
+| Repo | Hash | Message |
+|------|------|---------|
+| guardian | 2b3b24c | guardian: add CODEBASE.md with precise code references |
+| wrapper | 89d838a | wrapper: add CODEBASE.md with precise code references |
+| platform | 0474770 | platform: add CODEBASE.md with precise code references |
+| seam-core | d5289c3 | seam-core: add CODEBASE.md with precise code references |
+| domain-core | c9552e7 | domain-core: add CODEBASE.md with precise code references |
+| ontai root | a3045cb | root: rewrite CODEBASE.md and update GAP_TO_FILL.md |
+
+---
+
 ## Next Session Candidates
 
 1. **CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION** -- conductor pull loop for conductor-tenant RBACProfile (guardian side already complete PR #18).
 2. **PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE** -- ClusterRoleBinding cleanup on TalosCluster deletion.
-3. **CLUSTERPACK-BL-VERSION-CLEANUP** -- PackReceipt resource inventory field and orphan diff loop on version upgrade.
+3. **CLUSTERPACK-BL-VERSION-CLEANUP** -- version-upgrade orphan diff loop in `packinstance_pull_loop.go` (schema done; implementation absent).
 4. **T-25a (GUARDIAN-BL-RBACPROFILE-WEBHOOK)** -- RBACProfile validation webhook with seam-operator label routing.

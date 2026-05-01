@@ -2,13 +2,13 @@
 ## Repository Status
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main                                        | (pending)   | active (tracking)         |
+| ontai        | main                                        | a3045cb     | CODEBASE.md rewritten, GAP_TO_FILL.md updated |
 | conductor    | session/15-capability-tests                 | 1e481af     | TenantBootstrapSweep deleted, agent.go updated, e2e sweep test updated, pre-PR |
-| guardian     | session/15-t19a-conductor-rbacprofile       | 65ac2b9     | TenantSnapshotRunnable + TenantProfileRunnable deployed to ccs-dev; BootstrapAnnotationRunnable tenant fix; 13 unit tests; image pushed |
-| platform     | session/15-t19-import-conductor             | 10b94d5     | ClusterRole widened for orphan teardown delete verbs, pre-PR |
-| seam-core    | main                                        | f380fb6     | N-step rollback: Previous* fields removed, §7.8 retention model |
-| wrapper      | session/15-wrapper-fixes                    | 51039d6     | N-step handleRollback, 4 rollback tests, pre-PR |
-| domain-core  | main                                        | f01ca65     | active                    |
+| guardian     | session/15-t19a-conductor-rbacprofile       | 2b3b24c     | CODEBASE.md added with precise code references |
+| platform     | session/15-t19-import-conductor             | 0474770     | CODEBASE.md added with precise code references |
+| seam-core    | main                                        | d5289c3     | CODEBASE.md added with precise code references |
+| wrapper      | session/15-wrapper-fixes                    | 89d838a     | CODEBASE.md added with precise code references |
+| domain-core  | session/12-lineage-schema-amendment         | c9552e7     | CODEBASE.md added with precise code references |
 
 ## Branch Convention
 session/{N}-{role}-{description} for all work branches.
