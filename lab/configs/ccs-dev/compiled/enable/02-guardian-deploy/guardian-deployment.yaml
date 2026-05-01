@@ -1,0 +1,79 @@
+# Guardian Deployment
+# Generated for: ccs-dev guardian-tenant enable (phase 2 guardian-deploy)
+# role=tenant: no CNPG, no EPG. Pulls PermissionSnapshot from management cluster
+# via conductor-mgmt-kubeconfig secret (same secret reused by Conductor agent).
+# guardian-schema.md §3. INV-016, INV-022, INV-023.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/name: guardian
+    ontai.dev/managed-by: compiler
+  name: guardian
+  namespace: ont-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: guardian
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: operator
+        app.kubernetes.io/name: guardian
+    spec:
+      containers:
+      - env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: GUARDIAN_ROLE
+          value: tenant
+        - name: OPERATOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CLUSTER_ID
+          value: ccs-dev
+        - name: MGMT_KUBECONFIG_PATH
+          value: /etc/conductor/mgmt/kubeconfig
+        image: 10.20.0.1:5000/ontai-dev/guardian:dev
+        imagePullPolicy: Always
+        name: guardian
+        resources: {}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: webhook-certs
+          readOnly: true
+        - mountPath: /etc/conductor/mgmt
+          name: mgmt-kubeconfig
+          readOnly: true
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: guardian
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: webhook-certs
+        secret:
+          secretName: guardian-webhook-cert
+      - name: mgmt-kubeconfig
+        secret:
+          secretName: conductor-mgmt-kubeconfig
+status: {}

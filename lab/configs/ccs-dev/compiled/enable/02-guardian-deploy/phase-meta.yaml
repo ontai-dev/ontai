@@ -1,0 +1,19 @@
+# Phase metadata
+# Generated for: ccs-dev guardian-tenant enable (phase 2 guardian-deploy)
+---
+apiVersion: v1
+data:
+  applyOrder: guardian-webhook-cert.yaml,guardian-service.yaml,guardian-deployment.yaml,guardian-metrics-service.yaml,guardian-rbac-webhook.yaml,guardian-lineage-webhook.yaml
+  order: "2"
+  phase: guardian-deploy
+  readinessGate: "Wait for the Guardian Deployment to reach Available=True (kubectl
+    rollout status deployment/guardian -n ont-system). Guardian's admission webhook
+    must be registered and accepting requests. Verify with: kubectl get validatingwebhookconfigurations
+    | grep guardian. Do not apply phase 3 until Guardian is fully operational."
+kind: ConfigMap
+metadata:
+  labels:
+    seam.ontai.dev/phase: guardian-deploy
+    seam.ontai.dev/phase-order: "2"
+  name: seam-phase-guardian-deploy-meta
+  namespace: ont-system

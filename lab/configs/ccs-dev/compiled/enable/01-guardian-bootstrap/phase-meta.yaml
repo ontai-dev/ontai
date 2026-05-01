@@ -1,0 +1,19 @@
+# Phase metadata
+# Generated for: ccs-dev guardian-tenant enable (phase 1 guardian-bootstrap)
+---
+apiVersion: v1
+data:
+  applyOrder: namespace-labels.yaml,guardian-crds.yaml,guardian-rbac.yaml,guardian-issuers.yaml
+  order: "1"
+  phase: guardian-bootstrap
+  readinessGate: "Verify that ont-system carries seam.ontai.dev/webhook-mode=exempt before
+    applying phase 2. Guardian CRDs must be registered (kubectl get crd | grep security.ontai.dev).
+    Guardian RBAC must be present. cert-manager Issuers must be Ready and guardian-ca-secret
+    must exist in ont-system."
+kind: ConfigMap
+metadata:
+  labels:
+    seam.ontai.dev/phase: guardian-bootstrap
+    seam.ontai.dev/phase-order: "1"
+  name: seam-phase-guardian-bootstrap-meta
+  namespace: ont-system

@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 1, 2026 (cert-manager deployed to ccs-dev via ClusterPack; RBAC direct-apply step added to pack-deploy; helm namespace rendering fixed)
+**Last updated:** May 1, 2026 (Guardian role=tenant deployed to ccs-dev: enable bundle applied, Compliant=True verified on management snapshot, PermissionSnapshotReceipt confirmed on ccs-dev)
 
-**Current state:** cert-manager v1.14.0 deployed and running on ccs-dev via ClusterPack. Pack-deploy RBAC direct-apply step (step 5b) added to executeSplitPath -- guardian intake approves governance CRs, then RBAC manifests applied directly to tenant cluster via TenantDynamicClient. Helm namespace rendering fixed. Next: Guardian tenant deployment to ccs-dev, PR series.
+**Current state:** Guardian role=tenant fully operational on ccs-dev. Two-phase enable bundle (01-guardian-bootstrap, 02-guardian-deploy) applied. PermissionSnapshotReceipt `receipt-ccs-dev` exists in `ont-system`. Management cluster `snapshot-ccs-dev` shows `Compliant=True`, `drift=false`, `lastAckedVersion` set. Bootstrap annotation sweep completed (6 exempt namespaces skipped, 3 scanned). cert-manager RBACProfile created in `ont-system`. Two fixes applied: BootstrapAnnotationRunnable now skips createThirdPartyProfiles for role=tenant; management cluster conductor-tenant-ccs-dev-snapshot-reader ClusterRole extended with permissionsnapshots/status patch permission.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -317,6 +317,36 @@ Total: 7 live specs passed, 8 stubs skipped per e2e CI contract. 0 failures.
 
 ---
 
+## Session/15 Guardian role=tenant Wiring (2026-05-01)
+
+### Architecture Locked
+
+Guardian role=tenant is the FIRST component deployed on every new tenant cluster, before conductor. Guardian owns all `security.ontai.dev` operations on every cluster (INV-004). Conductor must never write security.ontai.dev resources. TenantBootstrapSweep in conductor was an INV-004 violation and has been removed.
+
+### New Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| TenantSnapshotRunnable | guardian/internal/controller/tenant_snapshot_runnable.go | Pulls PermissionSnapshot from mgmt, writes PermissionSnapshotReceipt to ont-system, patches lastAckedVersion/drift=false on mgmt, sets Compliant=True condition |
+| TenantProfileRunnable | guardian/internal/controller/tenant_profile_runnable.go | Creates RBACProfiles in ont-system for cert-manager/kueue/cnpg/metallb/local-path-provisioner. No per-component PermissionSet or RBACPolicy (CS-INV-008) |
+
+### Changes
+
+| Repo | Change |
+|------|--------|
+| conductor | `TenantBootstrapSweep` deleted (internal/agent/tenant_bootstrap.go, tenant_bootstrap_test.go). `agent.go` phase 3 block replaced with audit-mode-only EnforcementGate. `onLeaderStart` tenantSweep parameter removed. SetTalosClusterReady gated on snapshotPullLoop!=nil |
+| guardian | `setupTenantControllers` signature updated to accept clusterID, namespace, mgmtDynClient. TenantSnapshotRunnable and TenantProfileRunnable registered. mgmtDynClient init from MGMT_KUBECONFIG_PATH env var in main() |
+| conductor/test/e2e | `tenant_rbac_sweep_test.go` Describe block renamed from "Conductor role=tenant" to "Guardian role=tenant". Skip reasons updated from CONDUCTOR-TENANT-SWEEP-E2E to GUARDIAN-TENANT-E2E. Profile namespace/name corrected (ont-system, cert-manager). PermissionSet test removed (CS-INV-008) |
+
+### Unit Tests
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| TenantSnapshotRunnable | 5 (creates receipt, no-op same version, updates on version change, skips wrong cluster, patches mgmt acknowledgement, sets Compliant condition) | PASS |
+| TenantProfileRunnable | 6 (creates profile in ont-system, no PermissionSet/RBACPolicy, skips when SA absent, idempotent, NamespaceHint wins on collision, system namespaces ignored, TargetClusters set) | PASS |
+
+---
+
 ### cert-manager Deployed to ccs-dev via ClusterPack (2026-05-01)
 
 cert-manager v1.14.0 successfully deployed to ccs-dev tenant cluster via the ClusterPack mechanism. Three fixes were required:
@@ -328,6 +358,45 @@ cert-manager v1.14.0 successfully deployed to ccs-dev tenant cluster via the Clu
 3. **file:// URL support**: Added `file://` scheme handling to `fetchURL` for local chart tarballs.
 
 cert-manager ClusterPack status: `Available=true, signed=true`. All pods Running on ccs-dev.
+
+---
+
+## Session/15 Guardian role=tenant Deploy to ccs-dev (2026-05-01)
+
+### Enable Bundle Applied
+
+Two-phase enable bundle created and applied to ccs-dev:
+
+**Phase 01 (01-guardian-bootstrap):** namespace-labels.yaml (ont-system/cert-manager/kube-system/seam-system/ingress-nginx/kube-node-lease all exempt), guardian-crds.yaml (8 security.ontai.dev CRDs), guardian-rbac.yaml (SA + ClusterRole guardian-tenant-manager-role + ClusterRoleBinding), guardian-issuers.yaml (guardian-selfsigned-root + guardian-ca + guardian-ca-issuer chain), phase-meta.yaml.
+
+**Phase 02 (02-guardian-deploy):** guardian-webhook-cert.yaml (TLS cert via guardian-ca-issuer), guardian-service.yaml (ports 443/9090/8080), guardian-deployment.yaml (GUARDIAN_ROLE=tenant, CLUSTER_ID=ccs-dev, MGMT_KUBECONFIG_PATH, conductor-mgmt-kubeconfig mount), guardian-metrics-service.yaml, guardian-rbac-webhook.yaml (ValidatingWebhookConfiguration, cert-manager.io/inject-ca-from: ont-system/guardian-webhook-cert), guardian-lineage-webhook.yaml.
+
+### Fixes Required During Deploy
+
+| Fix | Root Cause | Resolution |
+|-----|-----------|------------|
+| BootstrapAnnotationRunnable crashes on role=tenant | `createThirdPartyProfiles` targets `seam-tenant-ccs-mgmt` (computed from MANAGEMENT_CLUSTER_NAME default). Namespace does not exist on tenant clusters. | Guard `createThirdPartyProfiles` with `ManagementClusterName != ""`. Pass `sweepMgmtCluster = ""` for role=tenant in main.go. |
+| TenantSnapshotRunnable RBAC forbidden | `conductor-tenant-ccs-dev-snapshot-reader` ClusterRole on management cluster only had get/list/watch on permissionsnapshots. Status patch required for Compliant condition. | Added permissionsnapshots/status + patch/update to ClusterRole on management cluster. |
+| serviceaccounts patch forbidden | guardian-tenant-manager-role only had get/list/watch on serviceaccounts; BootstrapAnnotationRunnable needs patch for annotation sweep. | Added update/patch to serviceaccounts rule. Added kube-node-lease to exempt namespace list. |
+
+### Verification
+
+| Check | Result |
+|-------|--------|
+| `kubectl get permissionsnapshotreceipts -n ont-system` on ccs-dev | `receipt-ccs-dev` exists |
+| `snapshot-ccs-dev` Compliant condition on management cluster | `Compliant=True`: "Tenant cluster ccs-dev has acknowledged the current snapshot" |
+| `drift` field on management snapshot | `false` |
+| `lastAckedVersion` set | `"2026-05-01T17:23:51Z"` |
+| Bootstrap annotation sweep | Complete: 6 skipped (exempt), 3 scanned, 50 already owned |
+| Guardian pods on ccs-dev | 2/2 Running, 0 restarts |
+
+### Commits
+
+| Repo | Hash | Message |
+|------|------|---------|
+| guardian | 89c7c57 | guardian: wire TenantSnapshotRunnable and TenantProfileRunnable for role=tenant |
+| guardian | 65ac2b9 | guardian: skip third-party profile creation in BootstrapAnnotationRunnable for role=tenant |
+| ontai-root | (pending) | lab: add guardian-tenant enable bundle for ccs-dev (phases 01 and 02) |
 
 ---
 
@@ -345,13 +414,15 @@ cert-manager ClusterPack status: `Available=true, signed=true`. All pods Running
 
 | ID | Component | Description |
 |----|-----------|-------------|
+| GUARDIAN-BL-CLUSTER-POLICY-TENANT | guardian | On tenant clusters, RBACProfiles reference `cluster-policy` in `ont-system` (not in `seam-tenant-ccs-dev` on management). `cluster-policy` RBACPolicy must be created in `ont-system` by guardian role=tenant or pushed from management. cert-manager RBACProfile shows Provisioned=False/PolicyNotFound. |
 | GUARDIAN-BL-RBACPROFILE-WEBHOOK | guardian | Add RBACProfile validation webhook; route seam-operator label profiles through management-maximum validation. |
-| CONDUCTOR-BL-SIGNING-KEY-TENANT | conductor | Enable bundle for tenant clusters (role=tenant) should not mount the signing PRIVATE key. Public key only for PackInstance signature verification (INV-026). The compiler currently generates and mounts a full signing keypair for all clusters. For tenant clusters: only the management cluster's public key should be present (for verifying signed PackInstances). This is a compiler + enable bundle change. |
+| CONDUCTOR-BL-SIGNING-KEY-TENANT | conductor | Enable bundle for tenant clusters (role=tenant) should not mount the signing PRIVATE key. Public key only for PackInstance signature verification (INV-026). |
 
 ---
 
 ## Next Session Candidates
 
-1. **CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION** -- conductor pull loop for conductor-tenant RBACProfile (guardian side already complete PR #18).
-2. **PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE** -- ClusterRoleBinding cleanup on TalosCluster deletion.
-3. **CLUSTERPACK-BL-VERSION-CLEANUP** -- PackReceipt resource inventory field and orphan diff loop on version upgrade.
+1. **GUARDIAN-BL-CLUSTER-POLICY-TENANT** -- cluster-policy RBACPolicy must exist in ont-system on tenant clusters so RBACProfiles reach Provisioned=True.
+2. **CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION** -- conductor pull loop for conductor-tenant RBACProfile (guardian side already complete PR #18).
+3. **PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE** -- ClusterRoleBinding cleanup on TalosCluster deletion.
+4. **CLUSTERPACK-BL-VERSION-CLEANUP** -- PackReceipt resource inventory field and orphan diff loop on version upgrade.

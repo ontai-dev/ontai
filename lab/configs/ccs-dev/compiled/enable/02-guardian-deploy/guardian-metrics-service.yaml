@@ -1,0 +1,22 @@
+# Prometheus metrics Service -- guardian in ont-system
+# Generated for: ccs-dev guardian-tenant enable (phase 2 guardian-deploy)
+# Port 8080 named 'metrics'. ServiceMonitor deferred to observability session.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/name: guardian
+  name: guardian-metrics
+  namespace: ont-system
+spec:
+  ports:
+  - name: metrics
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app.kubernetes.io/name: guardian
+status:
+  loadBalancer: {}

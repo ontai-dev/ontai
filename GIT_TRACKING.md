@@ -3,8 +3,8 @@
 | Repository   | Branch                  | Last Commit | Status                    |
 |---|---|---|---|
 | ontai        | main                                        | (pending)   | active (tracking)         |
-| conductor    | session/15-capability-tests                 | 1e481af     | pack-deploy RBAC apply fix + helm namespace fix, pre-PR |
-| guardian     | main                                        | 112f99e     | PR #18 merged             |
+| conductor    | session/15-capability-tests                 | 1e481af     | TenantBootstrapSweep deleted, agent.go updated, e2e sweep test updated, pre-PR |
+| guardian     | session/15-t19a-conductor-rbacprofile       | 65ac2b9     | TenantSnapshotRunnable + TenantProfileRunnable deployed to ccs-dev; BootstrapAnnotationRunnable tenant fix; 13 unit tests; image pushed |
 | platform     | session/15-t19-import-conductor             | 10b94d5     | ClusterRole widened for orphan teardown delete verbs, pre-PR |
 | seam-core    | main                                        | f380fb6     | N-step rollback: Previous* fields removed, §7.8 retention model |
 | wrapper      | session/15-wrapper-fixes                    | 51039d6     | N-step handleRollback, 4 rollback tests, pre-PR |
@@ -113,3 +113,5 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | fdfa63d | conductor: N-step rollback -- superseded POR retention replaces predecessor deletion |
 | wrapper      | 51039d6 | wrapper: N-step rollback -- handleRollback reads target POR directly, no N-1 guard |
 | conductor    | 1e481af | session/15: fix pack-deploy RBAC apply to tenant cluster and helm namespace rendering |
+| conductor    | (uncommitted) | Guardian role=tenant wiring: TenantBootstrapSweep deleted, agent.go onLeaderStart tenantSweep removed, e2e sweep test updated to GUARDIAN-TENANT-E2E |
+| guardian     | (uncommitted) | Guardian role=tenant wiring: TenantSnapshotRunnable, TenantProfileRunnable, setupTenantControllers updated, 13 unit tests |

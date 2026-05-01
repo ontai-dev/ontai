@@ -1,0 +1,51 @@
+# Namespace webhook-mode label patches
+# Generated for: ccs-dev guardian-tenant enable (phase 1 guardian-bootstrap)
+#
+# Apply with: kubectl apply --server-side --field-manager=compiler-enable
+#
+# Guardian's CheckBootstrapLabels gate requires the operator namespace (ont-system)
+# to carry seam.ontai.dev/webhook-mode=exempt before the admission webhook registers.
+# System and component namespaces also get exempt to prevent guardian blocking
+# its own bootstrap sweep. guardian-schema.md §4, INV-020, CS-INV-004.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    seam.ontai.dev/webhook-mode: exempt
+  name: ont-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    seam.ontai.dev/webhook-mode: exempt
+  name: cert-manager
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    seam.ontai.dev/webhook-mode: exempt
+  name: kube-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    seam.ontai.dev/webhook-mode: exempt
+  name: seam-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    seam.ontai.dev/webhook-mode: exempt
+  name: ingress-nginx
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    seam.ontai.dev/webhook-mode: exempt
+  name: kube-node-lease

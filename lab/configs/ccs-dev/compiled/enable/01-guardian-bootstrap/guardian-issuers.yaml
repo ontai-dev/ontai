@@ -1,0 +1,57 @@
+# Guardian webhook TLS Issuers
+# Generated for: ccs-dev guardian-tenant enable (phase 1 guardian-bootstrap)
+#
+# Two-step CA chain in ont-system:
+#   guardian-selfsigned-root (selfSigned) -> signs guardian-ca (CA cert)
+#   guardian-ca-issuer (CA type) -> signs guardian-webhook-cert (TLS)
+#
+# Apply before phase 2 (guardian-deploy). cert-manager must be running with CRDs installed.
+# guardian-schema.md §3.
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  labels:
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/name: guardian
+    ontai.dev/managed-by: compiler
+  name: guardian-selfsigned-root
+  namespace: ont-system
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/name: guardian
+    ontai.dev/managed-by: compiler
+  name: guardian-ca
+  namespace: ont-system
+spec:
+  commonName: guardian-ca
+  duration: 87600h
+  isCA: true
+  issuerRef:
+    kind: Issuer
+    name: guardian-selfsigned-root
+  privateKey:
+    algorithm: RSA
+    rotationPolicy: Never
+    size: 2048
+  renewBefore: 360h
+  secretName: guardian-ca-secret
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  labels:
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/name: guardian
+    ontai.dev/managed-by: compiler
+  name: guardian-ca-issuer
+  namespace: ont-system
+spec:
+  ca:
+    secretName: guardian-ca-secret

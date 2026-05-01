@@ -1,0 +1,173 @@
+# Guardian role=tenant RBAC Resources
+# Generated for: ccs-dev guardian-tenant enable (phase 1 guardian-bootstrap)
+#
+# ServiceAccount + ClusterRole + ClusterRoleBinding in ont-system.
+# ClusterRole scoped for role=tenant: no CNPG, no EPG, no PermissionSet management-write.
+# RBAC sweep: needs rbac.authorization.k8s.io bind/escalate for bootstrap annotation sweep.
+# TenantProfileRunnable: needs serviceaccounts get/list/watch for SA discovery.
+# INV-004, CS-INV-001, CS-INV-008.
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/name: guardian
+    ontai.dev/managed-by: compiler
+  name: guardian
+  namespace: ont-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    ontai.dev/rbac-owner: guardian
+  labels:
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/name: guardian
+    ontai.dev/managed-by: compiler
+  name: guardian-tenant-manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+- apiGroups:
+  - security.ontai.dev
+  resources:
+  - rbacpolicies
+  - rbacpolicies/status
+  - rbacprofiles
+  - rbacprofiles/status
+  - identitybindings
+  - identitybindings/status
+  - identityproviders
+  - identityproviders/status
+  - permissionsets
+  - permissionsets/status
+  - permissionsnapshots
+  - permissionsnapshots/status
+  - permissionsnapshotreceipts
+  - permissionsnapshotreceipts/status
+  - guardians
+  - guardians/status
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  - clusterrolebindings
+  - roles
+  - rolebindings
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+  - bind
+  - escalate
+- apiGroups:
+  - infrastructure.ontai.dev
+  resources:
+  - infrastructuretalosclusters
+  - infrastructuretalosclusters/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - infrastructure.ontai.dev
+  resources:
+  - seammemberships
+  - seammemberships/status
+  - seammemberships/finalizers
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    ontai.dev/rbac-owner: guardian
+  labels:
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/name: guardian
+    ontai.dev/managed-by: compiler
+  name: guardian-tenant-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: guardian-tenant-manager-role
+subjects:
+- kind: ServiceAccount
+  name: guardian
+  namespace: ont-system
