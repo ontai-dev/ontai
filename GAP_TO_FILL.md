@@ -14,7 +14,7 @@
 **Decision C** -- Conductor agent role=tenant pulls PermissionSnapshot and scoped RBACPolicy from management cluster and writes to `ont-system`.
 **Decision D (revised 2026-04-30)** -- PackReceipt is the sole local desired-state reference on tenant clusters. No mirror ClusterPack, PackExecution, or PackInstance CRs on tenant clusters. T-18 closed obsolete.
 **Decision E** -- PackOperationResult uses single-active-revision pattern. Predecessor labeled `ontai.dev/superseded=true` and retained (max 10). No deletion of predecessor.
-**Decision F** -- Guardian always writes RBACProfiles into `seam-tenant-{targetCluster}` regardless of cluster role.
+**Decision F** -- Guardian(role=management) always writes RBACProfiles into `seam-tenant-{targetCluster}` regardless of cluster role.
 **Decision G** -- seam-core is the exclusive owner of all cross-operator CRD schemas. Phase 2B complete.
 **Decision H** -- Conductor is the drift detection authority. No direct remediation. Three-state DriftSignal chain (pending/queued/confirmed). Bootstrap vs import deletion distinction via TalosCluster spec.mode.
 **Decision I** -- DriftSignal acknowledgement chain carries three traffic classes through federation: PermissionSnapshot, RBACProfile, DriftSignal acks.
