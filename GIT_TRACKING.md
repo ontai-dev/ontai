@@ -2,12 +2,13 @@
 ## Repository Status
 | Repository   | Branch  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main    | (pending session close commit) | PROGRESS.md + GIT_TRACKING.md updated session/17 hardening |
+| ontai        | main    | (pending session close commit) | PROGRESS.md + GIT_TRACKING.md updated session/18 drift guard + pack-deploy fix |
 | conductor    | session/17-etcd-s3-credential-injection | 25f9a91 | etcd-backup S3 upload fix |
 | conductor    | session/17-pki-rotation-automation | b1cc44c | Kubeconfig method + kubeconfig Secret refresh in pkiRotateHandler |
 | conductor    | session/17-hardening-profile-tests | 01a5cb5 | talos-upgrade rolling upgrade + Nodes()/Health() interface + installer image fix |
 | conductor    | session/17-hardening-profile-tests | 772e318 | T-23 TalosVersionDriftLoop -- Kubernetes API version check, InfrastructureTalosCluster DriftSignal |
 | conductor    | session/17-hardening-profile-tests | 5144841 | hardeningApplyHandler bug fix + unit tests + CODEBASE.md |
+| conductor    | session/17-hardening-profile-tests | cd63b00 | session/18: terminating-namespace drift guard + packDeploy alphabetical-first-match fix |
 | guardian     | main    | PR #19 merged | T-25a RBACProfile ceiling, unused snapshotReceiptGVR lint fix |
 | platform     | session/17-etcd-s3-credential-injection | f03804e | S3 credential injection for etcd backup/restore |
 | platform     | session/17-pki-rotation-automation | e6b64ab | PKI rotation automation + cert expiry detection + test fixtures |
@@ -16,6 +17,7 @@
 | platform     | session/17-hardening-profile-tests | 2b2bf3b | pkirotation e2e (TENANT-PKI-ROTATE, TENANT-PKI-CLUSTER-REACH) + registry client in day2 suite |
 | seam-core    | session/17-pki-rotation-automation | (committed) | pkiRotationThresholdDays + pkiExpiryDate fields |
 | wrapper      | main    | PR #16 merged | N-step rollback, DriftSignal cascade delete, errcheck lint fix |
+| wrapper      | main    | ee36691 | session/18: fix stale runner.ontai.dev RunnerConfig watch GVK |
 | domain-core  | main    | PR #3 merged | DomainLineageIndex schema amendment |
 
 ## Branch Convention
@@ -135,3 +137,5 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | 5144841 | conductor: update CODEBASE.md for hardeningApplyHandler fix and unstructuredList sharp edge |
 | platform     | 4fbe1e2 | platform: add hardeningprofile e2e tests for bootstrap and import clusters |
 | platform     | 2b2bf3b | platform: add pkirotation e2e tests and registry client to day2 suite |
+| conductor    | cd63b00 | conductor: fix three drift/pack-deploy alphabetical-first-match bugs (session/18) |
+| wrapper      | ee36691 | wrapper: fix stale runner.ontai.dev RunnerConfig watch GVK (session/18) |

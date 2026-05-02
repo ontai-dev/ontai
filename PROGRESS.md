@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 2, 2026 (session/17: T-23 Talos version drift detection live test -- rolling upgrade, full chain validated on ccs-dev)
+**Last updated:** May 2, 2026 (session/18: terminating-namespace drift guard, packDeploy alphabetical-first-match fix, wrapper RunnerConfig GVK migration fix)
 
-**Current state:** session/17 complete. T-23 Talos version drift chain fully implemented and live-tested on ccs-dev. Rolling upgrade Job corrected all 3 nodes from v1.9.5 back to v1.9.3. TCOR at revision 3 with out-of-band record. Remaining open: TENANT/MGMT-HP-NODE e2e blocked on infrastructure (ccs-dev unreachable, cp3 unstable), session/17 PRs pending Governor merge, Phase 6 excluded by directive.
+**Current state:** session/18 complete. Three bugs fixed: DriftSignal escalation on terminating namespaces, packDeployHandler alphabetical-first-match (cert-manager deployed instead of nginx), and wrapper RunnerConfig EventSource using pre-Phase-2B GVK. Full DriftSignal cycle end-to-end validated on ccs-dev for both ingress-nginx and cert-manager. PE ownerReference design gap identified. session/17 PRs still pending Governor merge.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -871,3 +871,65 @@ For `affectedCRRef.Kind=InfrastructureTalosCluster` + `spec.state=pending`:
 3. **PRs from session/17-hardening-profile-tests** -- conductor PR (per-node hardeningApply fix + unit tests) and platform PR (hardening e2e + PKI e2e). Both need Governor merge approval.
 4. **Phase 6 (T-20, T-21)** -- Day2 scheduling with node awareness; CAPI-path Day2 parity (design sessions required).
 5. **Guardian auto-RBAC expansion** -- Governor request 2026-05-02.
+
+---
+
+## Session/18 Drift Guard + Pack-Deploy Alphabetical-First-Match Fix (2026-05-02)
+
+### Three Bugs Fixed
+
+#### Bug 1: DriftSignal escalation on terminating namespaces
+
+`PackReceiptDriftLoop.checkDrift()` was incrementing the escalation counter when resources appeared missing because their namespace was terminating (finalizers still held). The drift checker calls `Get` on each deployed resource; a resource in a terminating namespace returns `IsNotFound`. Before this fix, every cycle during namespace teardown would emit a DriftSignal increment, reaching `escalationThreshold=3` before the namespace finished deleting and causing `TerminalDrift`.
+
+Fix: added `namespaceTerminating()` helper (reads namespace `DeletionTimestamp` via local dynamic client). Inside `checkDrift()`, when `IsNotFound` fires, `namespaceTerminating()` is called before `emitDriftSignal`. When namespace is terminating, the cycle skips that resource entirely.
+
+New unit test: `TestPackReceiptDriftLoop_NamespaceTerminating_SkipsDrift` -- creates a terminating namespace, a Deployment inside it, expects zero DriftSignals emitted.
+
+#### Bug 2: packDeployHandler alphabetical-first-match bug
+
+`packDeployHandler.Execute()` used `List + break` to find the PackExecution for the cluster. `List` returns all PEs sorted alphabetically by name. With two PEs in the same namespace (`cert-manager-ccs-dev`, `nginx-ccs-dev`), `break` always selected `cert-manager` first. Every pack-deploy Job -- including the nginx Job -- deployed cert-manager manifests.
+
+Root cause visible in Job logs: `pack="cert-manager-ccs-dev"` for a Job that was supposed to deploy nginx.
+
+Fix: wrapper's PE reconciler sets `OPERATION_RESULT_CM` env var on every Job to the PE name. `packDeployHandler` now uses `params.OperationResultCM` as the PE name for a direct `Get` call. Empty `OperationResultCM` returns `ValidationFailure` immediately.
+
+New unit test: `TestPackDeploy_MultiplePEsSameCluster_DeploysCorrectPack` -- creates cert-manager PE (alphabetically first) and nginx PE, sets `OperationResultCM="nginx-pe-ccs-dev"`, verifies the nginx OCI ref is used.
+
+#### Bug 3: Wrapper RunnerConfig EventSource GVK stale from pre-Phase-2B
+
+Wrapper's PE reconciler watched `RunnerConfig` in group `runner.ontai.dev/v1alpha1` to retrigger gate 0 when capabilities became available. Phase 2B migrated this type to `infrastructure.ontai.dev/v1alpha1/InfrastructureRunnerConfig` but this watch was not updated. The controller-runtime informer cache could not find the kind, causing wrapper pods to log `no matches for kind "RunnerConfig" in version "runner.ontai.dev/v1alpha1"` every 10 seconds and CrashLoopBackOff every ~2 minutes. Pack-deploy Jobs were never submitted.
+
+Fix: updated GVK to `infrastructure.ontai.dev/v1alpha1/InfrastructureRunnerConfig`.
+
+### Live E2E (ccs-dev)
+
+After the three fixes, full DriftSignal cycle validated end-to-end on ccs-dev:
+
+| # | Step | Result |
+|---|------|--------|
+| 1 | ingress-nginx Deployment deleted from ccs-dev | PASS |
+| 2 | DriftSignal emitted (counter=1 from prior cycle) | PASS |
+| 3 | DriftSignalHandler: PE deleted, new PE created | PASS |
+| 4 | pack-deploy Job: nginx deployed to correct PE (nginx, not cert-manager) | PASS |
+| 5 | drift-nginx-ccs-dev manually confirmed | PASS |
+| 6 | cert-manager DriftSignal confirmed after cert-manager redeployed | PASS |
+
+### Unit Tests
+
+| Suite | New Tests | Status |
+|-------|-----------|--------|
+| `test/unit/agent/pack_receipt_drift_loop_test.go` | `TestPackReceiptDriftLoop_NamespaceTerminating_SkipsDrift` (15 total) | PASS |
+| `test/unit/capability/wrapper_test.go` | `TestPackDeploy_MultiplePEsSameCluster_DeploysCorrectPack`, `TestPackDeploy_MissingOperationResultCM_ReturnsValidationFailure` renamed | PASS |
+| All conductor | `go test ./...` | All suites pass |
+
+### PE ownerReference design gap identified
+
+PackExecutions are created by `ClusterPackReconciler` but carry no `ownerReference` pointing back to the ClusterPack. When conductor's `DriftSignalHandler` deletes a PE for retrigger, the ClusterPack controller is not notified and cannot auto-recreate the PE. Manual annotation of the ClusterPack (`reconcile.infrastructure.ontai.dev/force`) was required during the live test. This is a design gap worth tracking.
+
+### Commits
+
+| Repo | Branch | Hash | Message |
+|------|--------|------|---------|
+| conductor | session/17-hardening-profile-tests | cd63b00 | conductor: fix three drift/pack-deploy alphabetical-first-match bugs |
+| wrapper | main | ee36691 | wrapper: fix stale runner.ontai.dev RunnerConfig watch GVK |
