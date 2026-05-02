@@ -2,21 +2,13 @@
 ## Repository Status
 | Repository   | Branch  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main    | (pending session close commit) | PROGRESS.md + GIT_TRACKING.md updated session/18 drift guard + pack-deploy fix |
-| conductor    | session/17-etcd-s3-credential-injection | 25f9a91 | etcd-backup S3 upload fix |
-| conductor    | session/17-pki-rotation-automation | b1cc44c | Kubeconfig method + kubeconfig Secret refresh in pkiRotateHandler |
-| conductor    | session/17-hardening-profile-tests | 01a5cb5 | talos-upgrade rolling upgrade + Nodes()/Health() interface + installer image fix |
-| conductor    | session/17-hardening-profile-tests | 772e318 | T-23 TalosVersionDriftLoop -- Kubernetes API version check, InfrastructureTalosCluster DriftSignal |
-| conductor    | session/17-hardening-profile-tests | 5144841 | hardeningApplyHandler bug fix + unit tests + CODEBASE.md |
-| conductor    | session/17-hardening-profile-tests | cd63b00 | session/18: terminating-namespace drift guard + packDeploy alphabetical-first-match fix |
+| ontai        | main    | (this commit) | session/18 close -- all PRs merged |
+| conductor    | main    | e06c678 | PR #29 squash merged: session/17 hardening, PKI, Talos drift, K8s drift |
+| conductor    | main    | 608edb9 | PR #30 squash merged: KubernetesVersionDriftLoop |
 | guardian     | main    | PR #19 merged | T-25a RBACProfile ceiling, unused snapshotReceiptGVR lint fix |
-| platform     | session/17-etcd-s3-credential-injection | f03804e | S3 credential injection for etcd backup/restore |
-| platform     | session/17-pki-rotation-automation | e6b64ab | PKI rotation automation + cert expiry detection + test fixtures |
-| platform     | session/17-hardening-profile-tests | 3a9acd9 | DriftSignalReconciler InfrastructureTalosCluster handler; platform-executor RBAC upgradepolicies fix |
-| platform     | session/17-hardening-profile-tests | 967ba3f | DriftSignalReconciler: observedTalosVersion patch, out-of-band TCOR record, TCOR revision bump |
-| platform     | session/17-hardening-profile-tests | 2b2bf3b | pkirotation e2e (TENANT-PKI-ROTATE, TENANT-PKI-CLUSTER-REACH) + registry client in day2 suite |
-| seam-core    | session/17-pki-rotation-automation | (committed) | pkiRotationThresholdDays + pkiExpiryDate fields |
-| wrapper      | main    | PR #16 merged | N-step rollback, DriftSignal cascade delete, errcheck lint fix |
+| platform     | main    | 2714053 | PR #19 squash merged: session/17 DriftSignalReconciler, PKI automation |
+| platform     | main    | 2c5d002 | PR #20 squash merged: K8s version drift DriftSignalReconciler handler |
+| seam-core    | main    | d90ee3d | PR #16 squash merged: PkiRotationThresholdDays + PkiExpiryDate + lint fix |
 | wrapper      | main    | ee36691 | session/18: fix stale runner.ontai.dev RunnerConfig watch GVK |
 | domain-core  | main    | PR #3 merged | DomainLineageIndex schema amendment |
 
@@ -139,3 +131,8 @@ No pushes to remote until Platform Governor authorizes.
 | platform     | 2b2bf3b | platform: add pkirotation e2e tests and registry client to day2 suite |
 | conductor    | cd63b00 | conductor: fix three drift/pack-deploy alphabetical-first-match bugs (session/18) |
 | wrapper      | ee36691 | wrapper: fix stale runner.ontai.dev RunnerConfig watch GVK (session/18) |
+| seam-core    | d90ee3d | seam-core: session/17 PKI rotation fields, CAPI mode validation, condition reasons, CODEBASE.md (PR #16) |
+| conductor    | e06c678 | conductor: session/17 hardening, PKI rotation, etcd S3, Talos version drift, K8s drift loop (PR #29) |
+| conductor    | 608edb9 | conductor: KubernetesVersionDriftLoop -- detect out-of-band K8s version change (PR #30) |
+| platform     | 2714053 | platform: session/17 S3 creds, PKI rotation, hardeningApply e2e, DriftSignal reconciler (PR #19) |
+| platform     | 2c5d002 | platform: DriftSignalReconciler handles Kubernetes version drift (PR #20) |
