@@ -575,7 +575,7 @@
         <div class="hero-stat-label">Published schemas</div>
       </div>
       <div class="hero-stat">
-        <div class="hero-stat-num">v0.1.0</div>
+        <div class="hero-stat-num">v1.9.3&#8209;alpha.1</div>
         <div class="hero-stat-label">Alpha release</div>
       </div>
       <div class="hero-stat">
@@ -806,42 +806,42 @@
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#7B5EC0;"></div><div class="op-name">Guardian</div></div>
         <div class="op-group">security.ontai.dev</div>
-        <div class="op-desc">Trust root and security substrate. RBAC governance, PermissionSnapshot computation and distribution, identity resolution, and the CNPG audit sink. Every operator is admitted through Guardian before it may operate.</div>
-        <span class="op-status status-live">Live on Management Cluster</span>
+        <div class="op-desc">Trust root and security substrate. RBAC governance, PermissionSnapshot computation and distribution, Guardian admission webhook, and the CNPG audit sink. Every operator on every cluster is admitted through Guardian before it may operate. RBAC audit mode transitions to enforce mode once the governance sweep is clean.</div>
+        <span class="op-status status-live">Alpha</span>
       </div>
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#0288D1;"></div><div class="op-name">Platform</div></div>
         <div class="op-group">platform.ontai.dev</div>
-        <div class="op-desc">Cluster lifecycle authority. Imports and bootstraps Talos Linux clusters. Manages CAPI-driven provisioning. Auto-onboards tenant clusters into the governance layer with zero manual steps.</div>
-        <span class="op-status status-live">Live on Management Cluster</span>
+        <div class="op-desc">Cluster lifecycle authority. Imports existing Talos Linux clusters as management or tenant. Drives day2 operations: Talos upgrades, Kubernetes version upgrades, PKI rotation, hardening profile application, etcd backup and restore. DriftSignalReconciler creates corrective UpgradePolicies when drift is detected.</div>
+        <span class="op-status status-live">Alpha</span>
       </div>
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#00897B;"></div><div class="op-name">Wrapper</div></div>
-        <div class="op-group">infra.ontai.dev</div>
-        <div class="op-desc">Pack delivery engine. Manages OCI artifact packs from ClusterPack signing through four sequential gates to PackInstance creation and DNS registration. No ephemeral intermediates.</div>
-        <span class="op-status status-live">Live on Management Cluster</span>
+        <div class="op-group">infrastructure.ontai.dev</div>
+        <div class="op-desc">Pack delivery engine. Compiles Helm charts, raw YAML, and Kustomize overlays into signed three-layer OCI artifacts. Drives PackExecution through a five-gate delivery sequence to PackInstance. Triggers corrective redeployment when drift signals arrive from tenant Conductor agents.</div>
+        <span class="op-status status-live">Alpha</span>
       </div>
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#C07A1A;"></div><div class="op-name">Conductor</div></div>
-        <div class="op-group">runner.ontai.dev</div>
-        <div class="op-desc">Execution intelligence. Two binaries with a hard architectural boundary: Compiler (workstation tool, never deployed) and Conductor agent (distroless, deployed everywhere). The Compiler never deploys. The agent never compiles.</div>
-        <span class="op-status status-live">Live on Management Cluster</span>
+        <div class="op-group">infrastructure.ontai.dev</div>
+        <div class="op-desc">Three-image execution model: Compiler (offline workstation tool, never deployed), Conductor execute-mode (debian-slim Kueue Jobs for operational capabilities on the management cluster), Conductor agent (distroless, deployed to every cluster). The agent runs drift detection loops, signs artifacts on the management cluster, and verifies signatures on tenant clusters.</div>
+        <span class="op-status status-live">Alpha &mdash; v1.9.3-alpha.1</span>
       </div>
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#6D28D9;"></div><div class="op-name">seam-core</div></div>
         <div class="op-group">infrastructure.ontai.dev</div>
-        <div class="op-desc">Lineage and semantic DNS controller. Maintains InfrastructureLineageIndex across all operator GVKs, owns SeamMembership CRD, and operates the DSNS zone that makes infrastructure topology resolvable by name.</div>
-        <span class="op-status status-live">Live on Management Cluster</span>
+        <div class="op-desc">Exclusive schema authority for all cross-operator CRD definitions. Twelve types including InfrastructureLineageIndex, DriftSignal, InfrastructureTalosCluster, InfrastructureRunnerConfig, and all pack lifecycle types. Runs the LineageReconciler, DescendantReconciler, DSNSReconciler, and OutcomeReconciler. No operator defines CRDs that seam-core owns.</div>
+        <span class="op-status status-live">Alpha</span>
       </div>
       <div class="op-card">
         <div class="op-header"><div class="op-dot" style="background:#1B5E20;"></div><div class="op-name">domain-core</div></div>
         <div class="op-group">core.ontai.dev</div>
         <div class="op-desc">Domain primitive declarations. Nine abstract CRDs every ONT domain inherits from: DomainIdentity through DomainSemanticNameService. Application operators read these. They never write them.</div>
-        <span class="op-status status-live">Live on Management Cluster</span>
+        <span class="op-status status-live">Alpha</span>
       </div>
     </div>
     <p style="margin-top:24px;font-size:13px;color:var(--ink3);text-align:center;">
-      Screen (virtualization sovereignty) and ONTAR (pod execution boundary, NOT YET IMPLEMENTED) are on the roadmap.
+      Screen (virtualization, virt.ontai.dev), Vortex (UI with NLP/AI integration), and ONTAR (application runtime) are future scope. No implementation until Governor-approved ADR.
     </p>
   </div>
 </section>
