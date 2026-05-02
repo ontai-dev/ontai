@@ -1,14 +1,14 @@
 # ONT Git Tracking
 ## Repository Status
-| Repository   | Branch                  | Last Commit | Status                    |
+| Repository   | Branch  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main                                        | a3045cb     | CODEBASE.md rewritten, GAP_TO_FILL.md updated |
-| conductor    | session/15-capability-tests                 | 34602eb     | helm hook filtering, slog JSON handler, remove spec dump from POR log |
-| guardian     | session/15-t19a-conductor-rbacprofile       | 2b3b24c     | CODEBASE.md added with precise code references |
-| platform     | session/15-t19-import-conductor             | 0474770     | CODEBASE.md added with precise code references |
-| seam-core    | main                                        | d5289c3     | CODEBASE.md added with precise code references |
-| wrapper      | session/15-wrapper-fixes                    | 89d838a     | CODEBASE.md added with precise code references |
-| domain-core  | session/12-lineage-schema-amendment         | c9552e7     | CODEBASE.md added with precise code references |
+| ontai        | main    | (pending session close commit) | PROGRESS.md + GIT_TRACKING.md updated session/16 |
+| conductor    | main    | PR #28 merged | e2e suite: T-17 loops, drift injection, signing, snapshot, lint fixes |
+| guardian     | main    | PR #19 merged | T-25a RBACProfile ceiling, unused snapshotReceiptGVR lint fix |
+| platform     | main    | PR #18 merged | T-19 conductor ClusterRole security.ontai.dev write verbs |
+| seam-core    | main    | b54a1de | ReasonConductorDeploymentAvailable/Unavailable added |
+| wrapper      | main    | PR #16 merged | N-step rollback, DriftSignal cascade delete, errcheck lint fix |
+| domain-core  | main    | PR #3 merged | DomainLineageIndex schema amendment |
 
 ## Branch Convention
 session/{N}-{role}-{description} for all work branches.
