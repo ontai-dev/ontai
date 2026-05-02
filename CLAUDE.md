@@ -32,10 +32,10 @@ Claude proposes. The Platform Governor approves. Human-at-Boundary principle. Ab
 
 ## 3. Session Protocol
 
-Step 1 -- If LOCAL-CONTEXT.md exists, read it first and resume from the recorded next step. Otherwise read CONTEXT.md.
+Step 1 -- Read CONTEXT.md and CODEBASE.md
 Step 2 -- Read AGENTS.md in full.
 Step 3 -- Read CLAUDE.md in full.
-Step 4 -- Read the in-scope repo CLAUDE.md for repo-specific constraints. Read schema documents from docs/ in each operator repo before any design or implementation work. Read CODEBASE.md in the root and in the target repo before any implementation or investigation.
+Step 4 -- Read the in-scope repo CLAUDE.md and CODEBASE.md for repo-specific constraints and thorough codebase clarity. Read schema documents from docs/ in each operator repo before any design or implementation work. Read CODEBASE.md in the root and in the target repo before any implementation or investigation.
 Step 5 -- Execute within assigned role authority. Surface every phase boundary for Governor approval.
 Step 6 -- Update CONTEXT.md (Governor only), PROGRESS.md, GIT_TRACKING.md, BACKLOG.md at session close.
 A session without Step 6 is aborted. The next Governor session must reconstruct state before proceeding.
@@ -140,26 +140,34 @@ Conductor, regardless of role, is the reconciliation authority for the governanc
 
 ## 7. Governor Directives
 
-### Context Compaction Safety Protocol
+## Codebase Understanding Protocol
 
 This directive is authored by the Governor and may not be amended or overridden by any other role.
 
-**Rule 1 - Threshold:** When the active context window reaches approximately 95 percent capacity, the current agent must not drive toward compaction. It must pause work and execute the compaction safety protocol before any further action.
+**Rule 1 - Read before work:** At the start of any session involving implementation, investigation, or feature change, the agent must read `~/ontai/CODEBASE.md` first. For any work scoped to a specific repo, the agent must also read the `CODEBASE.md` in that repo directory before reading any source files.
 
-**Rule 2 - LOCAL-CONTEXT.md creation:** The agent creates or overwrites ~/ontai/LOCAL-CONTEXT.md with the following content in order:
-- Session identifier and branch name currently active
-- Repos with uncommitted or unpushed changes and their current state
-- The exact next step that was about to be executed when the threshold was reached
-- Any diagnostic findings recorded so far in the session that have not yet been committed to PROGRESS.md
-- The list of backlog items still open in the current session
+**Rule 2 - CODEBASE.md is the mental model cache:** The agent must not re-derive understanding by walking the source tree when a CODEBASE.md exists and is not known to be stale. Walking source files is permitted only to fill gaps not covered by CODEBASE.md or to verify a specific invariant during debugging.
 
-**Rule 3 - CLAUDE.md reference:** LOCAL-CONTEXT.md must be listed as the first read in the CLAUDE.md agent startup sequence, before CONTEXT.md. Agents starting a new context window must read LOCAL-CONTEXT.md first and resume from the recorded next step without asking the human to repeat what was already decided.
+**Rule 3 - Update is mandatory after any change:** After any implementation, feature change, or invariant correction, the agent must update the CODEBASE.md in every repo it modified. If cross-repo relationships, data flows, or type contracts changed, the parent `~/ontai/CODEBASE.md` must also be updated. Committing code without updating the corresponding CODEBASE.md is an invariant violation.
 
-**Rule 4 - Governor authority:** Only the Governor role may create, amend, or delete LOCAL-CONTEXT.md protocol entries in CLAUDE.md. Individual controller, schema, or runner engineer roles must follow the protocol but may not modify it.
+**Rule 4 - What each repo-level CODEBASE.md must contain:** The document must be structured with these seven sections exactly:
+- **Purpose** — What the repo owns, what it explicitly does not own, and its role in the ONT system
+- **Key Abstractions** — Primary CRDs and types, their relationships, and lifecycle state transitions
+- **Primary Data Flows** — Numbered steps for the 1–3 most important operations, referencing actual file paths
+- **Invariants and Constraints** — Non-obvious rules, why they exist, and where enforcement lives
+- **Cross-Repo Dependencies** — What this repo consumes from others and what others depend on from it
+- **Test Contract** — What the e2e, integration, and unit tests verify at a behavioral level, not a file list
+- **Sharp Edges** — Known footguns, rejected patterns, and deliberately avoided approaches
 
-**Rule 5 - Cleanup:** When a session branch is fully merged to main and confirmed green, the agent must delete LOCAL-CONTEXT.md and commit the deletion to the ontai root main branch. A stale LOCAL-CONTEXT.md after merge is an invariant violation.
+**Rule 5 - Parent CODEBASE.md scope:** The root `~/ontai/CODEBASE.md` must contain the system-level architecture overview, a one-line responsibility entry per repo, the cross-repo dependency graph in text form, and links to each repo-level CODEBASE.md. It must not duplicate content that belongs in a repo-level file.
 
-*2026-04-20 -- Context compaction safety protocol established.*
+**Rule 6 - Staleness is an error:** If the agent detects that a CODEBASE.md section contradicts the current source (e.g. a type was renamed, a webhook was removed, a flow changed), it must correct the CODEBASE.md as part of the same commit that introduced the change. A CODEBASE.md that describes code that no longer exists is treated with the same severity as a failing test.
+
+**Rule 7 - Initial generation:** If CODEBASE.md does not exist in a repo, the agent must generate it before beginning implementation work in that repo. Generation is not optional and is not deferred to after the feature is complete.
+
+**Rule 8 - Governor authority:** Only the Governor role may amend the structure requirements in Rule 4 or the scope requirements in Rule 5. Controller, schema, and runner engineer roles must follow this protocol and keep their respective CODEBASE.md files current, but may not alter the protocol itself.
+
+---
 
 ### e2e CI Contract and Skip-Reason Standard
 

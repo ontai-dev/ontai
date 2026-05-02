@@ -2,12 +2,14 @@
 ## Repository Status
 | Repository   | Branch  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main    | (pending session close commit) | PROGRESS.md + GIT_TRACKING.md updated session/16 |
-| conductor    | main    | PR #28 merged | e2e suite: T-17 loops, drift injection, signing, snapshot, lint fixes |
+| ontai        | main    | (this commit) | session/18 close -- all PRs merged |
+| conductor    | main    | e06c678 | PR #29 squash merged: session/17 hardening, PKI, Talos drift, K8s drift |
+| conductor    | main    | 608edb9 | PR #30 squash merged: KubernetesVersionDriftLoop |
 | guardian     | main    | PR #19 merged | T-25a RBACProfile ceiling, unused snapshotReceiptGVR lint fix |
-| platform     | main    | PR #18 merged | T-19 conductor ClusterRole security.ontai.dev write verbs |
-| seam-core    | main    | b54a1de | ReasonConductorDeploymentAvailable/Unavailable added |
-| wrapper      | main    | PR #16 merged | N-step rollback, DriftSignal cascade delete, errcheck lint fix |
+| platform     | main    | 2714053 | PR #19 squash merged: session/17 DriftSignalReconciler, PKI automation |
+| platform     | main    | 2c5d002 | PR #20 squash merged: K8s version drift DriftSignalReconciler handler |
+| seam-core    | main    | d90ee3d | PR #16 squash merged: PkiRotationThresholdDays + PkiExpiryDate + lint fix |
+| wrapper      | main    | ee36691 | session/18: fix stale runner.ontai.dev RunnerConfig watch GVK |
 | domain-core  | main    | PR #3 merged | DomainLineageIndex schema amendment |
 
 ## Branch Convention
@@ -117,3 +119,20 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | 34602eb | conductor: helm hook filtering, slog JSON handler, remove spec dump from POR log |
 | guardian     | 693ba7d | session/15: GUARDIAN-BL-RBACPROFILE-TENANT-PROVISIONING -- tenant snapshot path in RBACProfileReconciler, TenantProfileRunnable clears RBACPolicyRef |
 | ontai root   | 52c4d36 | session/15 close: CODEBASE.md across all repos, GAP_TO_FILL cleanup, ccs-dev INV-026 bundle fix, ccs-mgmt signing key rotation |
+| conductor    | 25f9a91 | conductor: fix etcd-backup S3 upload for MinIO over HTTP (bytes.NewReader) |
+| platform     | f03804e | platform: inject S3 credentials into etcd backup/restore executor Jobs |
+| seam-core    | (session/17-pki-rotation-automation) | seam-core: add pkiRotationThresholdDays to spec and pkiExpiryDate to status |
+| platform     | 211defb | platform: implement PKI rotation automation with cert expiry detection |
+| platform     | e6b64ab | platform: fix S3 secret test fixtures to include required credentials |
+| conductor    | b1cc44c | conductor: add Kubeconfig method and kubeconfig Secret refresh to pkiRotateHandler |
+| conductor    | a8ad30e | conductor: fix hardeningApplyHandler to read machineConfigPatches as list |
+| conductor    | 5144841 | conductor: update CODEBASE.md for hardeningApplyHandler fix and unstructuredList sharp edge |
+| platform     | 4fbe1e2 | platform: add hardeningprofile e2e tests for bootstrap and import clusters |
+| platform     | 2b2bf3b | platform: add pkirotation e2e tests and registry client to day2 suite |
+| conductor    | cd63b00 | conductor: fix three drift/pack-deploy alphabetical-first-match bugs (session/18) |
+| wrapper      | ee36691 | wrapper: fix stale runner.ontai.dev RunnerConfig watch GVK (session/18) |
+| seam-core    | d90ee3d | seam-core: session/17 PKI rotation fields, CAPI mode validation, condition reasons, CODEBASE.md (PR #16) |
+| conductor    | e06c678 | conductor: session/17 hardening, PKI rotation, etcd S3, Talos version drift, K8s drift loop (PR #29) |
+| conductor    | 608edb9 | conductor: KubernetesVersionDriftLoop -- detect out-of-band K8s version change (PR #30) |
+| platform     | 2714053 | platform: session/17 S3 creds, PKI rotation, hardeningApply e2e, DriftSignal reconciler (PR #19) |
+| platform     | 2c5d002 | platform: DriftSignalReconciler handles Kubernetes version drift (PR #20) |
