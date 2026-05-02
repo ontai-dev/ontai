@@ -624,10 +624,50 @@ Full implementation across four repos on branch `session/17-pki-rotation-automat
 
 ---
 
+## Session/17 HardeningProfile Tests (2026-05-02)
+
+### hardeningApplyHandler Bug Fix
+
+`hardeningApplyHandler.Execute()` in `conductor/internal/capability/platform_security.go` was using `unstructuredString` to read `spec.machineConfigPatches`. This always returned empty string because the field is `[]interface{}` in the unstructured object -- the `v.(string)` type assertion inside `unstructuredString` silently fails on a slice. Fixed by using `unstructuredList` with a per-element string type assertion and applying each patch in a separate loop iteration. Each patch produces one `StepResult`.
+
+5 new unit tests in `conductor/test/unit/capability/platform_test.go`:
+- `TestHardeningApply_SinglePatchApplied`
+- `TestHardeningApply_MultiPatchApplied`
+- `TestHardeningApply_EmptyPatchesValidationFailure`
+- `TestHardeningApply_NoHardeningProfileRefValidationFailure`
+- `TestHardeningApply_ApplyErrorReturnsExecutionFailure`
+
+### HardeningProfile E2E Tests
+
+New file `platform/test/e2e/day2/hardeningprofile_e2e_test.go` with 6 live specs covering both bootstrap mode (ccs-mgmt) and import mode (ccs-dev):
+
+| Spec ID | Cluster | Coverage |
+|---------|---------|----------|
+| MGMT-HP-PROFILE | ccs-mgmt (bootstrap) | HardeningProfile Valid=True condition |
+| MGMT-HP-CLUSTER | ccs-mgmt (bootstrap) | Full-cluster NodeMaintenance hardeningApply reaches Ready=True |
+| MGMT-HP-NODE | ccs-mgmt (bootstrap) | Single-node (ccs-mgmt-w2) NodeMaintenance hardeningApply reaches Ready=True |
+| TENANT-HP-PROFILE | ccs-dev (import) | HardeningProfile Valid=True condition |
+| TENANT-HP-CLUSTER | ccs-dev (import) | Full-cluster NodeMaintenance hardeningApply reaches Ready=True |
+| TENANT-HP-NODE | ccs-dev (import) | Single-node via TENANT_WORKER_NODE env; skips if unset |
+
+Safe machineconfig patches: `net.ipv4.ip_forward=1` and `net.ipv4.conf.all.rp_filter=1`. These sysctls are required for Kubernetes networking and already set on all cluster nodes, so applying them in `no-reboot` mode is idempotent and non-disruptive.
+
+### Commits
+
+| Repo | Branch | Hash | Message |
+|------|--------|------|---------|
+| conductor | session/17-hardening-profile-tests | a8ad30e | conductor: fix hardeningApplyHandler to read machineConfigPatches as list |
+| conductor | session/17-hardening-profile-tests | 5144841 | conductor: update CODEBASE.md for hardeningApplyHandler fix and unstructuredList sharp edge |
+| platform | session/17-hardening-profile-tests | 4fbe1e2 | platform: add hardeningprofile e2e tests for bootstrap and import clusters |
+
+---
+
 ## Next Session Candidates
 
-1. **T-23** -- Platform DriftSignal handling for cluster-state drift (design session required).
-2. **T-24** -- TalosCluster deletion cascade per Decision H order (design session required).
-3. **Phase 6 (T-20, T-21)** -- Day2 scheduling with node awareness; CAPI-path Day2 parity (Phase 6, design session required).
-4. **Guardian auto-RBAC expansion** -- For every new API group detected on a cluster, guardian should upgrade the seam-operator RBACProfile/PermissionSets on both tenant and management clusters to include control over those third-party components. Governor request 2026-05-02.
-5. **PKI rotation live test** -- Apply PKI rotation e2e tests on ccs-dev after deploying updated platform and conductor images from session/17-pki-rotation-automation branches.
+1. **Build and push conductor-execute:dev** -- hardeningApplyHandler fix requires `conductor-execute:dev` rebuild before live e2e hardening tests can run on ccs-mgmt and ccs-dev.
+2. **Run live hardeningprofile e2e** -- After conductor-execute image deployed: run `make e2e` against both clusters to verify all 6 hardening specs pass.
+3. **T-23** -- Platform DriftSignal handling for cluster-state drift (design session required).
+4. **T-24** -- TalosCluster deletion cascade per Decision H order (design session required).
+5. **Phase 6 (T-20, T-21)** -- Day2 scheduling with node awareness; CAPI-path Day2 parity (Phase 6, design session required).
+6. **Guardian auto-RBAC expansion** -- For every new API group detected on a cluster, guardian should upgrade the seam-operator RBACProfile/PermissionSets on both tenant and management clusters to include control over those third-party components. Governor request 2026-05-02.
+7. **PKI rotation live test** -- Apply PKI rotation e2e tests on ccs-dev after deploying updated platform and conductor images from session/17-pki-rotation-automation branches.
