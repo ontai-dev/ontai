@@ -2,11 +2,13 @@
 ## Repository Status
 | Repository   | Branch  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main    | (pending session close commit) | PROGRESS.md + GIT_TRACKING.md updated session/16 |
-| conductor    | main    | PR #28 merged | e2e suite: T-17 loops, drift injection, signing, snapshot, lint fixes |
+| ontai        | main    | (pending session close commit) | PROGRESS.md + GIT_TRACKING.md updated session/17 |
+| conductor    | session/17-etcd-s3-credential-injection | 25f9a91 | etcd-backup S3 upload fix |
+| conductor    | session/17-pki-rotation-automation | b1cc44c | Kubeconfig method + kubeconfig Secret refresh in pkiRotateHandler |
 | guardian     | main    | PR #19 merged | T-25a RBACProfile ceiling, unused snapshotReceiptGVR lint fix |
-| platform     | main    | PR #18 merged | T-19 conductor ClusterRole security.ontai.dev write verbs |
-| seam-core    | main    | b54a1de | ReasonConductorDeploymentAvailable/Unavailable added |
+| platform     | session/17-etcd-s3-credential-injection | f03804e | S3 credential injection for etcd backup/restore |
+| platform     | session/17-pki-rotation-automation | e6b64ab | PKI rotation automation + cert expiry detection + test fixtures |
+| seam-core    | session/17-pki-rotation-automation | (committed) | pkiRotationThresholdDays + pkiExpiryDate fields |
 | wrapper      | main    | PR #16 merged | N-step rollback, DriftSignal cascade delete, errcheck lint fix |
 | domain-core  | main    | PR #3 merged | DomainLineageIndex schema amendment |
 
@@ -117,3 +119,9 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | 34602eb | conductor: helm hook filtering, slog JSON handler, remove spec dump from POR log |
 | guardian     | 693ba7d | session/15: GUARDIAN-BL-RBACPROFILE-TENANT-PROVISIONING -- tenant snapshot path in RBACProfileReconciler, TenantProfileRunnable clears RBACPolicyRef |
 | ontai root   | 52c4d36 | session/15 close: CODEBASE.md across all repos, GAP_TO_FILL cleanup, ccs-dev INV-026 bundle fix, ccs-mgmt signing key rotation |
+| conductor    | 25f9a91 | conductor: fix etcd-backup S3 upload for MinIO over HTTP (bytes.NewReader) |
+| platform     | f03804e | platform: inject S3 credentials into etcd backup/restore executor Jobs |
+| seam-core    | (session/17-pki-rotation-automation) | seam-core: add pkiRotationThresholdDays to spec and pkiExpiryDate to status |
+| platform     | 211defb | platform: implement PKI rotation automation with cert expiry detection |
+| platform     | e6b64ab | platform: fix S3 secret test fixtures to include required credentials |
+| conductor    | b1cc44c | conductor: add Kubeconfig method and kubeconfig Secret refresh to pkiRotateHandler |

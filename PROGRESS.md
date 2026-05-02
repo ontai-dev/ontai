@@ -568,9 +568,66 @@ All e2e test failures resolved. New conductor:dev image built with T-17 loops. A
 
 ---
 
+## Session/17 Etcd Backup/Restore + PKI Rotation Automation (2026-05-02)
+
+### Work Completed
+
+**Task A: S3 credential injection for etcd backup/restore executor Jobs**
+
+The etcd backup and restore paths in platform required S3 credentials mounted into the Conductor executor Job. Cross-namespace `envFrom` is not possible in Kubernetes, so the reconciler reads the source secret, normalizes its keys, and projects a per-operation copy into `em.Namespace` owned by the EtcdMaintenance CR.
+
+| File | Change |
+|------|--------|
+| `platform/internal/controller/s3_env_secret.go` | New file. `ensureS3EnvSecret`, `NormalizeS3SecretData` (exported), `appendS3EnvFrom`, `resolveS3CredentialsForRestore`. |
+| `platform/internal/controller/etcdmaintenance_reconciler.go` | Backup and restore paths call `ensureS3EnvSecret` and `appendS3EnvFrom`. |
+| `platform/docs/platform-schema.md` | Section 10 added: S3 secret contract, two-tier resolution, key normalization table. |
+| `platform/CODEBASE.md` | `s3_env_secret.go` functions documented. |
+
+Key design: S3 key normalization accepts MinIO/Scality camelCase (`accessKeyID`, `secretAccessKey`, `region`, `endpoint`) and AWS SDK env var names (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_REGION`, `S3_ENDPOINT`). Output always AWS SDK form. `NormalizeS3SecretData` exported for unit tests.
+
+**Task B: Conductor etcd-backup S3 upload fix**
+
+`bytes.Buffer` is not `io.ReadSeeker`. AWS SDK v2 requires seekable stream for `PutObject` over HTTP without TLS. Fixed in `conductor/internal/capability/platform_etcd.go`: `params.StorageClient.Upload(ctx, s3Bucket, s3Key, bytes.NewReader(buf.Bytes()))`.
+
+**Task C: Live etcd backup + restore E2E on ccs-dev**
+
+Backup and restore Jobs ran on ccs-dev. Both Jobs completed with `Ready=True`. Stale TCOR entry poisoning observed and documented: reusing a deleted EtcdMaintenance CR name causes the reconciler to read old failed TCOR entries. Resolution: use unique CR names per operation.
+
+**Task D: PKI rotation automation (ontai-schema, seam-core, platform, conductor)**
+
+Full implementation across four repos on branch `session/17-pki-rotation-automation`:
+
+| Repo | Changes |
+|------|---------|
+| ontai-schema | `pkiRotationThresholdDays` (int, default 30, min 1) added to spec; `pkiExpiryDate` (date-time) added to status of `InfrastructureTalosCluster.json` |
+| seam-core | `PkiRotationThresholdDays int32` added to `InfrastructureTalosClusterSpec`; `PkiExpiryDate *metav1.Time` added to `InfrastructureTalosClusterStatus`; `zz_generated.deepcopy.go` updated |
+| platform | New file `pki_cert_helpers.go`: `ParsePEMCertExpiry`, `ParseKubeconfigCertExpiry`, `ParseTalosConfigCertExpiry`, `detectClusterPKIExpiry`, `syncPKIExpiry`, `ensureAutoRotationPKI`, `ensureAnnotationRotationPKI`. `taloscluster_controller.go` Step F wires both annotation trigger and threshold-based auto-rotation. Daily requeue (24h) for stable-Ready clusters. 9 unit tests for cert expiry parsing. 2 e2e stubs. S3 test fixture data fixed (3 tests). |
+| conductor | `Kubeconfig(ctx) ([]byte, error)` added to `TalosNodeClient` interface and `TalosClientAdapter`. `pkiRotateHandler.Execute()` in `platform_security.go` extended: after staged apply calls `TalosClient.Kubeconfig(ctx)` and upserts `seam-mc-{cluster}-kubeconfig` + `target-cluster-kubeconfig` Secrets in `seam-tenant-{cluster}` via DynamicClient. |
+
+### Commits
+
+| Repo | Branch | Hash | Message |
+|------|--------|------|---------|
+| conductor | session/17-etcd-s3-credential-injection | 25f9a91 | conductor: fix etcd-backup S3 upload for MinIO over HTTP |
+| platform | session/17-etcd-s3-credential-injection | f03804e | platform: inject S3 credentials into etcd backup/restore executor Jobs |
+| seam-core | session/17-pki-rotation-automation | (committed) | seam-core: add pkiRotationThresholdDays to spec and pkiExpiryDate to status |
+| platform | session/17-pki-rotation-automation | 211defb | platform: implement PKI rotation automation with cert expiry detection |
+| platform | session/17-pki-rotation-automation | e6b64ab | platform: fix S3 secret test fixtures to include required credentials |
+| conductor | session/17-pki-rotation-automation | b1cc44c | conductor: add Kubeconfig method and kubeconfig Secret refresh to pkiRotateHandler |
+
+### All Tests Pass
+
+| Repo | Command | Result |
+|------|---------|--------|
+| conductor | `go test ./...` | All suites pass |
+| platform | `go test ./...` | All suites pass |
+
+---
+
 ## Next Session Candidates
 
 1. **T-23** -- Platform DriftSignal handling for cluster-state drift (design session required).
 2. **T-24** -- TalosCluster deletion cascade per Decision H order (design session required).
 3. **Phase 6 (T-20, T-21)** -- Day2 scheduling with node awareness; CAPI-path Day2 parity (Phase 6, design session required).
 4. **Guardian auto-RBAC expansion** -- For every new API group detected on a cluster, guardian should upgrade the seam-operator RBACProfile/PermissionSets on both tenant and management clusters to include control over those third-party components. Governor request 2026-05-02.
+5. **PKI rotation live test** -- Apply PKI rotation e2e tests on ccs-dev after deploying updated platform and conductor images from session/17-pki-rotation-automation branches.
