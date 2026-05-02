@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 2, 2026 (session/17: T-23 RunnerConfig drift signal loop, T-24 Decision H deletion cascade, GAP_TO_FILL.md closed)
+**Last updated:** May 2, 2026 (session/17: T-23 Talos version drift detection live test -- rolling upgrade, full chain validated on ccs-dev)
 
-**Current state:** session/17 complete. T-23 and T-24 implemented and committed. GAP_TO_FILL.md deleted; CONTEXT.md priority block removed. All unit tests passing in both platform and conductor. Remaining open: TENANT/MGMT-HP-NODE e2e blocked on infrastructure (ccs-dev unreachable, cp3 unstable), session/17 PRs pending Governor merge, Phase 6 excluded by directive.
+**Current state:** session/17 complete. T-23 Talos version drift chain fully implemented and live-tested on ccs-dev. Rolling upgrade Job corrected all 3 nodes from v1.9.5 back to v1.9.3. TCOR at revision 3 with out-of-band record. Remaining open: TENANT/MGMT-HP-NODE e2e blocked on infrastructure (ccs-dev unreachable, cp3 unstable), session/17 PRs pending Governor merge, Phase 6 excluded by directive.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -772,6 +772,95 @@ mode=bootstrap vs mode=import: step 0 runs for both. For mode=import, the namesp
 |------|---------|--------|
 | platform | `go test ./...` | All suites pass |
 | conductor | `go test ./...` | All suites pass |
+
+---
+
+## Session/17 T-23 Talos Version Drift Detection Live Test (2026-05-02)
+
+### New Components
+
+| Component | File | Role |
+|-----------|------|------|
+| `TalosVersionDriftLoop` | `conductor/internal/agent/talos_version_drift_loop.go` | role=tenant: reads `node.status.nodeInfo.osImage` via Kubernetes API; compares against `InfrastructureTalosCluster.spec.talosVersion` in `ont-system`; emits DriftSignal with `affectedCRRef.Kind=InfrastructureTalosCluster` when all nodes agree on a version that differs from spec |
+
+**Mixed-version skip invariant:** When nodes are at different Talos versions (mid-upgrade state), `readObservedTalosVersion()` returns empty string and no DriftSignal is emitted. Only fires when ALL nodes agree on the same non-spec version.
+
+**`ParseTalosVersionFromOSImage(osImage string) string`** -- extracts version from `Talos (vX.Y.Z)` format. Used to normalize `node.status.nodeInfo.osImage`.
+
+**`escalationThreshold const int32 = 3`** -- after 3 consecutive emissions without correction, the loop stops emitting. DriftSignal remains at last state; management conductor is responsible for escalation or manual reset.
+
+### DriftSignalReconciler: InfrastructureTalosCluster Handler
+
+`DriftSignalReconciler` (platform) extended with a second case:
+
+For `affectedCRRef.Kind=InfrastructureTalosCluster` + `spec.state=pending`:
+1. Parse `observedVersion` from `spec.driftReason` (field `observedTalosVersion:{version}`).
+2. Patch `TalosCluster.status.observedTalosVersion` to the observed version.
+3. Append a synthetic out-of-band TCOR operation record (capability: `talos-version-drift`, status: Succeeded, message: `out-of-band upgrade to {version} detected`).
+4. Bump TCOR revision epoch to the observed version (calls `bumpTCORRevision` with the observed version as the new talosVersion).
+5. Call `ensureCorrectiveUpgradePolicy()` -- creates `drift-version-{cluster}` UpgradePolicy in `seam-tenant-{cluster}` with `upgradeType=talos`, `targetTalosVersion=spec.talosVersion` (the declared desired state to restore).
+6. Advance DriftSignal `spec.state` to `queued`.
+
+`ensureCorrectiveUpgradePolicy()` is idempotent: no-op if the UpgradePolicy already exists with the same target version.
+
+### Rolling Upgrade (talosUpgradeHandler)
+
+`talosUpgradeHandler.Execute()` rewritten for rolling per-node sequential upgrade:
+
+1. `params.TalosClient.Nodes()` returns node IPs from talosconfig endpoints.
+2. For each node IP, calls `params.TalosClient.Upgrade(NodeContext(ctx, nodeIP), image, false)` with `stage=false` (immediate reboot).
+3. Calls `waitForNodeReboot(ctx, client, nodeIP)` before proceeding to next node.
+
+**`waitForNodeReboot()`** two-phase health check:
+- Phase 1 (2-min window): polls `client.Health(NodeContext(ctx, nodeIP))` until node goes offline (confirming reboot started). If node never goes offline within 2 minutes, assumes reboot completed faster than poll interval and returns nil.
+- Phase 2 (8-min window): polls until node comes back online. Returns error if node does not return within 8 minutes.
+
+**`NodeRebootPollInterval = 10 * time.Second`** exported so tests can set to 0 for instant polls.
+
+**Installer image fix:** `upgradeImage := "ghcr.io/siderolabs/installer:" + targetVersion`. The `targetTalosVersion` field in UpgradePolicy is a semantic version string (e.g. `v1.9.3`), not a full OCI reference.
+
+**`TalosNodeClient` interface extended:**
+- `Nodes() []string` -- returns node IPs from talosconfig endpoints parsed at construction.
+- `Health(ctx context.Context) error` -- lightweight liveness check via Talos Version RPC; nil when responsive.
+
+**`TalosClientAdapter`** updated: `nodes []string` field set at construction by `EndpointsFromTalosconfig(talosconfigPath)`; `Nodes()` returns the field; `Health()` calls `a.inner.Version(ctx)`.
+
+### RBAC Fix
+
+`ensureTenantExecutorResources()` in `taloscluster_helpers.go`: added `"upgradepolicies"` to the `platform.ontai.dev` resources list in the `platform-executor` Role definition. The `talos-upgrade` capability lists UpgradePolicies to find the target version.
+
+### Live E2E Results (ccs-dev, 2026-05-02)
+
+| # | Step | Result |
+|---|------|--------|
+| 1 | TalosVersionDriftLoop detected v1.9.5 (all 3 nodes) vs spec v1.9.3 | PASS |
+| 2 | DriftSignal `drift-version-ccs-dev` emitted to `seam-tenant-ccs-dev` on management cluster | PASS |
+| 3 | DriftSignalReconciler: `observedTalosVersion=v1.9.5` patched; out-of-band TCOR record written; TCOR revision bumped to 2 with `talosVersion: v1.9.5` | PASS |
+| 4 | Corrective UpgradePolicy `drift-version-ccs-dev` created in `seam-tenant-ccs-dev` | PASS |
+| 5 | talos-upgrade Job ran for ~2:42; all 3 nodes upgraded sequentially per-node with reboot wait | PASS |
+| 6 | All 3 ccs-dev nodes returned to `Talos (v1.9.3)` | PASS |
+| 7 | TCOR at revision 3 with `status: Succeeded` for `drift-version-ccs-dev-talos-upgrade` | PASS |
+
+**Bugs found and fixed during live test:**
+- `platform-executor` RBAC was missing `upgradepolicies` from platform.ontai.dev rules (FORBIDDEN on list).
+- Installer image constructed incorrectly as bare version string `v1.9.3` instead of `ghcr.io/siderolabs/installer:v1.9.3`.
+
+### Unit Tests
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| `test/unit/agent/talos_version_drift_loop_test.go` | 4 (emits signal on version mismatch, skips when all nodes match spec, skips on mixed versions, ParseTalosVersionFromOSImage) | PASS |
+| `internal/controller/driftsignal_reconciler_test.go` | 2 new (TalosVersionDrift_FullFlow verifies TCOR bump + observedTalosVersion + UpgradePolicy + DriftSignal queued; TalosVersionDrift_AlreadyQueued no-op) | PASS |
+| `test/unit/capability/platform_test.go` | 2 new (RollingUpgrade_AllNodes: 3-node sequential upgrade; NoNodesReturnsValidationFailure: empty node guard) | PASS |
+
+### Commits
+
+| Repo | Branch | Hash | Message |
+|------|--------|------|---------|
+| conductor | session/17-hardening-profile-tests | 772e318 | conductor: T-23 TalosVersionDriftLoop -- detect out-of-band Talos version change, emit InfrastructureTalosCluster DriftSignal |
+| conductor | session/17-hardening-profile-tests | 01a5cb5 | conductor: talos-upgrade rolling upgrade with per-node reboot wait and structured logging |
+| platform | session/17-hardening-profile-tests | 967ba3f | platform: handle InfrastructureTalosCluster DriftSignal -- patch observedTalosVersion, write TCOR out-of-band record |
+| platform | session/17-hardening-profile-tests | 3a9acd9 | platform: DriftSignalReconciler handles InfrastructureTalosCluster drift; fix platform-executor RBAC |
 
 ---
 
