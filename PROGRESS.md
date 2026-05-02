@@ -12,10 +12,7 @@
 
 ### Blocking Alpha
 
-| ID | Component | Description |
-|----|-----------|-------------|
-| PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE | platform | wrapper-runner ClusterRoleBinding must be deleted on TalosCluster deletion. `ensureWrapperRunnerResources` creates it at onboarding; `handleTalosClusterDeletion` Step 0 (Decision H) does not delete it. |
-| COMPILER-BL-PERMISSIONSET-DEFECT | conductor | `writeBootstrapPermissionSets` still emits per-operator PermissionSets. Three-layer RBAC hierarchy (CS-INV-008) requires only `management-maximum` and `cluster-maximum`. Known defect, needs cleanup pass. |
+No blocking alpha items currently open. All previously tracked items have been resolved.
 
 ### Infrastructure (blocks e2e)
 
