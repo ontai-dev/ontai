@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 1, 2026 (Guardian role=tenant deployed to ccs-dev: enable bundle applied, Compliant=True verified on management snapshot, PermissionSnapshotReceipt confirmed on ccs-dev)
+**Last updated:** May 2, 2026 (session/17: T-23 RunnerConfig drift signal loop, T-24 Decision H deletion cascade, GAP_TO_FILL.md closed)
 
-**Current state:** Guardian role=tenant fully operational on ccs-dev. Two-phase enable bundle (01-guardian-bootstrap, 02-guardian-deploy) applied. PermissionSnapshotReceipt `receipt-ccs-dev` exists in `ont-system`. Management cluster `snapshot-ccs-dev` shows `Compliant=True`, `drift=false`, `lastAckedVersion` set. Bootstrap annotation sweep completed (6 exempt namespaces skipped, 3 scanned). cert-manager RBACProfile created in `ont-system`. Two fixes applied: BootstrapAnnotationRunnable now skips createThirdPartyProfiles for role=tenant; management cluster conductor-tenant-ccs-dev-snapshot-reader ClusterRole extended with permissionsnapshots/status patch permission.
+**Current state:** session/17 complete. T-23 and T-24 implemented and committed. GAP_TO_FILL.md deleted; CONTEXT.md priority block removed. All unit tests passing in both platform and conductor. Remaining open: TENANT/MGMT-HP-NODE e2e blocked on infrastructure (ccs-dev unreachable, cp3 unstable), session/17 PRs pending Governor merge, Phase 6 excluded by directive.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -678,13 +678,107 @@ Both HardeningProfile and PKI rotation tests require a rebuilt `conductor-execut
 
 ---
 
+## Session/17 Per-Node Hardening Fix + E2E Run (2026-05-02)
+
+### Root Cause: hardeningApplyHandler IP Clash
+
+`hardeningApplyHandler` was using a Talos client with `endpoints: [10.20.0.2, 10.20.0.3, 10.20.0.4]` and no `nodes` scoping. `GetMachineConfig` returned cp3's config (first responder). `ApplyConfiguration` sent that config to all three endpoints simultaneously. ccs-mgmt-cp1 received cp3's config (hostname ccs-mgmt-cp3, IP 10.20.0.4) and adopted cp3's IP, causing an IP clash and requiring manual reset.
+
+### Fix
+
+Per-node iteration via `EndpointsFromTalosconfig` + `NodeContext` (commit `7c4c47d`):
+
+| Symbol | File | Role |
+|--------|------|------|
+| `EndpointsFromTalosconfig(path string)` | `conductor/internal/capability/adapters.go` | Reads active context `nodes` (preferred) or `endpoints` from talosconfig YAML |
+| `NodeContext(ctx, nodeIP string)` | `conductor/internal/capability/adapters.go` | Wraps ctx with `talos_client.WithNode` for single-node gRPC targeting |
+| `TalosconfigPath string` | `conductor/internal/capability/clients.go` `ExecuteClients` | Set from `TALOSCONFIG_PATH` env var; passed to hardeningApplyHandler |
+
+`hardeningApplyHandler.Execute()` iterates all talosconfig endpoints and calls `GetMachineConfig` + `ApplyConfiguration` with a per-node context for each node. Falls back to original single-node behavior when `TalosconfigPath` is empty.
+
+### New Unit Tests (5)
+
+`TestEndpointsFromTalosconfig_EndpointsFallback`, `TestEndpointsFromTalosconfig_NodesTakePrecedence`, `TestEndpointsFromTalosconfig_MissingFile`, `TestEndpointsFromTalosconfig_UnknownContext` in `test/unit/capability/adapters_test.go`. `TestHardeningApply_BadTalosconfigPathReturnsExecutionFailure` in `test/unit/capability/platform_test.go`.
+
+### Day2 E2E Run Results (2026-05-02)
+
+Seed: 1777737976 | Duration: 23.5 min | **10 Passed | 3 Failed | 35 Skipped** (13 of 48 ran)
+
+| Spec ID | Result | Notes |
+|---------|--------|-------|
+| MGMT-HP-PROFILE | PASS | HardeningProfile Valid=True on bootstrap cluster |
+| MGMT-HP-CLUSTER | PASS | Full-cluster hardening ccs-mgmt; per-node fix verified working |
+| TENANT-HP-PROFILE | PASS | HardeningProfile Valid=True on import cluster |
+| TENANT-PKI-ROTATE | PASS | PKIRotation on ccs-dev Ready=True, kubeconfig refreshed |
+| 6 other mgmt day2 specs | PASS | EtcdMaintenance, ClusterMaintenance, NodeOperation, NodeMaintenance, UpgradePolicy, PKI |
+| TENANT-PKI-CLUSTER-REACH | FAIL | Infrastructure: ccs-dev (10.20.0.20) unreachable |
+| MGMT-HP-NODE | FAIL | Infrastructure: cp3 Talos API down during test. Design note: `ccs-mgmt-w2` hardcoded as TargetNodes does not exist; TargetNodes governs Job pod scheduling only, not which nodes the capability applies to |
+| TENANT-HP-CLUSTER | FAIL | Infrastructure: Job not submitted within 120s -- ccs-dev down, etcd leader instability from cp3 flapping |
+
+### Cluster State at E2E Completion
+
+ccs-mgmt: cp1 Ready, cp2 Ready, cp3 NotReady (Talos API unreachable). ccs-dev: unreachable (10.20.0.20 -- Destination Host Unreachable). One conductor pod CrashLoopBackOff from cp3 leader election failures.
+
+### Commit
+
+| Repo | Branch | Hash |
+|------|--------|------|
+| conductor | session/17-hardening-profile-tests | 7c4c47d |
+
+---
+
+## Session/17 T-23 + T-24 Closure (2026-05-02)
+
+### T-23 -- RunnerConfig-Missing DriftSignal Loop
+
+Conductor (agent mode, role=management) detects that its RunnerConfig is persistently absent after 5 consecutive `NotFound` retries (`runnerConfigMissingDriftThreshold`). It emits a `DriftSignal` with `affectedCRRef.Kind = "InfrastructureRunnerConfig"` into `seam-tenant-{cluster}` on the management cluster. Platform's new `DriftSignalReconciler` watches `DriftSignal` CRs; for signals with state=pending + RunnerConfig kind, it annotates the `TalosCluster` with `ontai.dev/runnerconfig-drift-requeue` to trigger reconciliation and recreate the missing RunnerConfig. Signal is then advanced to state=queued.
+
+**Scope note:** This implementation covers the RunnerConfig-missing sub-case only. Talos version drift signaling (tenant conductor detects version delta, emits DriftSignal with InfrastructureTalosCluster kind, management conductor triggers upgrade Job) is a separate flow requiring a design session.
+
+| Component | File | Change |
+|-----------|------|--------|
+| conductor | `internal/agent/capability_publisher.go` | `runnerConfigMissingDriftThreshold = 5`; consecutive-NotFound counter; `emitRunnerConfigMissingSignal`; `isPublishNotFound` helper |
+| platform | `internal/controller/driftsignal_reconciler.go` | New `DriftSignalReconciler`; watches DriftSignal; annotates TalosCluster; advances signal to queued |
+| platform | `internal/controller/driftsignal_reconciler_test.go` | 4 unit tests |
+| conductor | `test/unit/capability/` | 3 unit tests: emit after threshold, idempotent on AlreadyExists, isPublishNotFound |
+| platform | `cmd/platform/main.go` | `DriftSignalReconciler` registered with manager |
+
+### T-24 -- Decision H Deletion Cascade
+
+`handleTalosClusterDeletion` in `platform/internal/controller/taloscluster_helpers.go` extended with Step 0 (Decision H cascade) before the existing steps 1-3. New finalizer `platform.ontai.dev/decision-h-cascade` gates cascade completion.
+
+Decision H order implemented:
+1. Delete all `InfrastructurePackExecution` and `InfrastructurePackInstance` CRs in `seam-tenant-{cluster}` (wrapper layer first)
+2. Remove TalosCluster name from `RBACProfile.spec.targetClusters` in `seam-tenant-{cluster}` and remove from `RBACPolicy.spec.allowedClusters` in seam-system (guardian layer second)
+3. Existing steps 1-3 (RunnerConfig, Secrets, namespace) proceed after cascade completes
+
+mode=bootstrap vs mode=import: step 0 runs for both. For mode=import, the namespace is not deleted (severance only); for mode=bootstrap, existing step 3 deletes the namespace (decommission). NOTE: physical Talos cluster destruction is not implemented -- INV-015 prohibits it. Only the governance relationship is severed for import; for bootstrap, only the seam-tenant namespace is deleted.
+
+| Component | File | Change |
+|-----------|------|--------|
+| platform | `internal/controller/taloscluster_helpers.go` | `finalizerDecisionHCascade`; `ensureDecisionHCascadeFinalizer`; Decision H cascade in `handleTalosClusterDeletion` Step 0; `removeFromUnstructuredStringSlice` helper |
+| platform | `internal/controller/taloscluster_helpers_test.go` | 5 unit tests covering cascade deletion, allowedClusters removal, mode=import guard, slice helper |
+
+### Commits
+
+| Repo | Hash | Message |
+|------|------|---------|
+| platform | bfe4ea1 | platform: T-24 Decision H deletion cascade order, T-23 DriftSignal cluster-state reconciler |
+| conductor | 06d6ad6 | conductor: T-23 emit RunnerConfig-missing DriftSignal from capability publisher |
+
+### All Tests Pass
+
+| Repo | Command | Result |
+|------|---------|--------|
+| platform | `go test ./...` | All suites pass |
+| conductor | `go test ./...` | All suites pass |
+
+---
+
 ## Next Session Candidates
 
-1. **PRs from session/17-hardening-profile-tests** -- conductor PR (hardeningApplyHandler fix + unit tests) and platform PR (6 hardening e2e + 2 PKI e2e specs). Both need Governor merge approval.
-2. **Build and push conductor-execute:dev** -- Must rebuild from session/17-hardening-profile-tests before live e2e runs. Both hardeningApplyHandler fix and Kubeconfig method must be in the image.
-3. **Run live e2e** -- After image push: run hardening (6 specs) and PKI rotation (2 specs) on ccs-mgmt and ccs-dev.
-4. **Runbook doc** -- Governor will provide prompt after e2e passes.
-5. **T-23** -- Platform DriftSignal handling for cluster-state drift (design session required).
-6. **T-24** -- TalosCluster deletion cascade per Decision H order (design session required).
-7. **Phase 6 (T-20, T-21)** -- Day2 scheduling with node awareness; CAPI-path Day2 parity (design sessions required).
-8. **Guardian auto-RBAC expansion** -- Governor request 2026-05-02.
+1. **Cluster recovery** -- cp3 NotReady and ccs-dev unreachable. All TENANT tests and MGMT-HP-NODE require healthy infrastructure before they can pass.
+2. **MGMT-HP-NODE test fix** -- `mgmtWorkerNode = "ccs-mgmt-w2"` hardcoded in `hardeningprofile_e2e_test.go` does not exist on ccs-mgmt. TargetNodes for hardening-apply governs Job pod scheduling exclusion only; capability applies to all talosconfig endpoints regardless. Either provision the node or update the test to use an existing node, and decide whether single-node targeting should be implemented in the capability.
+3. **PRs from session/17-hardening-profile-tests** -- conductor PR (per-node hardeningApply fix + unit tests) and platform PR (hardening e2e + PKI e2e). Both need Governor merge approval.
+4. **Phase 6 (T-20, T-21)** -- Day2 scheduling with node awareness; CAPI-path Day2 parity (design sessions required).
+5. **Guardian auto-RBAC expansion** -- Governor request 2026-05-02.

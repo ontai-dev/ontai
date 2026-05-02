@@ -1,6 +1,6 @@
 # ONT Platform: Backlog
 
-**Last updated:** 2026-05-02
+**Last updated:** 2026-05-02 (session/17 e2e run results recorded; DAY2-OPS-TENANT updated; etcd backup/restore closed)
 
 ---
 
@@ -16,7 +16,8 @@
 
 | ID | Component | Description |
 |----|-----------|-------------|
-| DAY2-OPS-TENANT | conductor, platform | Day-2 live validation still needed on ccs-dev for: etcd-backup (needs S3), etcd-restore (needs S3), hardening-apply (6 e2e specs written session/17, requires conductor-execute:dev rebuild with hardeningApplyHandler fix before live run), pki-rotate (2 e2e specs written session/17, requires conductor-execute:dev rebuild before live run). |
+| DAY2-OPS-TENANT | conductor, platform | Remaining day-2 live validation gaps after session/17 e2e run: hardening-apply MGMT-HP-NODE failed (cp3 down, infra); TENANT-HP-CLUSTER and TENANT-HP-NODE blocked (ccs-dev unreachable); TENANT-PKI-CLUSTER-REACH blocked (ccs-dev unreachable). Passed: MGMT-HP-CLUSTER, MGMT-HP-PROFILE, TENANT-HP-PROFILE, TENANT-PKI-ROTATE. Etcd backup/restore validated session/17 Task C. conductor-execute:dev image current (7c4c47d). Unblocked when cp3 stable and ccs-dev reachable. |
+| MGMT-HP-NODE-DESIGN | conductor, platform | `mgmtWorkerNode = "ccs-mgmt-w2"` hardcoded in `platform/test/e2e/day2/hardeningprofile_e2e_test.go` does not exist on ccs-mgmt. `TargetNodes` in `NodeMaintenanceSpec` governs Job pod scheduling exclusion only (NotIn affinity rule); `hardeningApplyHandler` applies to all talosconfig endpoints regardless. Decide: either update test to use an existing node, or implement per-target-node filtering in `hardeningApplyHandler` using `TargetNodes` params. |
 | PLATFORM-BL-HARDENINGPROFILE-MERGE | platform | HardeningProfileRef field absent from TalosClusterSpec. TalosConfigTemplate cannot merge HardeningProfile patches at runtime. Decision 11: schema PR to ontai-schema required before implementation. Governor session needed. Also blocks mode=bootstrap machineconfig generation from spec. |
 | PLATFORM-BL-MACHINECONFIG-IMPORT-CAPTURE | platform | For mode=import clusters, Platform should capture machineconfigs from running nodes via Talos COSI API GetMachineConfig and write them as seam-mc-{cluster}-{hostname} Secrets in seam-tenant-{cluster}. Requires: node discovery from target kubeconfig, talos goclient per-node call (CP-INV-001 extension for taloscluster_import_helpers.go), new ensureMachineConfigSecrets function. |
 | T-23 | platform | Platform DriftSignal handling for cluster-state drift. Design session required. See GAP_TO_FILL.md. |
@@ -44,9 +45,8 @@
 
 | Area | Component | Description |
 |------|-----------|-------------|
-| HardeningProfile live | platform, conductor | 6 e2e specs written (session/17). Require conductor-execute:dev rebuild with hardeningApplyHandler fix (a8ad30e). |
-| PKI rotation live | platform, conductor | 2 e2e specs written (session/17). Require conductor-execute:dev rebuild with Kubeconfig method (b1cc44c). |
-| Etcd backup/restore S3 live | conductor | Require live S3 object storage (MinIO or AWS). |
+| HardeningProfile live (TENANT) | platform, conductor | MGMT specs passed session/17. TENANT-HP-CLUSTER and TENANT-HP-NODE blocked until ccs-dev reachable. MGMT-HP-NODE blocked until cp3 stable and test updated (MGMT-HP-NODE-DESIGN). |
+| PKI rotation live (TENANT reach) | platform, conductor | TENANT-PKI-ROTATE passed session/17. TENANT-PKI-CLUSTER-REACH blocked until ccs-dev reachable (pack-deploy Job cannot connect to ccs-dev). |
 | Federation channel | conductor | Audit forwarding from tenant conductor to management guardian. Implemented, never tested. |
 | CAPI path | platform | SeamInfrastructureCluster and SeamInfrastructureMachine full lifecycle. Unit tests exist. e2e not yet scheduled. |
 | IdentityBinding | guardian | IdentityProvider and IdentityBinding e2e with Keycloak or Dex. No lab IdP provisioned. |
@@ -74,6 +74,7 @@
 
 | ID | Component | Closed | Resolution |
 |----|-----------|--------|------------|
+| DAY2-ETCD-S3-LIVE | conductor, platform | 2026-05-02 | Etcd backup and restore Jobs validated live on ccs-dev session/17 Task C. S3 credential injection in platform (s3_env_secret.go) and bytes.Reader upload fix in conductor both shipped. Both Jobs completed Ready=True. |
 | CLUSTERPACK-BL-VERSION-CLEANUP | conductor | 2026-05-02 | deleteOrphanedResources() + deployedResourceKey() in packinstance_pull_loop.go. 2 unit tests. |
 | CONDUCTOR-BL-TENANT-ROLE-RBACPROFILE-DISTRIBUTION | conductor | 2026-05-02 | RBACProfilePullLoop in rbacprofile_pull_loop.go. 4 unit tests. |
 | PLATFORM-BL-WRAPPER-RUNNER-RBAC-LIFECYCLE | platform | 2026-05-02 | finalizerWrapperRunnerCRBCleanup + Step 3 in handleTalosClusterDeletion. |

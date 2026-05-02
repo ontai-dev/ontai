@@ -6,35 +6,21 @@
 
 ---
 
-## PRIORITY: GAP_TO_FILL.md Work Is Active and Must Finish First
+## Codebase Understanding
 
-**File:** ~/ontai/GAP_TO_FILL.md
-**Status:** Active. Governor-approved. Implementation not yet started.
+Before any implementation or investigation, read `CODEBASE.md` in the root. For repo-specific work, read the CODEBASE.md in that repo directory. These files represent the pre-computed mental model of the codebase. After any implementation, update the relevant CODEBASE.md sections that were affected.
 
-The tasks listed in GAP_TO_FILL.md (T-01 through T-21 across six phases) represent
-the current architectural gap closure work. These tasks are the highest priority in
-the project. No new feature work, no backlog items, and no speculative design sessions
-may be started until T-01 through T-16 are closed and merged.
+| File | Covers |
+|------|--------|
+| `CODEBASE.md` | System architecture, dependency graph, namespace model, operational sequences |
+| `conductor/CODEBASE.md` | Compiler, 16 capabilities, execute/agent mode, rawSource packbuild |
+| `guardian/CODEBASE.md` | RBAC governance, EPG, PermissionSnapshot, admission webhook |
+| `platform/CODEBASE.md` | Cluster lifecycle, CAPI provider, day-2 operational CRDs |
+| `seam-core/CODEBASE.md` | Schema authority, LineageIndex, DSNS, shared libraries |
+| `wrapper/CODEBASE.md` | Pack delivery pipeline, 5-gate gatekeeper, PackInstance |
+| `domain-core/CODEBASE.md` | Layer 0 abstract schema, no controller |
+| `app-core/CODEBASE.md` | Application governance specification only |
 
-T-17 through T-19 are blocked pending TENANT-CLUSTER-E2E.
-T-20 through T-21 are blocked pending live cluster access for Day2 scheduling work.
-These blocked tasks remain open in BACKLOG.md until their prerequisites are met.
-
-**First gate before any implementation:** WS8b (cert-manager e2e with three-bucket
-split) must pass on the management cluster. WS8b is the first live cluster validation.
-The full live testing sequence after WS8b is recorded in GAP_TO_FILL.md under "Live
-Cluster Testing Sequence" and is authoritative.
-
-**Schema-first ordering is enforced.** Phase 1 schema PRs to ontai-schema must merge
-before any Phase 2+ operator implementation PRs are opened. Branch naming convention
-for all GAP_TO_FILL work: session/area{N} (one branch per area, one PR per branch).
-
-**Absorption on completion:** When all tasks in a phase are closed and merged, the
-closed tasks are absorbed into PROGRESS.md (as closed work items) and BACKLOG.md
-(removing the completed entries). GAP_TO_FILL.md is removed and this CONTEXT.md
-priority block is deleted at that point. The removal commit closes the gap work cycle.
-
----
 
 ## What This File Is
 
@@ -229,17 +215,4 @@ cd ~/ontai/conductor && go build -o bin/compiler ./cmd/compiler
 
 ---
 
-## Codebase Understanding
 
-Before any implementation or investigation, read `CODEBASE.md` in the root. For repo-specific work, read the CODEBASE.md in that repo directory. These files represent the pre-computed mental model of the codebase. After any implementation, update the relevant CODEBASE.md sections that were affected.
-
-| File | Covers |
-|------|--------|
-| `CODEBASE.md` | System architecture, dependency graph, namespace model, operational sequences |
-| `conductor/CODEBASE.md` | Compiler, 16 capabilities, execute/agent mode, rawSource packbuild |
-| `guardian/CODEBASE.md` | RBAC governance, EPG, PermissionSnapshot, admission webhook |
-| `platform/CODEBASE.md` | Cluster lifecycle, CAPI provider, day-2 operational CRDs |
-| `seam-core/CODEBASE.md` | Schema authority, LineageIndex, DSNS, shared libraries |
-| `wrapper/CODEBASE.md` | Pack delivery pipeline, 5-gate gatekeeper, PackInstance |
-| `domain-core/CODEBASE.md` | Layer 0 abstract schema, no controller |
-| `app-core/CODEBASE.md` | Application governance specification only |
