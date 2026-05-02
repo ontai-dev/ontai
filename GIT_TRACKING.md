@@ -9,7 +9,7 @@
 | guardian     | main    | PR #19 merged | T-25a RBACProfile ceiling, unused snapshotReceiptGVR lint fix |
 | platform     | session/17-etcd-s3-credential-injection | f03804e | S3 credential injection for etcd backup/restore |
 | platform     | session/17-pki-rotation-automation | e6b64ab | PKI rotation automation + cert expiry detection + test fixtures |
-| platform     | session/17-hardening-profile-tests | 4fbe1e2 | hardeningprofile e2e tests (6 specs, bootstrap + import) + CODEBASE.md |
+| platform     | session/17-hardening-profile-tests | 2b2bf3b | pkirotation e2e (TENANT-PKI-ROTATE, TENANT-PKI-CLUSTER-REACH) + registry client in day2 suite |
 | seam-core    | session/17-pki-rotation-automation | (committed) | pkiRotationThresholdDays + pkiExpiryDate fields |
 | wrapper      | main    | PR #16 merged | N-step rollback, DriftSignal cascade delete, errcheck lint fix |
 | domain-core  | main    | PR #3 merged | DomainLineageIndex schema amendment |
@@ -130,3 +130,4 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | a8ad30e | conductor: fix hardeningApplyHandler to read machineConfigPatches as list |
 | conductor    | 5144841 | conductor: update CODEBASE.md for hardeningApplyHandler fix and unstructuredList sharp edge |
 | platform     | 4fbe1e2 | platform: add hardeningprofile e2e tests for bootstrap and import clusters |
+| platform     | 2b2bf3b | platform: add pkirotation e2e tests and registry client to day2 suite |

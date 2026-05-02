@@ -624,7 +624,7 @@ Full implementation across four repos on branch `session/17-pki-rotation-automat
 
 ---
 
-## Session/17 HardeningProfile Tests (2026-05-02)
+## Session/17 PKI Rotation E2E + HardeningProfile Tests (2026-05-02)
 
 ### hardeningApplyHandler Bug Fix
 
@@ -652,22 +652,39 @@ New file `platform/test/e2e/day2/hardeningprofile_e2e_test.go` with 6 live specs
 
 Safe machineconfig patches: `net.ipv4.ip_forward=1` and `net.ipv4.conf.all.rp_filter=1`. These sysctls are required for Kubernetes networking and already set on all cluster nodes, so applying them in `no-reboot` mode is idempotent and non-disruptive.
 
+### PKI Rotation E2E Tests
+
+New `platform/test/e2e/day2/pkirotation_e2e_test.go` (replaces stubs). Two live specs:
+
+| Spec ID | Coverage |
+|---------|----------|
+| TENANT-PKI-ROTATE | PKIRotation CR on ccs-dev: waits for Ready=True, verifies `target-cluster-kubeconfig` Secret refreshed in `seam-tenant-ccs-dev`, best-effort check on `seam-mc-ccs-dev-kubeconfig` |
+| TENANT-PKI-CLUSTER-REACH | Pushes minimal two-layer OCI pack (empty ServiceAccount RBAC + single ConfigMap workload) to lab registry, creates `InfrastructureClusterPack` in `seam-tenant-ccs-dev`, waits for signing loop, waits for `PackExecution Succeeded=True` -- proves ccs-dev reachable using refreshed kubeconfig from pkiRotateHandler |
+
+`buildTarGzManifest(filename, content string) []byte` helper in the test file creates tar.gz blobs for OCI layer push.
+
+`suite_test.go` updated: added `registry *e2ehelpers.RegistryClient` and `registryAddr string` (from `REGISTRY_ADDR` env, default `10.20.0.1:5000`). Import `seam-core/pkg/e2e` added to day2 suite.
+
+Both HardeningProfile and PKI rotation tests require a rebuilt `conductor-execute:dev` image from `session/17-hardening-profile-tests` before live e2e runs.
+
 ### Commits
 
 | Repo | Branch | Hash | Message |
 |------|--------|------|---------|
 | conductor | session/17-hardening-profile-tests | a8ad30e | conductor: fix hardeningApplyHandler to read machineConfigPatches as list |
 | conductor | session/17-hardening-profile-tests | 5144841 | conductor: update CODEBASE.md for hardeningApplyHandler fix and unstructuredList sharp edge |
-| platform | session/17-hardening-profile-tests | 4fbe1e2 | platform: add hardeningprofile e2e tests for bootstrap and import clusters |
+| platform | session/17-hardening-profile-tests | 4fbe1e2 | platform: add hardeningprofile e2e tests for bootstrap and import clusters (includes CODEBASE.md) |
+| platform | session/17-hardening-profile-tests | (pending) | platform: add PKIRotation e2e tests + update day2 suite with registry client |
 
 ---
 
 ## Next Session Candidates
 
-1. **Build and push conductor-execute:dev** -- hardeningApplyHandler fix requires `conductor-execute:dev` rebuild before live e2e hardening tests can run on ccs-mgmt and ccs-dev.
-2. **Run live hardeningprofile e2e** -- After conductor-execute image deployed: run `make e2e` against both clusters to verify all 6 hardening specs pass.
-3. **T-23** -- Platform DriftSignal handling for cluster-state drift (design session required).
-4. **T-24** -- TalosCluster deletion cascade per Decision H order (design session required).
-5. **Phase 6 (T-20, T-21)** -- Day2 scheduling with node awareness; CAPI-path Day2 parity (Phase 6, design session required).
-6. **Guardian auto-RBAC expansion** -- For every new API group detected on a cluster, guardian should upgrade the seam-operator RBACProfile/PermissionSets on both tenant and management clusters to include control over those third-party components. Governor request 2026-05-02.
-7. **PKI rotation live test** -- Apply PKI rotation e2e tests on ccs-dev after deploying updated platform and conductor images from session/17-pki-rotation-automation branches.
+1. **PRs from session/17-hardening-profile-tests** -- conductor PR (hardeningApplyHandler fix + unit tests) and platform PR (6 hardening e2e + 2 PKI e2e specs). Both need Governor merge approval.
+2. **Build and push conductor-execute:dev** -- Must rebuild from session/17-hardening-profile-tests before live e2e runs. Both hardeningApplyHandler fix and Kubeconfig method must be in the image.
+3. **Run live e2e** -- After image push: run hardening (6 specs) and PKI rotation (2 specs) on ccs-mgmt and ccs-dev.
+4. **Runbook doc** -- Governor will provide prompt after e2e passes.
+5. **T-23** -- Platform DriftSignal handling for cluster-state drift (design session required).
+6. **T-24** -- TalosCluster deletion cascade per Decision H order (design session required).
+7. **Phase 6 (T-20, T-21)** -- Day2 scheduling with node awareness; CAPI-path Day2 parity (design sessions required).
+8. **Guardian auto-RBAC expansion** -- Governor request 2026-05-02.
