@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 2, 2026 (session/18 close)
+**Last updated:** May 3, 2026 (session/19 close)
 
-**Current state:** All session/17 and session/18 PRs squash-merged to main. K8s version drift detection (KubernetesVersionDriftLoop) live on ccs-dev. DriftSignal drift-k8s-version-ccs-dev emitted, reconciler created corrective UpgradePolicy. Signal in queued state; will confirm once nodes revert to 1.32.3. Five PRs merged: seam-core #16, conductor #29+#30, platform #19+#20.
+**Current state:** Alpha release v1.9.3-alpha.1 cut. Kube-upgrade fix merged (conductor PR #31). K8s version drift loop bridged to conductor main (PR #32). Onboarding runbook and config files added (conductor PR #33). ontai.dev and schema.ontai.dev updated for alpha release. ccs-dev nodes restored to Ready at v1.32.3 after kube-upgrade fix applied.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -20,6 +20,32 @@ No blocking alpha items currently open. All previously tracked items have been r
 |----|-------------|
 | ccs-dev unreachable (10.20.0.20) | Blocks TENANT-HP-CLUSTER, TENANT-PKI-CLUSTER-REACH, TENANT-HP-NODE |
 | ccs-mgmt cp3 NotReady | Talos API down, causing conductor pod CrashLoopBackOff; blocks MGMT-HP-NODE |
+
+---
+
+## Session/19 Work (2026-05-03) -- MERGED
+
+### PRs Merged (session/19)
+
+| PR | Repo | Branch | Summary |
+|----|------|--------|---------|
+| conductor #31 | conductor | session/18-kube-upgrade-fix | kube-upgrade v-prefix fix, GetMachineConfig+merge pattern, 2 new unit tests |
+| conductor #32 | conductor | session/18-k8s-drift-to-main | Cherry-pick KubernetesVersionDriftLoop to main (PR #30 had landed on session/17 branch) |
+| conductor #33 | conductor | session/19-onboarding-runbook | Onboarding runbook and 5 config files in conductor/docs/configs/ |
+| ontai-schema #9 | ontai-schema | session/19-schema-index-update | schema index: seam-core 3->12 schemas, v1.9.3-alpha.1, Decision G migration |
+| ontai #14 | ontai | session/19-site-alpha-release | ontai.dev: hero stat v1.9.3-alpha.1, operator cards updated, submodule bump |
+
+### Alpha Release
+
+- Tag: v1.9.3-alpha.1 on conductor repo
+- GitHub release created
+
+### ccs-dev Node Recovery
+
+- Nodes had kubelet:1.32.3 (no v) in machine config after first corrective Job run
+- Applied talosctl machine config patch (no-reboot mode) to all 3 nodes replacing 1.32.3 with v1.32.3
+- All nodes returned to Ready at v1.32.3
+- DriftSignal drift-k8s-version-ccs-dev confirmed
 
 ---
 
@@ -85,6 +111,7 @@ drift-k8s-version-ccs-dev signal queued; corrective UpgradePolicy `drift-k8s-ver
 ## Next Session Candidates
 
 1. Cluster recovery -- cp3 NotReady, ccs-dev unreachable; blocks all TENANT e2e and MGMT-HP-NODE.
-2. K8s drift revert -- run UpgradePolicyReconciler or manually confirm drift-k8s-version-ccs-dev.
+2. K8s drift signal confirm -- drift-k8s-version-ccs-dev is queued; nodes are at v1.32.3 and should be confirmed once platform UpgradePolicyReconciler verifies convergence.
 3. MGMT-HP-NODE test fix -- `ccs-mgmt-w2` hardcoded node does not exist; decide whether single-node targeting should be implemented.
 4. Phase 6 (T-20, T-21) -- day2 scheduling with node awareness; design session required.
+5. LineageSink, IdentityProvider, IdentityBinding -- future scope; deferred past alpha.

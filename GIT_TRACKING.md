@@ -2,13 +2,14 @@
 ## Repository Status
 | Repository   | Branch  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main    | (this commit) | session/18 close -- all PRs merged |
-| conductor    | main    | e06c678 | PR #29 squash merged: session/17 hardening, PKI, Talos drift, K8s drift |
-| conductor    | main    | 608edb9 | PR #30 squash merged: KubernetesVersionDriftLoop |
+| ontai        | main    | ecaa5e6 | session/19 close -- ontai.dev alpha release update, PR #14 merged |
+| conductor    | main    | 9f75512 | PR #33 squash merged: onboarding runbook and config files |
+| conductor    | main    | efc6e8f | PR #32 squash merged: KubernetesVersionDriftLoop bridge to main |
+| conductor    | main    | 7f064a9 | PR #31 squash merged: kube-upgrade v-prefix fix |
 | guardian     | main    | PR #19 merged | T-25a RBACProfile ceiling, unused snapshotReceiptGVR lint fix |
-| platform     | main    | 2714053 | PR #19 squash merged: session/17 DriftSignalReconciler, PKI automation |
 | platform     | main    | 2c5d002 | PR #20 squash merged: K8s version drift DriftSignalReconciler handler |
 | seam-core    | main    | d90ee3d | PR #16 squash merged: PkiRotationThresholdDays + PkiExpiryDate + lint fix |
+| ontai-schema | main    | 33d82c9 | PR #9 squash merged: schema index seam-core 12 schemas, v1.9.3-alpha.1 |
 | wrapper      | main    | ee36691 | session/18: fix stale runner.ontai.dev RunnerConfig watch GVK |
 | domain-core  | main    | PR #3 merged | DomainLineageIndex schema amendment |
 
@@ -136,3 +137,8 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | 608edb9 | conductor: KubernetesVersionDriftLoop -- detect out-of-band K8s version change (PR #30) |
 | platform     | 2714053 | platform: session/17 S3 creds, PKI rotation, hardeningApply e2e, DriftSignal reconciler (PR #19) |
 | platform     | 2c5d002 | platform: DriftSignalReconciler handles Kubernetes version drift (PR #20) |
+| conductor    | 7f064a9 | conductor: fix kube-upgrade partial config rejection and kubelet image v-prefix (PR #31) |
+| conductor    | efc6e8f | conductor: KubernetesVersionDriftLoop bridge to main -- cherry-pick from session/17 (PR #32) |
+| conductor    | 9f75512 | conductor: onboarding runbook and example config files in conductor/docs/configs/ (PR #33) |
+| ontai-schema | 33d82c9 | docs: update schema index -- seam-core 12 schemas, v1.9.3-alpha.1, Decision G (PR #9) |
+| ontai root   | ecaa5e6 | docs: ontai.dev site update for v1.9.3-alpha.1 alpha release (PR #14) |
