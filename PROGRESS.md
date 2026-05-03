@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 3, 2026 (session/19 close)
+**Last updated:** May 3, 2026 (session/20 close)
 
-**Current state:** Alpha release v1.9.3-alpha.1 cut. Kube-upgrade fix merged (conductor PR #31). K8s version drift loop bridged to conductor main (PR #32). Onboarding runbook and config files added (conductor PR #33). ontai.dev and schema.ontai.dev updated for alpha release. ccs-dev nodes restored to Ready at v1.32.3 after kube-upgrade fix applied.
+**Current state:** Alpha release v1.9.3-alpha.1 cut. Compiler fixes merged (conductor PR #34): management bootstrap guard, OCI push auth with docker config.json snap fallback, cluster-input-tenant.yaml machineConfigPaths correction. ontai.dev schema stats updated to 36 (ontai PR #15). LineageController confirmed working across all 9 GVKs including security.ontai.dev types.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -20,6 +20,21 @@ No blocking alpha items currently open. All previously tracked items have been r
 |----|-------------|
 | ccs-dev unreachable (10.20.0.20) | Blocks TENANT-HP-CLUSTER, TENANT-PKI-CLUSTER-REACH, TENANT-HP-NODE |
 | ccs-mgmt cp3 NotReady | Talos API down, causing conductor pod CrashLoopBackOff; blocks MGMT-HP-NODE |
+
+---
+
+## Session/20 Work (2026-05-03) -- MERGED
+
+### PRs Merged (session/20)
+
+| PR | Repo | Branch | Summary |
+|----|------|--------|---------|
+| conductor #34 | conductor | session/19-compiler-fixes | Management bootstrap guard, OCI push auth (docker config.json + snap fallback), cluster-input-tenant.yaml machineConfigPaths fix, BACKLOG COMPILER-BL-TALOSCLUSTER-VIP-REMOVAL |
+| ontai #15 | ontai | session/19-site-schema-update | ontai.dev: schema stats 36 schemas, seam-core 12 types, LineageController badge Alpha: Partial |
+
+### LineageController Confirmed
+
+LineageController working for all 9 GVKs: 4 infrastructure.ontai.dev types (InfrastructureTalosCluster, InfrastructureClusterPack, InfrastructurePackExecution, InfrastructurePackInstance) and 5 security.ontai.dev types (RBACPolicy, RBACProfile, IdentityBinding, IdentityProvider, PermissionSet). Initial concern about security.ontai.dev types was transient; all synced correctly.
 
 ---
 
@@ -114,4 +129,5 @@ drift-k8s-version-ccs-dev signal queued; corrective UpgradePolicy `drift-k8s-ver
 2. K8s drift signal confirm -- drift-k8s-version-ccs-dev is queued; nodes are at v1.32.3 and should be confirmed once platform UpgradePolicyReconciler verifies convergence.
 3. MGMT-HP-NODE test fix -- `ccs-mgmt-w2` hardcoded node does not exist; decide whether single-node targeting should be implemented.
 4. Phase 6 (T-20, T-21) -- day2 scheduling with node awareness; design session required.
-5. LineageSink, IdentityProvider, IdentityBinding -- future scope; deferred past alpha.
+5. COMPILER-BL-TALOSCLUSTER-VIP-REMOVAL -- remove mutable clusterEndpoint VIP field from InfrastructureTalosCluster CR and compiler emit paths; schema PR to ontai-schema first (Decision 11); deferred post-alpha.
+6. LineageSink, IdentityProvider, IdentityBinding -- future scope; deferred past alpha.
