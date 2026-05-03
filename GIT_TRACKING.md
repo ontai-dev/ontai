@@ -2,7 +2,8 @@
 ## Repository Status
 | Repository   | Branch  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main    | ecaa5e6 | session/19 close -- ontai.dev alpha release update, PR #14 merged |
+| ontai        | main    | f979573 | session/20 close -- PR #15: ontai.dev schema stats 36, seam-core 12 types |
+| conductor    | main    | 46ec897 | PR #34 squash merged: management bootstrap guard, OCI auth, tenant config fix |
 | conductor    | main    | 9f75512 | PR #33 squash merged: onboarding runbook and config files |
 | conductor    | main    | efc6e8f | PR #32 squash merged: KubernetesVersionDriftLoop bridge to main |
 | conductor    | main    | 7f064a9 | PR #31 squash merged: kube-upgrade v-prefix fix |
@@ -142,3 +143,5 @@ No pushes to remote until Platform Governor authorizes.
 | conductor    | 9f75512 | conductor: onboarding runbook and example config files in conductor/docs/configs/ (PR #33) |
 | ontai-schema | 33d82c9 | docs: update schema index -- seam-core 12 schemas, v1.9.3-alpha.1, Decision G (PR #9) |
 | ontai root   | ecaa5e6 | docs: ontai.dev site update for v1.9.3-alpha.1 alpha release (PR #14) |
+| conductor    | 46ec897 | conductor: management bootstrap guard, OCI auth, tenant config machineConfigPaths fix (PR #34) |
+| ontai root   | f979573 | docs: ontai.dev schema stats 36 schemas, seam-core 12 types, lineage partial (PR #15) |
