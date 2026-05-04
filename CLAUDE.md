@@ -32,12 +32,12 @@ Claude proposes. The Platform Governor approves. Human-at-Boundary principle. Ab
 
 ## 3. Session Protocol
 
-Step 1 -- Read CONTEXT.md and CODEBASE.md
+Step 1 -- Read CONTEXT.md in full. The graphify graph at ~/ontai/graphify-out/graph.json is the source of truth for codebase understanding.
 Step 2 -- Read AGENTS.md in full.
 Step 3 -- Read CLAUDE.md in full.
-Step 4 -- Read the in-scope repo CLAUDE.md and CODEBASE.md for repo-specific constraints and thorough codebase clarity. Read schema documents from docs/ in each operator repo before any design or implementation work. Read CODEBASE.md in the root and in the target repo before any implementation or investigation.
+Step 4 -- Read the in-scope repo CLAUDE.md for repo-specific constraints. Query the graph for subsystem understanding: /graphify query "<question>" or /graphify explain "<concept>". Read schema documents from docs/ in each operator repo before any design or implementation work.
 Step 5 -- Execute within assigned role authority. Surface every phase boundary for Governor approval.
-Step 6 -- Update CONTEXT.md (Governor only), PROGRESS.md, GIT_TRACKING.md, BACKLOG.md at session close.
+Step 6 -- Run /graphify --update from ~/ontai, then update CONTEXT.md (Governor only), PROGRESS.md, GIT_TRACKING.md, BACKLOG.md at session close.
 A session without Step 6 is aborted. The next Governor session must reconstruct state before proceeding.
 
 ---
@@ -51,7 +51,7 @@ A session without Step 6 is aborted. The next Governor session must reconstruct 
 - Markdown steps only in responses, no inline code except git, kubectl YAML, Talos machineconfig patches
 - Ask before inventing or assuming
 - Unit tests required for all new functionality
-- **After every implementation or feature change**: Update the CODEBASE.md in any repo you modified. If cross-repo relationships changed, update the parent CODEBASE.md. This is not optional.
+- **After every implementation or feature change**: Run `/graphify --update` from `~/ontai`. A code change not followed by a graph update is an invariant violation. The graph update must be included in the same commit or PR.
 
 ---
 
@@ -140,32 +140,23 @@ Conductor, regardless of role, is the reconciliation authority for the governanc
 
 ## 7. Governor Directives
 
-## Codebase Understanding Protocol
+## Graphify Source of Truth Protocol
 
 This directive is authored by the Governor and may not be amended or overridden by any other role.
 
-**Rule 1 - Read before work:** At the start of any session involving implementation, investigation, or feature change, the agent must read `~/ontai/CODEBASE.md` first. For any work scoped to a specific repo, the agent must also read the `CODEBASE.md` in that repo directory before reading any source files.
+CODEBASE.md files have been eliminated from all repos. The graphify knowledge graph is the sole authoritative source for codebase understanding. Static documentation that drifts from the code is not documentation -- it is liability.
 
-**Rule 2 - CODEBASE.md is the mental model cache:** The agent must not re-derive understanding by walking the source tree when a CODEBASE.md exists and is not known to be stale. Walking source files is permitted only to fill gaps not covered by CODEBASE.md or to verify a specific invariant during debugging.
+**Rule 1 - Query before work:** At the start of any session involving implementation, investigation, or feature change, the agent must query the graphify graph at `~/ontai/graphify-out/graph.json` before reading any source files. Use `/graphify query "<question>"` to locate relevant nodes. Use `/graphify explain "<concept>"` to understand a CRD, function, or subsystem. Use `/graphify path "<A>" "<B>"` to trace a dependency chain.
 
-**Rule 3 - Update is mandatory after any change:** After any implementation, feature change, or invariant correction, the agent must update the CODEBASE.md in every repo it modified. If cross-repo relationships, data flows, or type contracts changed, the parent `~/ontai/CODEBASE.md` must also be updated. Committing code without updating the corresponding CODEBASE.md is an invariant violation.
+**Rule 2 - Graph is the mental model cache:** The agent must not re-derive understanding by walking the source tree when the graph exists. Source file reads are permitted only to verify a specific invariant or to examine implementation detail at a path the graph references. Do not read files to build a mental model -- query the graph.
 
-**Rule 4 - What each repo-level CODEBASE.md must contain:** The document must be structured with these seven sections exactly:
-- **Purpose** — What the repo owns, what it explicitly does not own, and its role in the ONT system
-- **Key Abstractions** — Primary CRDs and types, their relationships, and lifecycle state transitions
-- **Primary Data Flows** — Numbered steps for the 1–3 most important operations, referencing actual file paths
-- **Invariants and Constraints** — Non-obvious rules, why they exist, and where enforcement lives
-- **Cross-Repo Dependencies** — What this repo consumes from others and what others depend on from it
-- **Test Contract** — What the e2e, integration, and unit tests verify at a behavioral level, not a file list
-- **Sharp Edges** — Known footguns, rejected patterns, and deliberately avoided approaches
+**Rule 3 - Update is mandatory after any change:** After any implementation, feature change, or invariant correction, the agent must run `/graphify --update` from `~/ontai`. The graph update must be committed in the same PR that introduced the change. Committing code without updating the graph is an invariant violation with the same severity as a failing test.
 
-**Rule 5 - Parent CODEBASE.md scope:** The root `~/ontai/CODEBASE.md` must contain the system-level architecture overview, a one-line responsibility entry per repo, the cross-repo dependency graph in text form, and links to each repo-level CODEBASE.md. It must not duplicate content that belongs in a repo-level file.
+**Rule 4 - What triggers a graph update:** Run `/graphify --update` after: adding or modifying Go types, adding or changing CRD definitions, changing reconciler logic, updating YAML configs or lab files, adding or modifying docs. Whitespace-only and comment-only changes do not require an update.
 
-**Rule 6 - Staleness is an error:** If the agent detects that a CODEBASE.md section contradicts the current source (e.g. a type was renamed, a webhook was removed, a flow changed), it must correct the CODEBASE.md as part of the same commit that introduced the change. A CODEBASE.md that describes code that no longer exists is treated with the same severity as a failing test.
+**Rule 5 - Staleness is an error:** If a graph query returns a node or edge that contradicts the current source (renamed type, removed webhook, changed flow), the agent must run `/graphify --update` and resolve the discrepancy before continuing. A stale graph is treated with the same severity as a stale test fixture.
 
-**Rule 7 - Initial generation:** If CODEBASE.md does not exist in a repo, the agent must generate it before beginning implementation work in that repo. Generation is not optional and is not deferred to after the feature is complete.
-
-**Rule 8 - Governor authority:** Only the Governor role may amend the structure requirements in Rule 4 or the scope requirements in Rule 5. Controller, schema, and runner engineer roles must follow this protocol and keep their respective CODEBASE.md files current, but may not alter the protocol itself.
+**Rule 6 - Governor authority:** Only the Governor role may amend this protocol. Engineer sessions follow it without modification.
 
 ---
 
@@ -203,3 +194,4 @@ Generic TODO comments are an invariant violation. A PR that introduces a spec wi
 2026-04-24 -- Decision H locked. Conductor drift detection, deletion cascade order, and bootstrap-versus-import deletion invariants established.
 2026-04-25 -- Decision G locked. All cross-operator CRD schemas migrate to seam-core under infrastructure.ontai.dev. INV-010 updated to reflect seam-core as schema authority. Phase 2B complete.
 2026-04-25 -- INV-023 added. Operator Deployments and enable bundles always use :dev tag in lab/development. Custom per-build tags are never written into any committed artifact.
+2026-05-04 -- Graphify replaces CODEBASE.md as source of truth. All CODEBASE.md files removed from all repos. Codebase Understanding Protocol replaced with Graphify Source of Truth Protocol. Session Protocol Steps 1, 4, and 6 updated. Working Preferences updated. CONTEXT.md updated to reference graphify graph at ~/ontai/graphify-out/graph.json.

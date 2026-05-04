@@ -1,25 +1,42 @@
 # ONT Platform: Session Context
 
-**Last updated:** April 24, 2026
-**Branch:** main (session/14-bake-lab-patches fully merged)
+**Last updated:** May 4, 2026 (session/21 -- graphify replaces CODEBASE.md)
+**Branch:** main
 **Author:** Krishna (ontave / ontave@ontave.dev)
 
 ---
 
-## Codebase Understanding
+## Codebase Understanding: graphify is the Source of Truth
 
-Before any implementation or investigation, read `CODEBASE.md` in the root. For repo-specific work, read the CODEBASE.md in that repo directory. These files represent the pre-computed mental model of the codebase. After any implementation, update the relevant CODEBASE.md sections that were affected.
+CODEBASE.md files have been removed from all repos. The graphify knowledge graph is the authoritative source of codebase understanding for all agents and contributors.
 
-| File | Covers |
-|------|--------|
-| `CODEBASE.md` | System architecture, dependency graph, namespace model, operational sequences |
-| `conductor/CODEBASE.md` | Compiler, 16 capabilities, execute/agent mode, rawSource packbuild |
-| `guardian/CODEBASE.md` | RBAC governance, EPG, PermissionSnapshot, admission webhook |
-| `platform/CODEBASE.md` | Cluster lifecycle, CAPI provider, day-2 operational CRDs |
-| `seam-core/CODEBASE.md` | Schema authority, LineageIndex, DSNS, shared libraries |
-| `wrapper/CODEBASE.md` | Pack delivery pipeline, 5-gate gatekeeper, PackInstance |
-| `domain-core/CODEBASE.md` | Layer 0 abstract schema, no controller |
-| `app-core/CODEBASE.md` | Application governance specification only |
+**Graph location:** `~/ontai/graphify-out/graph.json`
+**Last built:** May 4, 2026 -- 5,268 nodes, 10,450 edges, 767 source files, 421 communities
+**Report:** `~/ontai/graphify-out/GRAPH_REPORT.md`
+
+### How agents must use the graph
+
+Before any implementation or investigation work, query the graph:
+
+```
+/graphify query "<your question about the subsystem>"
+/graphify explain "<CRD or function name>"
+/graphify path "<SourceConcept>" "<TargetConcept>"
+```
+
+Do not walk source files to derive understanding that the graph already contains. Source file reads are permitted only to verify a specific invariant or examine implementation detail the graph references by path.
+
+### How to keep the graph current
+
+After every codebase change -- new Go types, new CRDs, changed reconciler logic, updated lab YAML, new docs -- run from `~/ontai`:
+
+```
+/graphify --update
+```
+
+This re-extracts only changed files and merges them into the existing graph. A codebase change that is not followed by a graph update is treated the same as a failing test: the graph is stale and agents will reason from incorrect state.
+
+The graph update must be included in the same commit or PR that introduced the change. The Governor reviews that `graphify-out/graph.json` is up to date at session close.
 
 
 ## What This File Is
