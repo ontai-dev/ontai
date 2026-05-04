@@ -2,16 +2,20 @@
 ## Repository Status
 | Repository   | Branch  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main    | f979573 | session/20 close -- PR #15: ontai.dev schema stats 36, seam-core 12 types |
-| conductor    | main    | 46ec897 | PR #34 squash merged: management bootstrap guard, OCI auth, tenant config fix |
-| conductor    | main    | 9f75512 | PR #33 squash merged: onboarding runbook and config files |
-| conductor    | main    | efc6e8f | PR #32 squash merged: KubernetesVersionDriftLoop bridge to main |
-| conductor    | main    | 7f064a9 | PR #31 squash merged: kube-upgrade v-prefix fix |
-| guardian     | main    | PR #19 merged | T-25a RBACProfile ceiling, unused snapshotReceiptGVR lint fix |
-| platform     | main    | 2c5d002 | PR #20 squash merged: K8s version drift DriftSignalReconciler handler |
-| seam-core    | main    | d90ee3d | PR #16 squash merged: PkiRotationThresholdDays + PkiExpiryDate + lint fix |
-| ontai-schema | main    | 33d82c9 | PR #9 squash merged: schema index seam-core 12 schemas, v1.9.3-alpha.1 |
-| wrapper      | main    | ee36691 | session/18: fix stale runner.ontai.dev RunnerConfig watch GVK |
+| ontai        | main    | session/21 PR #17 merged | graphify replaces CODEBASE.md; graph committed (5268 nodes) |
+| conductor    | main    | PR #36 merged | remove CODEBASE.md -- graphify source of truth |
+| guardian     | main    | PR #20 merged | remove CODEBASE.md -- graphify source of truth |
+| platform     | main    | PR #21 merged | remove CODEBASE.md -- graphify source of truth |
+| seam-core    | main    | PR #17 merged | remove CODEBASE.md -- graphify source of truth |
+| wrapper      | main    | PR #17 merged | remove CODEBASE.md -- graphify source of truth |
+| domain-core  | main    | PR #4 merged  | remove CODEBASE.md -- graphify source of truth |
+| app-core     | main    | PR #1 merged  | remove CODEBASE.md -- graphify source of truth |
+| conductor    | main    | 46ec897 | PR #34: management bootstrap guard, OCI auth, tenant config fix |
+| guardian     | main    | PR #19 merged | T-25a RBACProfile ceiling, lint fix |
+| platform     | main    | 2c5d002 | PR #20: K8s version drift DriftSignalReconciler handler |
+| seam-core    | main    | d90ee3d | PR #16: PkiRotationThresholdDays + PkiExpiryDate + lint fix |
+| ontai-schema | main    | 33d82c9 | PR #9: schema index seam-core 12 schemas, v1.9.3-alpha.1 |
+| wrapper      | main    | ee36691 | fix stale runner.ontai.dev RunnerConfig watch GVK |
 | domain-core  | main    | PR #3 merged | DomainLineageIndex schema amendment |
 
 ## Branch Convention
