@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 3, 2026 (session/20 close)
+**Last updated:** May 4, 2026 (session/21 close)
 
-**Current state:** Alpha release v1.9.3-alpha.1 cut. Compiler fixes merged (conductor PR #34): management bootstrap guard, OCI push auth with docker config.json snap fallback, cluster-input-tenant.yaml machineConfigPaths correction. ontai.dev schema stats updated to 36 (ontai PR #15). LineageController confirmed working across all 9 GVKs including security.ontai.dev types.
+**Current state:** graphify knowledge graph replaces CODEBASE.md as source of truth across all repos (session/21 -- 8 PRs merged). Graph at graphify-out/graph.json: 5,268 nodes, 10,450 edges, 767 source files, 421 communities, 256x token reduction. CLAUDE.md Codebase Understanding Protocol replaced with Graphify Source of Truth Protocol. Prior: Alpha release v1.9.3-alpha.1 cut. Compiler fixes merged (conductor PR #34). LineageController confirmed across all 9 GVKs.
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -20,6 +20,31 @@ No blocking alpha items currently open. All previously tracked items have been r
 |----|-------------|
 | ccs-dev unreachable (10.20.0.20) | Blocks TENANT-HP-CLUSTER, TENANT-PKI-CLUSTER-REACH, TENANT-HP-NODE |
 | ccs-mgmt cp3 NotReady | Talos API down, causing conductor pod CrashLoopBackOff; blocks MGMT-HP-NODE |
+
+---
+
+## Session/21 Work (2026-05-04) -- MERGED
+
+### Governor Directive: graphify replaces CODEBASE.md
+
+| PR | Repo | Summary |
+|----|------|---------|
+| ontai #17 | ontai | CLAUDE.md Graphify Protocol, CONTEXT.md graphify section, root CODEBASE.md removed, graphify-out/ committed |
+| conductor #36 | conductor | Remove CODEBASE.md |
+| guardian #20 | guardian | Remove CODEBASE.md |
+| platform #21 | platform | Remove CODEBASE.md |
+| seam-core #17 | seam-core | Remove CODEBASE.md |
+| wrapper #17 | wrapper | Remove CODEBASE.md |
+| domain-core #4 | domain-core | Remove CODEBASE.md |
+| app-core #1 | app-core | Remove CODEBASE.md |
+
+### Graphify Graph (initial build)
+
+- Nodes: 5,268 | Edges: 10,450 | Communities: 421 | Source files: 767
+- Token reduction: 256x vs naive full-corpus reads
+- God nodes: `buildDay2Scheme()` (97), `newScheme()` (78), `NewRegistry()` (77)
+- Graph at: `~/ontai/graphify-out/graph.json`
+- Agents must run `/graphify --update` after every codebase change
 
 ---
 
