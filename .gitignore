@@ -38,4 +38,8 @@ Thumbs.db
 !GIT_TRACKING.md
 !CRD_OWNERSHIP_AUDIT.md
 !docs/**
+
+# Graphify knowledge graph — source of truth for all agents
+!graphify-out/
+!graphify-out/**
 guardian-db-credentials.yaml
