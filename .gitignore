@@ -9,7 +9,6 @@ guardian/
 platform/
 wrapper/
 seam-core/
-ont-lab/
 
 # Lab infrastructure files — not committed
 lab/
