@@ -1,0 +1,12 @@
+# ont-lab: deprecated pre-architecture repository (removed)
+ont-lab/
+
+# lab: cluster-specific YAML configs, not codebase nodes
+lab/
+
+# Test files: excluded from primary graph build.
+# Community detection already groups test helpers together, but test file
+# nodes dilute the production codebase graph and inflate god-node degree counts
+# (e.g. NewRegistry() degree 77 is inflated by inferred edges to 60+ test funcs).
+*_test.go
+test/
