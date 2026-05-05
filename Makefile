@@ -1,4 +1,11 @@
-.PHONY: lint lint-docs install-hooks build-all push-all
+.PHONY: lint lint-docs install-hooks build-all push-all envtest-setup
+
+# Kubernetes version for envtest binaries. Pinned to the ccs-mgmt cluster version.
+# Update here when the management cluster is upgraded.
+ENVTEST_K8S_VERSION ?= 1.32.x
+
+# Directory where setup-envtest installs binaries. User-owned, persistent.
+ENVTEST_BIN_DIR ?= $(HOME)/.local/share/kubebuilder-envtest
 
 # Registry and tag override for all image builds.
 # Override via: make build-all IMAGE_REGISTRY=registry.ontai.dev/ontai-dev TAG=v1.9.3-r1
@@ -49,6 +56,26 @@ build-all:
 	@echo ">>> build-all: step 3 — conductor (compiler + execute + agent)"
 	$(MAKE) -C conductor docker-build docker-push IMAGE_REGISTRY=$(IMAGE_REGISTRY) TAG=$(TAG)
 	@echo ">>> build-all: done — all images pushed to $(IMAGE_REGISTRY)"
+
+# envtest-setup downloads etcd + kube-apiserver binaries for integration tests.
+# Run once per machine; re-run after a Kubernetes version bump on ccs-mgmt.
+#
+# After setup, export KUBEBUILDER_ASSETS before running integration tests:
+#   export KUBEBUILDER_ASSETS=$(make -s envtest-path)
+#   go test ./test/integration/...   (from any operator repo)
+envtest-setup:
+	@command -v setup-envtest >/dev/null 2>&1 || go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	@mkdir -p $(ENVTEST_BIN_DIR)
+	@setup-envtest use $(ENVTEST_K8S_VERSION) --bin-dir $(ENVTEST_BIN_DIR)
+	@echo ""
+	@echo "KUBEBUILDER_ASSETS=$$(setup-envtest use $(ENVTEST_K8S_VERSION) --bin-dir $(ENVTEST_BIN_DIR) -p path)"
+	@echo "Run the line above to set KUBEBUILDER_ASSETS, then run integration tests."
+
+# envtest-path prints the KUBEBUILDER_ASSETS path for use in shell eval.
+envtest-path:
+	@setup-envtest use $(ENVTEST_K8S_VERSION) --bin-dir $(ENVTEST_BIN_DIR) -p path 2>/dev/null
+
+.PHONY: envtest-setup envtest-path
 
 # push-all pushes all already-built images to the registry without rebuilding.
 push-all:
