@@ -2,14 +2,14 @@
 ## Repository Status
 | Repository   | Branch  | Last Commit | Status                    |
 |---|---|---|---|
-| ontai        | main    | session/21 PR #17 merged | graphify replaces CODEBASE.md; graph committed (5268 nodes) |
-| conductor    | main    | PR #36 merged | remove CODEBASE.md -- graphify source of truth |
-| guardian     | main    | PR #20 merged | remove CODEBASE.md -- graphify source of truth |
-| platform     | main    | PR #21 merged | remove CODEBASE.md -- graphify source of truth |
-| seam-core    | main    | PR #17 merged | remove CODEBASE.md -- graphify source of truth |
-| wrapper      | main    | PR #17 merged | remove CODEBASE.md -- graphify source of truth |
-| domain-core  | main    | PR #4 merged  | remove CODEBASE.md -- graphify source of truth |
-| app-core     | main    | PR #1 merged  | remove CODEBASE.md -- graphify source of truth |
+| ontai        | session/23-test-graph | session/22 PRs #19,#20 merged; session/23 PR pending |
+| conductor    | session/23-envtest-setup | PR #38 merged (NewRegistry comment); session/23 PR pending |
+| guardian     | main    | PR #20 merged; all integration tests green with envtest |
+| platform     | session/23-envtest-setup | PR #22 merged (PlatformTenant drop); session/23 PR pending |
+| seam-core    | main    | PR #17 merged; integration tests green with envtest |
+| wrapper      | session/23-envtest-setup | session/22 TCOR CRD deleted; session/23 PR pending |
+| domain-core  | main    | PR #4 merged -- remove CODEBASE.md |
+| app-core     | main    | PR #1 merged -- remove CODEBASE.md |
 | conductor    | main    | 46ec897 | PR #34: management bootstrap guard, OCI auth, tenant config fix |
 | guardian     | main    | PR #19 merged | T-25a RBACProfile ceiling, lint fix |
 | platform     | main    | 2c5d002 | PR #20: K8s version drift DriftSignalReconciler handler |

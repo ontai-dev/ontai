@@ -1,8 +1,8 @@
 # ONT Platform Progress
 
-**Last updated:** May 4, 2026 (session/21 close)
+**Last updated:** May 5, 2026 (session/23 close)
 
-**Current state:** graphify knowledge graph replaces CODEBASE.md as source of truth across all repos (session/21 -- 8 PRs merged). Graph at graphify-out/graph.json: 5,268 nodes, 10,450 edges, 767 source files, 421 communities, 256x token reduction. CLAUDE.md Codebase Understanding Protocol replaced with Graphify Source of Truth Protocol. Prior: Alpha release v1.9.3-alpha.1 cut. Compiler fixes merged (conductor PR #34). LineageController confirmed across all 9 GVKs.
+**Current state:** Production graph pruned to production code only (2,755 nodes, 4,248 links, 266 communities). Test graph introduced at graphify-tests-out/ (2,247 nodes, 4,914 links, 165 communities). Envtest binaries installed locally; all integration test suites green across all 6 repos. make envtest-setup target added to root Makefile, pinned to K8s 1.32.x matching ccs-mgmt. Session/22 cleanup: 6 PRs merged (Decision G violation removed, ont-lab removed, hardeningApply VIP fix, PlatformTenant reference dropped, .graphifyignore created, NewRegistry comment added).
 
 **Full history:** PROGRESS-archive-2026-04-20.md
 
@@ -20,6 +20,56 @@ No blocking alpha items currently open. All previously tracked items have been r
 |----|-------------|
 | ccs-dev unreachable (10.20.0.20) | Blocks TENANT-HP-CLUSTER, TENANT-PKI-CLUSTER-REACH, TENANT-HP-NODE |
 | ccs-mgmt cp3 NotReady | Talos API down, causing conductor pod CrashLoopBackOff; blocks MGMT-HP-NODE |
+
+---
+
+## Session/23 Work (2026-05-05) -- IN PROGRESS
+
+### Task 1 -- Test-only graphify graph
+
+| Item | Details |
+|------|---------|
+| graphify-tests.py | Builder script at ontai root; collects *_test.go + test/ dirs from all repos |
+| graphify-tests-out/ | Added to .gitignore; 2,247 nodes, 4,914 links, 165 communities |
+| CONTEXT.md | Updated with two-graph model: production graph and test graph sections |
+
+### Task 2 -- Envtest local setup
+
+| Item | Details |
+|------|---------|
+| setup-envtest | Already installed at /home/saigha01/go/bin/setup-envtest |
+| make envtest-setup | New root Makefile target; installs K8s 1.32.x binaries to ~/.local/share/kubebuilder-envtest |
+| make envtest-path | Companion target; prints KUBEBUILDER_ASSETS for shell eval |
+| guardian integration | 4 suites: controller, epg, lineage, webhook -- all pass |
+| conductor integration | 3 suites: main, federation, signing -- all pass |
+| platform integration | 2 suites: capi, day2 -- all pass |
+| wrapper integration | 1 suite -- passes |
+| seam-core integration | 1 suite -- passes |
+| suite_test.go comments | Updated in conductor, platform, wrapper to reference make envtest-setup |
+
+### Session/23 PRs
+
+| PR | Repo | Branch | Summary |
+|----|------|--------|---------|
+| ontai #21 (pending) | ontai | session/23-test-graph | graphify-tests.py, envtest-setup Makefile target, CONTEXT/PROGRESS/GIT_TRACKING updates |
+| conductor #39 (pending) | conductor | session/23-envtest-setup | suite_test.go comment fix |
+| platform #23 (pending) | platform | session/23-envtest-setup | suite_test.go comment fix |
+| wrapper #18 (pending) | wrapper | session/23-envtest-setup | suite_test.go comment fix |
+
+---
+
+## Session/22 Work (2026-05-05) -- MERGED
+
+### Cleanup (6 items)
+
+| PR | Repo | Summary |
+|----|------|---------|
+| ontai #18 | wrapper (via ontai) | Delete wrapper TCOR CRD YAML -- Decision G violation |
+| ontai #19 | ontai | Remove ont-lab/ directory and .gitignore entry |
+| conductor #37 | conductor | hardeningApply VIP fix: ClusterEndpoint filter + waitForNodeStable + 3 tests |
+| platform #22 | platform | Drop PlatformTenant forward-looking reference from CLAUDE.md Step 4b |
+| ontai #20 | ontai | .graphifyignore + graph rebuild: 5268->2755 nodes, test/lab ghost nodes pruned |
+| conductor #38 | conductor | NewRegistry dual-mode usage comment |
 
 ---
 
