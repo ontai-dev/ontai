@@ -1,1 +1,1502 @@
-{}
+{
+  "/home/saigha01/ontai/graphify-tests.py": {
+    "mtime": 1777990803.4272535,
+    "hash": "e5fcad82756d3aa764e20f2f108268b3"
+  },
+  "/home/saigha01/ontai/build_pptx.py": {
+    "mtime": 1775470201.6363213,
+    "hash": "a0025a2d81687f83306f3a08c2ad60c0"
+  },
+  "/home/saigha01/ontai/wrapper/cmd/wrapper/main.go": {
+    "mtime": 1777709646.8588512,
+    "hash": "a9e95762cad1e7346ae578e17eb85cd3"
+  },
+  "/home/saigha01/ontai/wrapper/internal/controller/packinstance_reconciler.go": {
+    "mtime": 1777709646.8646874,
+    "hash": "93f0dbd2f64cfb65acea981b7155d0bd"
+  },
+  "/home/saigha01/ontai/wrapper/internal/controller/clusterpack_reconciler.go": {
+    "mtime": 1777751797.64241,
+    "hash": "5ab430e49d72725ff72250c33a5b9b6c"
+  },
+  "/home/saigha01/ontai/wrapper/internal/controller/packexecution_reconciler.go": {
+    "mtime": 1777749854.2606173,
+    "hash": "079fac7de57909ccb297f3fb450987b0"
+  },
+  "/home/saigha01/ontai/wrapper/config/crd/embed.go": {
+    "mtime": 1777709646.8592048,
+    "hash": "10e6f330db1ce38e4f62052875665357"
+  },
+  "/home/saigha01/ontai/wrapper/scripts/commit-msg": {
+    "mtime": 1775403229.2346394,
+    "hash": "32cda93944bd4b578032bdeed2b57ce3"
+  },
+  "/home/saigha01/ontai/domain-core/pkg/lineage/lineage.go": {
+    "mtime": 1775410107.7253036,
+    "hash": "912d02496d9e4331f4d51f108bdf680d"
+  },
+  "/home/saigha01/ontai/domain-core/api/v1alpha1/groupversion_info.go": {
+    "mtime": 1775409854.1357052,
+    "hash": "b0d75660168cdf82e645f1af4edfc95b"
+  },
+  "/home/saigha01/ontai/domain-core/api/v1alpha1/primitives_types.go": {
+    "mtime": 1776001238.571794,
+    "hash": "69bcc9f74065730638e37b1439055718"
+  },
+  "/home/saigha01/ontai/domain-core/api/v1alpha1/zz_generated.deepcopy.go": {
+    "mtime": 1775410089.0581896,
+    "hash": "98ebafbccfc4b242c991a265754aca65"
+  },
+  "/home/saigha01/ontai/domain-core/api/v1alpha1/domainlineageindex_types.go": {
+    "mtime": 1775409883.8048985,
+    "hash": "6c993216d5124d2e77701ec2f26f4e67"
+  },
+  "/home/saigha01/ontai/conductor/cmd/conductor/main.go": {
+    "mtime": 1777758295.8620865,
+    "hash": "475857bf01589622ac8c816ce73e808a"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/compile_packbuild_kustomize.go": {
+    "mtime": 1777710104.5432527,
+    "hash": "46eec1dab69c661ff07510090f6f1745"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/compile_enable.go": {
+    "mtime": 1777710104.5403395,
+    "hash": "08ea4314cd76b1a3b6ceb35e113f9859"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/compile_packbuild_split.go": {
+    "mtime": 1777710104.5438867,
+    "hash": "6c0b995b29aaf5df9f67392d6b150149"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/compile_packbuild_helm.go": {
+    "mtime": 1777710104.5424542,
+    "hash": "b0fd69d907746d8559885a5007089902"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/compile_component.go": {
+    "mtime": 1775574821.713787,
+    "hash": "93dc00b648ba2f34d9d003beaa24612c"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/compile_oci_push.go": {
+    "mtime": 1777828973.0873048,
+    "hash": "9edae0cfe0705ea462fa7f25cce14bef"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/compile_maintenance.go": {
+    "mtime": 1775574684.4787726,
+    "hash": "875bc1887c14f9a65f2e863b9bf0fb5c"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/compile_packbuild_raw.go": {
+    "mtime": 1777710104.5436037,
+    "hash": "769f162e4d20c4d424a4d29b0b5e5499"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/main.go": {
+    "mtime": 1777710104.5446806,
+    "hash": "2f5dfaec80ef6645c18b3a0f086487cb"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/compile.go": {
+    "mtime": 1777828601.4136558,
+    "hash": "8155a21858eeac7fad8fbf119a1743ce"
+  },
+  "/home/saigha01/ontai/conductor/cmd/compiler/compile_launch.go": {
+    "mtime": 1777710104.5413623,
+    "hash": "36da3d75e3f3aa117a6d1026ab5123d2"
+  },
+  "/home/saigha01/ontai/conductor/internal/persistence/operationresult_writer.go": {
+    "mtime": 1777710104.5654948,
+    "hash": "40b27e7bc6568241943339aaf53122bd"
+  },
+  "/home/saigha01/ontai/conductor/internal/persistence/tcor_writer.go": {
+    "mtime": 1777710104.5668597,
+    "hash": "da3ac11588ab6191f29be92f10964607"
+  },
+  "/home/saigha01/ontai/conductor/internal/persistence/configmap_writer.go": {
+    "mtime": 1775289315.187386,
+    "hash": "5b0f692ac0e1f0e49b529e18312878b8"
+  },
+  "/home/saigha01/ontai/conductor/internal/webhook/sealed_causal_chain.go": {
+    "mtime": 1777710104.5689223,
+    "hash": "e731c85f2ffe4ace43fbcacf2f8ca34d"
+  },
+  "/home/saigha01/ontai/conductor/internal/webhook/rbac_ownership.go": {
+    "mtime": 1777710104.567833,
+    "hash": "790cb68314a65de1f3c21d71df92d146"
+  },
+  "/home/saigha01/ontai/conductor/internal/webhook/enforcement_gate.go": {
+    "mtime": 1777710104.5673532,
+    "hash": "ccd4170ec603e9cfdc8333afb298ae15"
+  },
+  "/home/saigha01/ontai/conductor/internal/federation/tls.go": {
+    "mtime": 1775483817.9651017,
+    "hash": "88bf840a882ed3e24b9f4668d8949def"
+  },
+  "/home/saigha01/ontai/conductor/internal/federation/messages.go": {
+    "mtime": 1775424386.9829311,
+    "hash": "eb301572777e11b01c3f991b83a8fbd0"
+  },
+  "/home/saigha01/ontai/conductor/internal/federation/codec.go": {
+    "mtime": 1775424843.313244,
+    "hash": "77658c4371dc602565ceb74ee9e16a64"
+  },
+  "/home/saigha01/ontai/conductor/internal/federation/server.go": {
+    "mtime": 1775424645.3078828,
+    "hash": "a282973e603bfec3abe31fa0c44d54e1"
+  },
+  "/home/saigha01/ontai/conductor/internal/federation/client.go": {
+    "mtime": 1775483820.5881176,
+    "hash": "4a082b6589da423d447600f09dc2e589"
+  },
+  "/home/saigha01/ontai/conductor/internal/federation/wal.go": {
+    "mtime": 1775425359.876496,
+    "hash": "e00fa015e9d9a84030c2b6a124ba6c16"
+  },
+  "/home/saigha01/ontai/conductor/internal/kernel/mode.go": {
+    "mtime": 1775287655.3998399,
+    "hash": "aab7e24c4ddd6b871cf00a64c362f4bc"
+  },
+  "/home/saigha01/ontai/conductor/internal/kernel/agent.go": {
+    "mtime": 1777761829.3609617,
+    "hash": "e2df363a0169d3262d74e3f7e8f6da09"
+  },
+  "/home/saigha01/ontai/conductor/internal/kernel/execute.go": {
+    "mtime": 1777710104.5642736,
+    "hash": "a9aec7fd13e9d82ed3f586b13de3e2f9"
+  },
+  "/home/saigha01/ontai/conductor/internal/kernel/role.go": {
+    "mtime": 1775573278.858698,
+    "hash": "c0fbc9fac1b984f64980b1bfe20684ed"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/catalog.go": {
+    "mtime": 1775389750.9290204,
+    "hash": "1270e3c3fabc5c575ffa80ed3ee8b62b"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/capi/capi.go": {
+    "mtime": 1775484111.625854,
+    "hash": "fbe5d3ec06c7ac602e41292e5bf20fb1"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/platform_machineconfig.go": {
+    "mtime": 1778064025.0150862,
+    "hash": "6f87a5f41d1db4b4659c157f24bc9fbf"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/registry.go": {
+    "mtime": 1777972345.91602,
+    "hash": "40e36ff87e0375f729b3a63d2f4c5f83"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/guardian.go": {
+    "mtime": 1777710104.5577836,
+    "hash": "d1545e920a0a0eb465e633b28ac32c6e"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/platform_node.go": {
+    "mtime": 1777710104.5601645,
+    "hash": "8f766d1f9dbd2b628f3bba5c066cc8ad"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/stubs.go": {
+    "mtime": 1778064064.239256,
+    "hash": "6f662c0cfc4247446a09f70805878d1f"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/platform_etcd.go": {
+    "mtime": 1777717171.1820402,
+    "hash": "c980383d862a8fe0457ef844c19d6caa"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/platform_cluster.go": {
+    "mtime": 1777710104.5586338,
+    "hash": "b0e3d8a1150f592f87a0ed56431ffb53"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/clients.go": {
+    "mtime": 1777758295.86295,
+    "hash": "7560f7a67e170355c9026fe46b3b98b1"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/platform_upgrade.go": {
+    "mtime": 1777761829.360532,
+    "hash": "c5e24a5584b136f07e7ea8c41991adee"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/platform_security.go": {
+    "mtime": 1778060605.5441415,
+    "hash": "85247c0da6bfb1cad9b0084af0977f29"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/adapters.go": {
+    "mtime": 1777971804.629208,
+    "hash": "2d6d80dc96b7a5ba9b895610a52c0f83"
+  },
+  "/home/saigha01/ontai/conductor/internal/capability/wrapper.go": {
+    "mtime": 1777758295.86348,
+    "hash": "355c36a48cdb7cc18966d61c45916adf"
+  },
+  "/home/saigha01/ontai/conductor/internal/config/context.go": {
+    "mtime": 1777710104.5626814,
+    "hash": "2ce839a872e4db30e3dbdb27f5a8cc00"
+  },
+  "/home/saigha01/ontai/conductor/internal/packbuild/split.go": {
+    "mtime": 1777710104.564781,
+    "hash": "542b63469842391d6f715b38688adf1a"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/snapshot_pull_loop.go": {
+    "mtime": 1775578453.3029084,
+    "hash": "4a246b5c9b8764193e788ab08f060db9"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/talosclusters.go": {
+    "mtime": 1777710104.555662,
+    "hash": "27998b43ad740209e7b5096b9411ea94"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/leaderelection.go": {
+    "mtime": 1775289402.0418696,
+    "hash": "5ff308650ed46607cb934fb58b6d6235"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/pack_receipt_drift_loop.go": {
+    "mtime": 1777758295.862396,
+    "hash": "8ae98f647cab4eb629a1216c31c8555a"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/rbacpolicy_pull_loop.go": {
+    "mtime": 1777710104.5530658,
+    "hash": "685487a5f86411042e8c1eb007ed1474"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/drift_signal_handler.go": {
+    "mtime": 1777758295.862396,
+    "hash": "6f0fa3b9a8f4e45e7717cc53fa74fe1f"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/receipt_reconciler.go": {
+    "mtime": 1777710104.553912,
+    "hash": "fdfdbf74072b773ceca26a458138e84d"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/packinstance_pull_loop.go": {
+    "mtime": 1777710104.5517972,
+    "hash": "e1c7abaf88438de79049235ff84565be"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/talos_version_drift_loop.go": {
+    "mtime": 1777758295.862654,
+    "hash": "5ae4c70015730638325ea99acc7441fe"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/signing_loop.go": {
+    "mtime": 1777710104.5546126,
+    "hash": "871501dd6998fca310bcb4e275c908dd"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/rbacprofile_pull_loop.go": {
+    "mtime": 1777710104.5534737,
+    "hash": "4af90167f8fe38dad03a7f2ef88fd038"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/kubernetes_version_drift_loop.go": {
+    "mtime": 1777761829.3600779,
+    "hash": "e4620c021e6c61066d5ad318f26d5280"
+  },
+  "/home/saigha01/ontai/conductor/internal/agent/capability_publisher.go": {
+    "mtime": 1777758295.8622308,
+    "hash": "0c6c5d8c46b01d5487b3ee9b7dc507a5"
+  },
+  "/home/saigha01/ontai/conductor/internal/permissionservice/store.go": {
+    "mtime": 1775424512.897913,
+    "hash": "a135b661f4b32fbaef9583bac8aa65eb"
+  },
+  "/home/saigha01/ontai/conductor/internal/permissionservice/server.go": {
+    "mtime": 1775326077.4924135,
+    "hash": "ab81830ebd819ff478aab2628aa70122"
+  },
+  "/home/saigha01/ontai/conductor/internal/permissionservice/service.go": {
+    "mtime": 1775326122.1326733,
+    "hash": "ad518d24da1598597ad5ced9371ec877"
+  },
+  "/home/saigha01/ontai/conductor/pkg/runnerlib/operationresult.go": {
+    "mtime": 1777710104.5705266,
+    "hash": "24172cd90e21df72e31b1bc52331ab93"
+  },
+  "/home/saigha01/ontai/conductor/pkg/runnerlib/runnerconfig.go": {
+    "mtime": 1777710104.5713644,
+    "hash": "65d8b196706964e9767bdadf7d6157bb"
+  },
+  "/home/saigha01/ontai/conductor/pkg/runnerlib/doc.go": {
+    "mtime": 1775222507.3356647,
+    "hash": "0f1ca1fc29d9d05adbfd33fe0e6c5718"
+  },
+  "/home/saigha01/ontai/conductor/pkg/runnerlib/packreceipt.go": {
+    "mtime": 1777710104.5707767,
+    "hash": "65d8b196706964e9767bdadf7d6157bb"
+  },
+  "/home/saigha01/ontai/conductor/pkg/runnerlib/generators.go": {
+    "mtime": 1777710104.5698414,
+    "hash": "751f02dedfff9cc7c1001744ef8604f6"
+  },
+  "/home/saigha01/ontai/conductor/pkg/runnerlib/constants.go": {
+    "mtime": 1778063967.4023855,
+    "hash": "b8cecec42e0d59dcdcb6feabf4ec0f7a"
+  },
+  "/home/saigha01/ontai/conductor/pkg/runnerlib/jobspec.go": {
+    "mtime": 1777710104.570121,
+    "hash": "e4bc79969aacc03e83d41e51c2e8a09e"
+  },
+  "/home/saigha01/ontai/conductor/pkg/runnerlib/capability.go": {
+    "mtime": 1775813319.2219245,
+    "hash": "18e6e2299777cd607d57750411bf435e"
+  },
+  "/home/saigha01/ontai/conductor/config/crd/embed.go": {
+    "mtime": 1777710104.5454834,
+    "hash": "33ea71b56e5bb91963c35f87bde04ae9"
+  },
+  "/home/saigha01/ontai/conductor/scripts/commit-msg": {
+    "mtime": 1775403229.2328005,
+    "hash": "32cda93944bd4b578032bdeed2b57ce3"
+  },
+  "/home/saigha01/ontai/guardian/cmd/guardian/main.go": {
+    "mtime": 1777714516.699046,
+    "hash": "af2a0fa78bd7e47ea25c78da6099f4c9"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/rbac_intake_handler.go": {
+    "mtime": 1777710526.7407975,
+    "hash": "bb18c79145bfb7d3b221c1a8bfd77770"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/namespace_mode.go": {
+    "mtime": 1775401930.6263435,
+    "hash": "97c3869bf4b42395840326efcf996aeb"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/decision.go": {
+    "mtime": 1777710526.7397234,
+    "hash": "5d46ec3eb7a38c3c8970edcd09e638ff"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/mode_gate.go": {
+    "mtime": 1775763434.17462,
+    "hash": "5e118d35555d925cc10f80f79e341e9d"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/rbac_handler.go": {
+    "mtime": 1777710526.7407885,
+    "hash": "c60f3d2f2b00c0890d178f96fd9ea52c"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/operator_cr_guard.go": {
+    "mtime": 1777710526.740349,
+    "hash": "3e5f7fd738a8a82d24faacdd1900d7a6"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/server.go": {
+    "mtime": 1777710526.7421474,
+    "hash": "5e9317457298bdcf65363be68067d9d0"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/rbac_pack_intake_handler.go": {
+    "mtime": 1777710526.7418752,
+    "hash": "02db8e866a5d88e5d362cad98630647c"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/lineage_handler.go": {
+    "mtime": 1775339491.090401,
+    "hash": "860f07a213c6cfce1e9ae617a27e102a"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/operator_cr_handler.go": {
+    "mtime": 1777710526.740526,
+    "hash": "6e1180a67a8b5619dc75e82412f9b6df"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/declaring_principal_handler.go": {
+    "mtime": 1777710526.7400188,
+    "hash": "72bf054cdebbb159dc43fc834704cdd2"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/guarded_resolver.go": {
+    "mtime": 1775763464.2108562,
+    "hash": "928ae8b88cec5a3f2ddd7a93278e16e7"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/lineage_immutability.go": {
+    "mtime": 1775339477.8373353,
+    "hash": "366d55f18a7e950c09d77d595725c798"
+  },
+  "/home/saigha01/ontai/guardian/internal/webhook/bootstrap_check.go": {
+    "mtime": 1777710526.7387974,
+    "hash": "d6275f408d77387425f2017b38b58d64"
+  },
+  "/home/saigha01/ontai/guardian/internal/database/lazy.go": {
+    "mtime": 1775737570.3776407,
+    "hash": "0c21eb8d7a5acf754d609845a320a4bd"
+  },
+  "/home/saigha01/ontai/guardian/internal/database/audit_writer.go": {
+    "mtime": 1775936125.3507357,
+    "hash": "f26dcfbf80c6591090dba7c257a213d3"
+  },
+  "/home/saigha01/ontai/guardian/internal/database/cnpg.go": {
+    "mtime": 1777710526.7379968,
+    "hash": "368bf6054c1b4cf011682aa497ebea68"
+  },
+  "/home/saigha01/ontai/guardian/internal/database/startup.go": {
+    "mtime": 1777710526.7383735,
+    "hash": "f73462ab9b25a7223f125f910647282f"
+  },
+  "/home/saigha01/ontai/guardian/internal/epg/compute.go": {
+    "mtime": 1777710526.738756,
+    "hash": "ca65e8790b3824eed9f44354984ba4c8"
+  },
+  "/home/saigha01/ontai/guardian/internal/epg/types.go": {
+    "mtime": 1775222507.1735604,
+    "hash": "c039f9d66b5564b0c2ba3c06349395eb"
+  },
+  "/home/saigha01/ontai/guardian/internal/epg/intersection.go": {
+    "mtime": 1775243121.0998502,
+    "hash": "3096ae9d18ce51c942a4dd7b321e9f86"
+  },
+  "/home/saigha01/ontai/guardian/internal/epg/snapshot.go": {
+    "mtime": 1775578507.1765745,
+    "hash": "bc1132a17346346f4bcde3aa9d17be6d"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/bootstrap_controller.go": {
+    "mtime": 1777710526.7326703,
+    "hash": "1ccab8a4b64f68e78954bf337b3e580d"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/seammembership_controller.go": {
+    "mtime": 1776708748.6697528,
+    "hash": "a49ab20af48192383f4c1663fe272fbb"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/drift.go": {
+    "mtime": 1776708748.6699653,
+    "hash": "74fe89dfc9005c6205275dfe2351e54f"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/audit_helpers.go": {
+    "mtime": 1777710526.7308855,
+    "hash": "3f34cfd2f3833a69322882bff22c5e95"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/bootstrap_annotation_sweep.go": {
+    "mtime": 1777710526.7321718,
+    "hash": "182b74e3306ef73a88ed93676c8bfa59"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/rbacpolicy_controller.go": {
+    "mtime": 1777714069.8928897,
+    "hash": "79c0dc809ff851cb80cd0f4151deeb9d"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/identitybinding_trust.go": {
+    "mtime": 1776708748.6704695,
+    "hash": "05c6c79843281f1b4bfc9e5b39e8aaa3"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/rbacpolicy_validation.go": {
+    "mtime": 1776708748.6705334,
+    "hash": "82f00fa3e26d2d3a2f40558790b67a23"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/auditforwarder_controller.go": {
+    "mtime": 1777710526.731518,
+    "hash": "df505a667f861b917009680ab393acc8"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/rbacprofile_compliance.go": {
+    "mtime": 1776708748.6710699,
+    "hash": "b80ea12de0368fa3bd94f05b34908711"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/bootstrap_third_party_profiles.go": {
+    "mtime": 1777710526.733027,
+    "hash": "0296df3d62f33f29775dc0a96153b073"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/identitybinding_controller.go": {
+    "mtime": 1777710526.734631,
+    "hash": "5fc267b972cf52c3e6b0d1eb9c470376"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/identitybinding_validation.go": {
+    "mtime": 1776708748.6713984,
+    "hash": "7c47eb9b59c78f4e80ee7dbe72c90bb6"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/epg_store_writer.go": {
+    "mtime": 1776708748.6714985,
+    "hash": "42288e6a0b695ade1ba388bb484ae242"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/rbacprofile_backfill.go": {
+    "mtime": 1777710526.7361193,
+    "hash": "814328b2c8490524ba4a9665248fb494"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/permissionset_controller.go": {
+    "mtime": 1777710526.7352169,
+    "hash": "4770478fd337e212a888d99ebf0c01cf"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/permissionset_validation.go": {
+    "mtime": 1776708748.6718924,
+    "hash": "52112b750794d4865686503913ca8905"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/identityprovider_controller.go": {
+    "mtime": 1777710526.7349353,
+    "hash": "e5764eb72993c56502b19243521b969e"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/rbacprofile_controller.go": {
+    "mtime": 1777710526.7365363,
+    "hash": "6e3924228d40fed2e853afec7947cbb1"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/apigroup_sweep_controller.go": {
+    "mtime": 1777714632.7669203,
+    "hash": "7de85893661f355917d8b7a063dc9f6f"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/auditsink_controller.go": {
+    "mtime": 1777710526.7318065,
+    "hash": "52b92f6718cb07797a1e2644ed0f4568"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/epg_controller.go": {
+    "mtime": 1777714069.8928897,
+    "hash": "14615670367b3bfde1fbcb80204bc450"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/permissionsnapshot_controller.go": {
+    "mtime": 1777710526.7354994,
+    "hash": "e94801157bf63a51541b4c0e912d696e"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/identityprovider_validation.go": {
+    "mtime": 1776708748.673019,
+    "hash": "3e25716460e94eb05f66bada068abf2d"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/tenant_snapshot_runnable.go": {
+    "mtime": 1777710526.7373517,
+    "hash": "afad008c0e814fda33a41db1c87924e8"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/tenant_profile_runnable.go": {
+    "mtime": 1777710526.7370486,
+    "hash": "3bac5dd5ff189b4a587ad7319086b864"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/cluster_rbacpolicy_controller.go": {
+    "mtime": 1777710526.7334852,
+    "hash": "bb92e734045358e44b4658454be10a0d"
+  },
+  "/home/saigha01/ontai/guardian/internal/controller/rbacprofile_validation.go": {
+    "mtime": 1777710526.7367885,
+    "hash": "3cf4e8ee4d1693ce6a0f937dcd63b9e7"
+  },
+  "/home/saigha01/ontai/guardian/internal/role/controllersets.go": {
+    "mtime": 1777714505.8589666,
+    "hash": "712285dff904c5ac5a40ff70ff16c7eb"
+  },
+  "/home/saigha01/ontai/guardian/internal/role/role.go": {
+    "mtime": 1775422538.3452091,
+    "hash": "125236d699a0fef71c2ec1ff426b2ca7"
+  },
+  "/home/saigha01/ontai/guardian/internal/permissionservice/store.go": {
+    "mtime": 1775286371.901354,
+    "hash": "3b2cafadf3ab0a78fcf4603ca89793a7"
+  },
+  "/home/saigha01/ontai/guardian/internal/permissionservice/server.go": {
+    "mtime": 1775286427.868611,
+    "hash": "6efb3c2c0cbbabf1d2f637da30a0286f"
+  },
+  "/home/saigha01/ontai/guardian/internal/permissionservice/service.go": {
+    "mtime": 1775286406.8285143,
+    "hash": "e3345f20330eaab81f752e0c18580815"
+  },
+  "/home/saigha01/ontai/guardian/config/crd/embed.go": {
+    "mtime": 1775391959.8529067,
+    "hash": "736f9bb22616efd8ebfcb74734cc3e07"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/permissionsnapshot_types.go": {
+    "mtime": 1776630455.8351462,
+    "hash": "c1955e116ce649845f81987ee8b6f108"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/lineage_conditions.go": {
+    "mtime": 1775406792.3594842,
+    "hash": "f0ad48f4a3b3c77dfe1ef47fc46281cd"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/groupversion_info.go": {
+    "mtime": 1775242374.8495343,
+    "hash": "a9bae19ae3895599d820c5bc548697b0"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/guardian_types.go": {
+    "mtime": 1777714461.7676482,
+    "hash": "6be9dfc63e3988c47158150545e168de"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/zz_generated.deepcopy.go": {
+    "mtime": 1776001019.0500925,
+    "hash": "7ba840635f1b7ea929aac21532b7a5d7"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/rbacprofile_types.go": {
+    "mtime": 1776001015.706066,
+    "hash": "36e53209374847c99bff57e4b681c333"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/identitybinding_types.go": {
+    "mtime": 1775326739.831821,
+    "hash": "7475f5e951b0298b79e6e7d35a80dc78"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/rbacpolicy_types.go": {
+    "mtime": 1775326712.8516786,
+    "hash": "05c2263dec14a18c56c61d4e54961764"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/conditions.go": {
+    "mtime": 1775222507.2990353,
+    "hash": "a6669b8ca9cd1519695d8acce871ef57"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/permissionsnapshotreceipt_types.go": {
+    "mtime": 1777710526.4702697,
+    "hash": "840612c73495f4110a7c629fd266a7d8"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/permissionset_types.go": {
+    "mtime": 1775326761.3479347,
+    "hash": "d2089ed811c82259b9753da6353052b7"
+  },
+  "/home/saigha01/ontai/guardian/api/v1alpha1/identityprovider_types.go": {
+    "mtime": 1775326749.324871,
+    "hash": "29ea1d72a810e873898017ac3825afe2"
+  },
+  "/home/saigha01/ontai/guardian/scripts/commit-msg": {
+    "mtime": 1775403229.2310703,
+    "hash": "32cda93944bd4b578032bdeed2b57ce3"
+  },
+  "/home/saigha01/ontai/scripts/commit-msg": {
+    "mtime": 1775403224.579015,
+    "hash": "32cda93944bd4b578032bdeed2b57ce3"
+  },
+  "/home/saigha01/ontai/seam-core/cmd/seam-core/main.go": {
+    "mtime": 1776718292.0412166,
+    "hash": "a16b9ea6a07081705783d43e7183ce2d"
+  },
+  "/home/saigha01/ontai/seam-core/internal/webhook/lineage_index_handler.go": {
+    "mtime": 1776540904.5963247,
+    "hash": "dd159ee47fcfa6dbd38d27ba447f4a64"
+  },
+  "/home/saigha01/ontai/seam-core/internal/webhook/rootbinding_immutability.go": {
+    "mtime": 1776540904.5964975,
+    "hash": "ff0427bfa3325ef09c510c0b9e4bc8c2"
+  },
+  "/home/saigha01/ontai/seam-core/internal/webhook/server.go": {
+    "mtime": 1776540904.596642,
+    "hash": "4ed90e5cc932bc50db585b27a7feec5b"
+  },
+  "/home/saigha01/ontai/seam-core/internal/webhook/domainref_validation.go": {
+    "mtime": 1776540904.596176,
+    "hash": "a2f33b5164497b459459289f0ad61753"
+  },
+  "/home/saigha01/ontai/seam-core/internal/webhook/authorship_gate.go": {
+    "mtime": 1776540904.5960202,
+    "hash": "6cd8dba2ee252e08d70196c38db806d4"
+  },
+  "/home/saigha01/ontai/seam-core/internal/controller/outcome_reconciler.go": {
+    "mtime": 1776763033.2126155,
+    "hash": "ffc7d7d6433206043b457fddc699205d"
+  },
+  "/home/saigha01/ontai/seam-core/internal/controller/descendant_reconciler.go": {
+    "mtime": 1777130698.8714867,
+    "hash": "d4c418f33bcc2c0e852499c70a638ca1"
+  },
+  "/home/saigha01/ontai/seam-core/internal/controller/dsns_reconciler.go": {
+    "mtime": 1777130742.2617893,
+    "hash": "f66173c994d9c4211bbfed82000e5a38"
+  },
+  "/home/saigha01/ontai/seam-core/internal/controller/lineage_controller.go": {
+    "mtime": 1777130707.355545,
+    "hash": "18de5c5036e0ba9b08ba1ba4898e28c6"
+  },
+  "/home/saigha01/ontai/seam-core/internal/dns/zone.go": {
+    "mtime": 1776540904.5958662,
+    "hash": "760c689b3365c92f9d1417c510fcd278"
+  },
+  "/home/saigha01/ontai/seam-core/internal/dns/configmap.go": {
+    "mtime": 1776540904.5950956,
+    "hash": "e453197b1dd6a35512cfb37b862df041"
+  },
+  "/home/saigha01/ontai/seam-core/internal/dns/sink_registry.go": {
+    "mtime": 1776540904.5954287,
+    "hash": "59c255328128ab18c488055b016f13d6"
+  },
+  "/home/saigha01/ontai/seam-core/internal/dns/state.go": {
+    "mtime": 1776540904.5955305,
+    "hash": "ef6cf1fab02c27ddcdcbaf35915c6a3c"
+  },
+  "/home/saigha01/ontai/seam-core/internal/dns/event.go": {
+    "mtime": 1776540904.5952916,
+    "hash": "b47db9ec3b1a898e3be2d4f13061d308"
+  },
+  "/home/saigha01/ontai/seam-core/pkg/e2e/registry.go": {
+    "mtime": 1776540904.5976202,
+    "hash": "113411e117f3fb4fdcd91061436c2d38"
+  },
+  "/home/saigha01/ontai/seam-core/pkg/e2e/applier.go": {
+    "mtime": 1776540904.5972455,
+    "hash": "39f08990cb126ca75192f5b454762f1b"
+  },
+  "/home/saigha01/ontai/seam-core/pkg/e2e/namespace.go": {
+    "mtime": 1776540904.597444,
+    "hash": "28a4505f4b3c653560d85f298a9cf64a"
+  },
+  "/home/saigha01/ontai/seam-core/pkg/e2e/client.go": {
+    "mtime": 1776540904.5973587,
+    "hash": "f94ce6f7268f2e9aab734ef4d186ffd6"
+  },
+  "/home/saigha01/ontai/seam-core/pkg/e2e/poller.go": {
+    "mtime": 1776540904.5975394,
+    "hash": "f61c44c060a9e218ec1a7a488963da49"
+  },
+  "/home/saigha01/ontai/seam-core/pkg/lineage/descendant.go": {
+    "mtime": 1776763033.2128844,
+    "hash": "5796b6abccb867f19cd4805ebbab4785"
+  },
+  "/home/saigha01/ontai/seam-core/pkg/lineage/rationale.go": {
+    "mtime": 1775338409.3203804,
+    "hash": "d4c85a8c070887f96b941759c27761bb"
+  },
+  "/home/saigha01/ontai/seam-core/pkg/lineage/chain.go": {
+    "mtime": 1775338409.3201208,
+    "hash": "db6862087f45bcdb0deff7f8a0cbc7c6"
+  },
+  "/home/saigha01/ontai/seam-core/pkg/conditions/validate.go": {
+    "mtime": 1777581353.1511204,
+    "hash": "8085f28ca9fe2d921fc04ddd0e5ce9a1"
+  },
+  "/home/saigha01/ontai/seam-core/pkg/conditions/conditions.go": {
+    "mtime": 1777707314.5274522,
+    "hash": "5a0e18b5dcf2f539bcfc16b06ebee520"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/embed.go": {
+    "mtime": 1776540904.593596,
+    "hash": "758fbfe9fbd9cb303a1cb88396cc154c"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/groupversion_info.go": {
+    "mtime": 1775338409.3191004,
+    "hash": "e4c1d6aa03522582b20bc13aa3c366ea"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/talosclusteroperationresult_types.go": {
+    "mtime": 1777646636.298099,
+    "hash": "e2c310e26d2d7e6bee7aea7273d31f26"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/packinstance_types.go": {
+    "mtime": 1777042983.9583519,
+    "hash": "4618d1210217e3fd8ecc060f7ccb499c"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/infrastructurelineageindex_types.go": {
+    "mtime": 1776763033.211291,
+    "hash": "ecd7ea591ba643b22fee05a673033492"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/packreceipt_types.go": {
+    "mtime": 1777642644.291402,
+    "hash": "6c48c4aa8ce39c4a680faf2815df68fe"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/clusterpack_types.go": {
+    "mtime": 1777628841.6230981,
+    "hash": "89a96554e85f62e4d9af04c3365a378d"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/packexecution_types.go": {
+    "mtime": 1777042929.8480692,
+    "hash": "31548d0b0faa03cce2ce1b0ff5fb1011"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/zz_generated.deepcopy.go": {
+    "mtime": 1777755911.69643,
+    "hash": "f56f790c7c75ac2f8e236f3b38c6e42b"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/runnerconfig_types.go": {
+    "mtime": 1777106546.23396,
+    "hash": "681dd6db12919be1c94e9d9ddd23dc0d"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/packoperationresult_types.go": {
+    "mtime": 1777629981.3038487,
+    "hash": "6d223c31741d0f9c154ea0c582ed6e4e"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/packbuild_types.go": {
+    "mtime": 1777042204.634467,
+    "hash": "489bcc0eaf9fc819bd28bf77c280abc8"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/seammembership_types.go": {
+    "mtime": 1776540904.5930524,
+    "hash": "1227b6d4b2bd9297fdf2a0cd12d94d09"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/taloscluster_types.go": {
+    "mtime": 1777755911.695616,
+    "hash": "cacf0af1b5c90e0a2bbe4cfa5582cb88"
+  },
+  "/home/saigha01/ontai/seam-core/api/v1alpha1/driftsignal_types.go": {
+    "mtime": 1777042204.634467,
+    "hash": "0de5ef426184235de5f161e3590f7968"
+  },
+  "/home/saigha01/ontai/seam-core/scripts/commit-msg": {
+    "mtime": 1776540904.5977855,
+    "hash": "32cda93944bd4b578032bdeed2b57ce3"
+  },
+  "/home/saigha01/ontai/platform/cmd/platform/main.go": {
+    "mtime": 1778064155.6454723,
+    "hash": "bd9d01467e2daa1c406184c053dc3331"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/nodeoperation_reconciler.go": {
+    "mtime": 1777710237.6195652,
+    "hash": "cd7c4de47904358c421841b7ccb92139"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/taloscluster_helpers.go": {
+    "mtime": 1778060562.3178065,
+    "hash": "ed56b0a10c938994b08ed4ac65f8b3c4"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/upgradepolicy_reconciler.go": {
+    "mtime": 1777710237.6268718,
+    "hash": "3c3212855fa51f968253b730d53ca71b"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/clustermaintenance_reconciler.go": {
+    "mtime": 1777710237.616937,
+    "hash": "a6b328ddb55d4c5274f6a01d0559ddb1"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/machineconfigbackup_reconciler.go": {
+    "mtime": 1778064133.29589,
+    "hash": "1783116a05a7072e2b41e75b08398b48"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/clusterreset_reconciler.go": {
+    "mtime": 1777710237.6175845,
+    "hash": "6ae71ac65190f480e71b27df3405525c"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/taloscluster_import_helpers.go": {
+    "mtime": 1778060574.1128974,
+    "hash": "ed36b6dd8cb74c928d3f1eebdbc24c4f"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/nodemaintenance_reconciler.go": {
+    "mtime": 1777710237.6191921,
+    "hash": "4ed013be51d13ad9114bfefda3136e09"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/operational_job_base.go": {
+    "mtime": 1777710237.620092,
+    "hash": "3fb58f668fe0c76e6752818ae7035739"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/taloscluster_controller.go": {
+    "mtime": 1778060597.785081,
+    "hash": "1bf980a1c59990d799bb6c5a513f2122"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/driftsignal_reconciler.go": {
+    "mtime": 1777905533.1771145,
+    "hash": "fed120f6ff145be85b201768ca004d9b"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/hardeningprofile_reconciler.go": {
+    "mtime": 1777710237.61815,
+    "hash": "bc79ad95297ed77a5e4fb4b3436f1029"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/runnerconfig_cr.go": {
+    "mtime": 1777710237.620992,
+    "hash": "021936b85dafeb756467bc83b6f60c19"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/etcdmaintenance_reconciler.go": {
+    "mtime": 1777716402.7456024,
+    "hash": "da29cbeec89308fc55133c9ae6b0e804"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/taloscluster_version_upgrade.go": {
+    "mtime": 1777710237.6256816,
+    "hash": "a50607e3630665a6a6bc4bd8b98714d0"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/pkirotation_reconciler.go": {
+    "mtime": 1777710237.6205385,
+    "hash": "7ab20da036dd29031e4ad059bfdcfadf"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/seaminfrastructuremachine_reconciler.go": {
+    "mtime": 1777710237.621762,
+    "hash": "2c7bec56eaae9402953daa6ac385577d"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/tcor_graphquery_stub.go": {
+    "mtime": 1777710237.6262116,
+    "hash": "deafb7b1773f34043ac057bd1a3e769d"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/pki_cert_helpers.go": {
+    "mtime": 1777718860.1274009,
+    "hash": "8e91d1616d87f50f54740042e8f3995e"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/seaminfrastructurecluster_reconciler.go": {
+    "mtime": 1777710237.6215823,
+    "hash": "39b9801f6fe8405005baee789da9653a"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/maintenancebundle_reconciler.go": {
+    "mtime": 1777710237.6184578,
+    "hash": "5fca40fb2fa1bb0509063b462c105c2c"
+  },
+  "/home/saigha01/ontai/platform/config/crd/embed.go": {
+    "mtime": 1775391957.5248928,
+    "hash": "512ee1088bba556e0c7255f9f6fa9a21"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/lineage_conditions.go": {
+    "mtime": 1775410201.547869,
+    "hash": "3c56c155573331c80a4f443b4243f8a5"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/clusterreset_types.go": {
+    "mtime": 1775379400.5895126,
+    "hash": "bd472da94785a0587036bfc4c347d213"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/groupversion_info.go": {
+    "mtime": 1775329328.050171,
+    "hash": "f76a150c92576e4d4f83b7a5e0b1b309"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/shared_types.go": {
+    "mtime": 1775379338.1192603,
+    "hash": "beb7ca1cf72bac7fc7c1ea6123cefa45"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/maintenancebundle_types.go": {
+    "mtime": 1775388768.383725,
+    "hash": "5a0d7f9791330c9345b9bbf914eef0d5"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/clustermaintenance_types.go": {
+    "mtime": 1775379482.6837714,
+    "hash": "f9fe01eeb497177e2f42f178b634ff4d"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/nodemaintenance_types.go": {
+    "mtime": 1775379361.53496,
+    "hash": "961b06539c09c464588240e47a10bc7b"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/upgradepolicy_types.go": {
+    "mtime": 1775379441.3811123,
+    "hash": "af50bc1d0b7c7eeff7d0bc60b70684df"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/pkirotation_types.go": {
+    "mtime": 1775379376.5227807,
+    "hash": "0ef5a1f28b54879074ba7b347cfd20a9"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/etcdmaintenance_types.go": {
+    "mtime": 1777710237.6143394,
+    "hash": "fce155fc81421476618b38ceee91803d"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/zz_generated.deepcopy.go": {
+    "mtime": 1778063956.8926334,
+    "hash": "bcff924b3c3afabc38985c62b53776e0"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/nodeoperation_types.go": {
+    "mtime": 1775379458.8129609,
+    "hash": "955fd90eb4cac7cc141d229c6026c2e9"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/conditions.go": {
+    "mtime": 1775329335.4442155,
+    "hash": "c438e4dc68a645ca8490f0807af9b28d"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/hardeningprofile_types.go": {
+    "mtime": 1777710237.61453,
+    "hash": "8e1ea4e06815aeda18c428a6c961ea20"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/capability_conditions.go": {
+    "mtime": 1777710237.6141827,
+    "hash": "b4f408db2df5c978cfe814155918213d"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/taloscluster_types.go": {
+    "mtime": 1777710237.6147661,
+    "hash": "4f6880fc416e1a72c0588759521403f7"
+  },
+  "/home/saigha01/ontai/platform/api/v1alpha1/machineconfigbackup_types.go": {
+    "mtime": 1778063938.8380678,
+    "hash": "be1b4f719fc8e48a8fc959e4a4dadceb"
+  },
+  "/home/saigha01/ontai/platform/api/infrastructure/v1alpha1/lineage_conditions.go": {
+    "mtime": 1775410208.572911,
+    "hash": "ebd2679005d5b6a7c25afd21cb8892c1"
+  },
+  "/home/saigha01/ontai/platform/api/infrastructure/v1alpha1/groupversion_info.go": {
+    "mtime": 1775330519.5785677,
+    "hash": "b4745a1a999109632aa5dc7ce9ca4cbf"
+  },
+  "/home/saigha01/ontai/platform/api/infrastructure/v1alpha1/zz_generated.deepcopy.go": {
+    "mtime": 1777107677.1318066,
+    "hash": "611cb0951a4c3da39618ae1e86dab352"
+  },
+  "/home/saigha01/ontai/platform/api/infrastructure/v1alpha1/seaminfrastructurecluster_types.go": {
+    "mtime": 1775330555.8476958,
+    "hash": "710f42812a472581118bf9d63f43eed6"
+  },
+  "/home/saigha01/ontai/platform/api/infrastructure/v1alpha1/conditions.go": {
+    "mtime": 1775330526.318591,
+    "hash": "639f8aee1acced63492c85ab0fccd7c1"
+  },
+  "/home/saigha01/ontai/platform/api/infrastructure/v1alpha1/seaminfrastructuremachine_types.go": {
+    "mtime": 1775400885.5289903,
+    "hash": "b0a82a9791ab40d1727aa5cc9b862ebc"
+  },
+  "/home/saigha01/ontai/platform/scripts/commit-msg": {
+    "mtime": 1775403229.2294571,
+    "hash": "32cda93944bd4b578032bdeed2b57ce3"
+  },
+  "/home/saigha01/ontai/CRD_OWNERSHIP_AUDIT.md": {
+    "mtime": 1777164762.3978171,
+    "hash": "35330013026915d2bfcc8393df702af3"
+  },
+  "/home/saigha01/ontai/CONTEXT.md": {
+    "mtime": 1778060757.078355,
+    "hash": "97d5d062188aa9a8e8548ec0631a8e81"
+  },
+  "/home/saigha01/ontai/AGENTS.md": {
+    "mtime": 1775337858.8821528,
+    "hash": "e733eca6982694f77e6046df6df29a5e"
+  },
+  "/home/saigha01/ontai/GIT_TRACKING.md": {
+    "mtime": 1777991214.4244003,
+    "hash": "103a2b46878b45214fff7aa1e8963123"
+  },
+  "/home/saigha01/ontai/index.html": {
+    "mtime": 1777829246.0912347,
+    "hash": "e710d787a76442e26cbbf697f760275e"
+  },
+  "/home/saigha01/ontai/PROGRESS.md": {
+    "mtime": 1778060745.1422575,
+    "hash": "c6b1ed5aa9a54bfba8b656752a21d624"
+  },
+  "/home/saigha01/ontai/CLAUDE.md": {
+    "mtime": 1777905331.3958004,
+    "hash": "a5aa2bf461d4f623265019b048dacf5c"
+  },
+  "/home/saigha01/ontai/BACKLOG.md": {
+    "mtime": 1778060721.8270679,
+    "hash": "903d59f587a27ccb5aa0f6438450b6f4"
+  },
+  "/home/saigha01/ontai/README.md": {
+    "mtime": 1776545219.3090088,
+    "hash": "5a5cbc0918c05e8e9b85c9efbf01bcd6"
+  },
+  "/home/saigha01/ontai/PROGRESS-archive-2026-04-20.md": {
+    "mtime": 1776668340.6922767,
+    "hash": "8b043db2171c26c052ff09db4880d64e"
+  },
+  "/home/saigha01/ontai/wrapper/CONTRIBUTING.md": {
+    "mtime": 1776520053.617521,
+    "hash": "2316928ae9e333166ddbbb9ad382a446"
+  },
+  "/home/saigha01/ontai/wrapper/AGENTS.md": {
+    "mtime": 1776538244.4006598,
+    "hash": "11d7a932bac9fd09767fa148e9c31e47"
+  },
+  "/home/saigha01/ontai/wrapper/wrapper-design.md": {
+    "mtime": 1776797408.657497,
+    "hash": "09635b3c3734f944922f3f703a11d520"
+  },
+  "/home/saigha01/ontai/wrapper/CLAUDE.md": {
+    "mtime": 1777713829.0215375,
+    "hash": "4fa8052cdfde00e3c3e533ddc0ae3b78"
+  },
+  "/home/saigha01/ontai/wrapper/README.md": {
+    "mtime": 1776538924.2591946,
+    "hash": "3c74f1585f6ce89fc112494836ac6f01"
+  },
+  "/home/saigha01/ontai/wrapper/docs/wrapper-schema.md": {
+    "mtime": 1777709646.8629096,
+    "hash": "b874b23d1c440de9ec3b557c45c0a41a"
+  },
+  "/home/saigha01/ontai/wrapper/config/crd/infrastructure.ontai.dev_infrastructurerunnerconfigs.yaml": {
+    "mtime": 1777709646.8618493,
+    "hash": "68c6d9053f3366cb31bacf3e2e2a7b72"
+  },
+  "/home/saigha01/ontai/wrapper/config/crd/infrastructure.ontai.dev_driftsignals.yaml": {
+    "mtime": 1777709646.8596811,
+    "hash": "b808efbb49ace1829aff6bcc007912f1"
+  },
+  "/home/saigha01/ontai/wrapper/config/crd/infrastructure.ontai.dev_infrastructurepackbuilds.yaml": {
+    "mtime": 1777709646.8605826,
+    "hash": "37784e320b00e415a42c8591f8667acb"
+  },
+  "/home/saigha01/ontai/wrapper/config/crd/infrastructure.ontai.dev_infrastructurepackexecutions.yaml": {
+    "mtime": 1777709646.8608496,
+    "hash": "d1dd068378aef7d1d4be3c66b4bf3883"
+  },
+  "/home/saigha01/ontai/wrapper/config/crd/infrastructure.ontai.dev_packoperationresults.yaml": {
+    "mtime": 1777709646.862475,
+    "hash": "8d2e722a91d7d9cdfe859bfad85ae4d7"
+  },
+  "/home/saigha01/ontai/wrapper/config/crd/infrastructure.ontai.dev_infrastructurepackreceipts.yaml": {
+    "mtime": 1777709646.8614733,
+    "hash": "53093b151529e5ce8b25c231fb35cbae"
+  },
+  "/home/saigha01/ontai/wrapper/config/crd/infrastructure.ontai.dev_infrastructureclusterpacks.yaml": {
+    "mtime": 1777709646.8601418,
+    "hash": "4dcf6cad99fb977f2f85a0124df91adc"
+  },
+  "/home/saigha01/ontai/wrapper/config/crd/infrastructure.ontai.dev_infrastructurepackinstances.yaml": {
+    "mtime": 1777709646.8612554,
+    "hash": "880412cf5694adc883ad6ba8a93b454f"
+  },
+  "/home/saigha01/ontai/docs/ont-platform-state.md": {
+    "mtime": 1776537653.6721056,
+    "hash": "c43b9bcf6917231c95dede4f2b344108"
+  },
+  "/home/saigha01/ontai/docs/ont-architectural-gaps.md": {
+    "mtime": 1776538244.4010012,
+    "hash": "6f6e3277e4a4842397bca42aed79d663"
+  },
+  "/home/saigha01/ontai/docs/where-to-find.md": {
+    "mtime": 1776452891.4356697,
+    "hash": "da59e7c14bdb603c11ae6ec0da8d8fce"
+  },
+  "/home/saigha01/ontai/docs/index.md": {
+    "mtime": 1776537653.6696546,
+    "hash": "cab4e60172eb1a5bd08d44685649aef4"
+  },
+  "/home/saigha01/ontai/docs/playbooks/compiler-usage.md": {
+    "mtime": 1777164762.3985538,
+    "hash": "248cf6b952bd0067704b8f403c0298af"
+  },
+  "/home/saigha01/ontai/docs/playbooks/vortex-retrieval-interface.md": {
+    "mtime": 1776537817.1686778,
+    "hash": "21ce6d19cfcb9b203db5958d5cc8e420"
+  },
+  "/home/saigha01/ontai/docs/playbooks/validation-framework.md": {
+    "mtime": 1776537817.165518,
+    "hash": "c104189381be3481156188c24ffd9f6e"
+  },
+  "/home/saigha01/ontai/docs/playbooks/cluster-is-the-documentation.md": {
+    "mtime": 1776613719.7518685,
+    "hash": "a01d1212e0349eb476d309382fda3b00"
+  },
+  "/home/saigha01/ontai/docs/playbooks/brownfield.md": {
+    "mtime": 1776537817.1568122,
+    "hash": "267ca0e395dcaea0e4e7eec17972d490"
+  },
+  "/home/saigha01/ontai/docs/decisions/ontar.md": {
+    "mtime": 1776537819.9346688,
+    "hash": "a6f4f87d9be1cfd299cdb151df973342"
+  },
+  "/home/saigha01/ontai/docs/history/ont-progress.md": {
+    "mtime": 1776538244.401267,
+    "hash": "ac1a34e81c86895475e7a46aa4d316c7"
+  },
+  "/home/saigha01/ontai/domain-core/CONTRIBUTING.md": {
+    "mtime": 1776520097.3997715,
+    "hash": "3e88ceae15c1226f4f5cf97e0cec430f"
+  },
+  "/home/saigha01/ontai/domain-core/CLAUDE.md": {
+    "mtime": 1776667780.526795,
+    "hash": "a847784f9f7736a6389bbf0e3f32e6c1"
+  },
+  "/home/saigha01/ontai/domain-core/README.md": {
+    "mtime": 1776539076.6643443,
+    "hash": "6158050411731f190b7eb97d88f88639"
+  },
+  "/home/saigha01/ontai/domain-core/docs/domain-core-schema.md": {
+    "mtime": 1776760457.5992188,
+    "hash": "ce084ebc15d362d56ee555504b314a21"
+  },
+  "/home/saigha01/ontai/domain-core/config/relationships/guardian-signs-conductor.yaml": {
+    "mtime": 1776001271.2740424,
+    "hash": "549898812159d147ccb4e742515fd5ec"
+  },
+  "/home/saigha01/ontai/domain-core/config/relationships/conductor-signs-clusterpack.yaml": {
+    "mtime": 1776001275.8130767,
+    "hash": "fc957b182ddcc106323649fe3a297450"
+  },
+  "/home/saigha01/ontai/domain-core/config/relationships/seam-core-tracks-lineage.yaml": {
+    "mtime": 1776001300.182261,
+    "hash": "d7a066a71da9256bd1726d3209498261"
+  },
+  "/home/saigha01/ontai/domain-core/config/relationships/guardian-provisions-rbacprofile.yaml": {
+    "mtime": 1776001291.5321958,
+    "hash": "8e68d612cad424c9a6bab80a84569996"
+  },
+  "/home/saigha01/ontai/domain-core/config/relationships/wrapper-creates-packexecution.yaml": {
+    "mtime": 1776001286.5181577,
+    "hash": "f77811e0f805d68c40c2f5a3144062be"
+  },
+  "/home/saigha01/ontai/domain-core/config/relationships/platform-creates-runnerconfig.yaml": {
+    "mtime": 1776001281.128117,
+    "hash": "2dc9afa0f230358878ab94e7d5cc7802"
+  },
+  "/home/saigha01/ontai/ontai-schema/index.html": {
+    "mtime": 1777762205.9206357,
+    "hash": "f55b1ff7993c2f922b96c5ab17de004e"
+  },
+  "/home/saigha01/ontai/ontai-schema/_config.yml": {
+    "mtime": 1776514046.0518382,
+    "hash": "2a2e68adbe9bb1d651cde50b212e62d3"
+  },
+  "/home/saigha01/ontai/ontai-schema/README.md": {
+    "mtime": 1777122179.8823862,
+    "hash": "502d0ae3ba7ea931ba9284dd20fc4aed"
+  },
+  "/home/saigha01/ontai/ontai-schema/CHANGELOG.md": {
+    "mtime": 1776790303.8085372,
+    "hash": "346c275d89ec17c716c7e8408d4dfa21"
+  },
+  "/home/saigha01/ontai/conductor/CONTRIBUTING.md": {
+    "mtime": 1776520069.6326125,
+    "hash": "ed2091b10bbbb4da4b4c1926bfe576ab"
+  },
+  "/home/saigha01/ontai/conductor/conductor-design.md": {
+    "mtime": 1776538242.381087,
+    "hash": "7c0e0ade3f105c21887894a41ad17f2e"
+  },
+  "/home/saigha01/ontai/conductor/AGENTS.md": {
+    "mtime": 1776538244.400771,
+    "hash": "f4a9f29cb5fd4b4794ef8a33f41a4033"
+  },
+  "/home/saigha01/ontai/conductor/CLAUDE.md": {
+    "mtime": 1777710104.5371895,
+    "hash": "9265223e9a15f55a342c957caa451deb"
+  },
+  "/home/saigha01/ontai/conductor/README.md": {
+    "mtime": 1776538926.489212,
+    "hash": "7f27799aae1bd836c2f67686791abc9f"
+  },
+  "/home/saigha01/ontai/conductor/docs/conductor-schema.md": {
+    "mtime": 1777710104.5472383,
+    "hash": "75a0b15ade2777028e4038f619175f81"
+  },
+  "/home/saigha01/ontai/conductor/docs/compiler-usage.md": {
+    "mtime": 1777762320.7840407,
+    "hash": "248cf6b952bd0067704b8f403c0298af"
+  },
+  "/home/saigha01/ontai/conductor/docs/onboarding-runbook.md": {
+    "mtime": 1777830283.5832946,
+    "hash": "85091e8d5b6e5376bb0c1b264501793c"
+  },
+  "/home/saigha01/ontai/conductor/docs/decisions/ontar.md": {
+    "mtime": 1777762320.7848449,
+    "hash": "a6f4f87d9be1cfd299cdb151df973342"
+  },
+  "/home/saigha01/ontai/conductor/docs/configs/packbuild-raw.yaml": {
+    "mtime": 1777762320.7844634,
+    "hash": "e341971025c471ef5299f3576d0293a7"
+  },
+  "/home/saigha01/ontai/conductor/docs/configs/packbuild-helm.yaml": {
+    "mtime": 1777762320.7844634,
+    "hash": "d56e792e14efdc4fd52f85244ba1d063"
+  },
+  "/home/saigha01/ontai/conductor/docs/configs/cluster-input-management.yaml": {
+    "mtime": 1777762320.7842457,
+    "hash": "a194390e4eb4f867a949eb1d94438089"
+  },
+  "/home/saigha01/ontai/conductor/docs/configs/packbuild-kustomize.yaml": {
+    "mtime": 1777762320.7844634,
+    "hash": "27daaaded87ad5cf1759383159f47a2d"
+  },
+  "/home/saigha01/ontai/conductor/docs/configs/cluster-input-tenant.yaml": {
+    "mtime": 1777828904.5971375,
+    "hash": "f7cf9673e286cb4ff27f59af1bb41d90"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/entries/cert-manager.yaml": {
+    "mtime": 1775389790.9061825,
+    "hash": "04432d12ff3a494f88c72352a98f3b8c"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/entries/local-path-provisioner.yaml": {
+    "mtime": 1775389797.9432116,
+    "hash": "c4dbdcb51f7aa908adfbf44c59499077"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/entries/cnpg.yaml": {
+    "mtime": 1775389772.4701073,
+    "hash": "dd8e191b75ff60acab09a8c9b79e6f3b"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/entries/cilium.yaml": {
+    "mtime": 1775389762.1640656,
+    "hash": "1541b3ccff4a1e5a90f159cae6bf4e1b"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/entries/kueue.yaml": {
+    "mtime": 1775389781.8901458,
+    "hash": "759f6b7d37b0f0d5bf6a64cde73698a0"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/capi/capi-core.yaml": {
+    "mtime": 1775484054.452517,
+    "hash": "da1d98f0cad206fbb051892556de8efc"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/capi/seam-infrastructure-crds.yaml": {
+    "mtime": 1775484100.2923536,
+    "hash": "5efde8a918ae95cea32596e6a5907e64"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/capi/capi-talos-controlplane.yaml": {
+    "mtime": 1775484089.9337263,
+    "hash": "8476ee783f7c091b0b76a717adedba7d"
+  },
+  "/home/saigha01/ontai/conductor/internal/catalog/capi/capi-talos-bootstrap.yaml": {
+    "mtime": 1775484077.5246532,
+    "hash": "ffe0f812518e116b1944b2bead7569b4"
+  },
+  "/home/saigha01/ontai/conductor/config/crd/infrastructure.ontai.dev_infrastructurerunnerconfigs.yaml": {
+    "mtime": 1777710104.5458117,
+    "hash": "68c6d9053f3366cb31bacf3e2e2a7b72"
+  },
+  "/home/saigha01/ontai/conductor/scripts/README.md": {
+    "mtime": 1776616928.4686298,
+    "hash": "f66832bf2f290a5dcbd5e47988fe4bba"
+  },
+  "/home/saigha01/ontai/guardian/CONTRIBUTING.md": {
+    "mtime": 1776520030.8983915,
+    "hash": "59bb7b5397e9bc555f9d75a6ff4debbe"
+  },
+  "/home/saigha01/ontai/guardian/AGENTS.md": {
+    "mtime": 1776538244.399888,
+    "hash": "367596745e14110d6e9f065730c5b614"
+  },
+  "/home/saigha01/ontai/guardian/CLAUDE.md": {
+    "mtime": 1777710526.4693658,
+    "hash": "65d266d25233b64de50815072298e90f"
+  },
+  "/home/saigha01/ontai/guardian/README.md": {
+    "mtime": 1776538920.2991636,
+    "hash": "04ab79dee2bfb181b4cfd06fb486df3c"
+  },
+  "/home/saigha01/ontai/guardian/guardian-design.md": {
+    "mtime": 1776538242.3797796,
+    "hash": "670e3e4f87d8cc9ae059728e2a9720a7"
+  },
+  "/home/saigha01/ontai/guardian/docs/guardian-schema.md": {
+    "mtime": 1777714724.9536426,
+    "hash": "44be3908b080c8379213951ca1b45534"
+  },
+  "/home/saigha01/ontai/guardian/config/webhook/operator-cr-validating-webhook-configuration.yaml": {
+    "mtime": 1777709645.8601084,
+    "hash": "5929c6aea2d3b367fc87bb0fb7edae1d"
+  },
+  "/home/saigha01/ontai/guardian/config/webhook/lineage-validating-webhook-configuration.yaml": {
+    "mtime": 1775760154.721367,
+    "hash": "5343a3e39e096e11c2c7a5262fa0901e"
+  },
+  "/home/saigha01/ontai/guardian/config/webhook/validating-webhook-configuration.yaml": {
+    "mtime": 1775760148.2953222,
+    "hash": "d78ab1f03a52370a0997741602952ea8"
+  },
+  "/home/saigha01/ontai/guardian/config/crd/security.ontai.dev_identitybindings.yaml": {
+    "mtime": 1777645478.7881494,
+    "hash": "8ce538ab60e34afecfd87b363ee4c0fc"
+  },
+  "/home/saigha01/ontai/guardian/config/crd/security.ontai.dev_permissionsnapshotreceipts.yaml": {
+    "mtime": 1777710526.4708836,
+    "hash": "c3e373cf2a7ee0041d57c0883aff9fe5"
+  },
+  "/home/saigha01/ontai/guardian/config/crd/security.ontai.dev_rbacprofiles.yaml": {
+    "mtime": 1777645478.7983422,
+    "hash": "f8ef755584cf5eb242551c789fd87ca7"
+  },
+  "/home/saigha01/ontai/guardian/config/crd/security.ontai.dev_guardians.yaml": {
+    "mtime": 1777645478.785342,
+    "hash": "8f8f552e8bc0b80a07b5d5f86cb4ca64"
+  },
+  "/home/saigha01/ontai/guardian/config/crd/security.ontai.dev_permissionsnapshots.yaml": {
+    "mtime": 1777710526.4711778,
+    "hash": "e25b1285ce8c1ee71be7d8c429936ddf"
+  },
+  "/home/saigha01/ontai/guardian/config/crd/security.ontai.dev_rbacpolicies.yaml": {
+    "mtime": 1777645478.7963421,
+    "hash": "2d6d74439aa62b7e9c677631473db8e3"
+  },
+  "/home/saigha01/ontai/guardian/config/crd/security.ontai.dev_permissionsets.yaml": {
+    "mtime": 1777645478.791342,
+    "hash": "3eb23e32219c54ee50b8d47200f814af"
+  },
+  "/home/saigha01/ontai/guardian/config/crd/security.ontai.dev_identityproviders.yaml": {
+    "mtime": 1777645478.7893422,
+    "hash": "bb078caeb0d9315dfe32e7042fb96119"
+  },
+  "/home/saigha01/ontai/app-core/CONTRIBUTING.md": {
+    "mtime": 1776538314.7682574,
+    "hash": "469076d64f0047525f1db00acbcd48be"
+  },
+  "/home/saigha01/ontai/app-core/README.md": {
+    "mtime": 1776538305.3101377,
+    "hash": "ff28226cd6c4644cc2168381cd1fcb9b"
+  },
+  "/home/saigha01/ontai/app-core/docs/app-core-schema.md": {
+    "mtime": 1776538342.0515957,
+    "hash": "9cae7ffb217a66ead8a1d6e5cf583de7"
+  },
+  "/home/saigha01/ontai/seam-core/CONTRIBUTING.md": {
+    "mtime": 1776540904.592073,
+    "hash": "06cad52170e2f0ce0a42b39bfa11e18f"
+  },
+  "/home/saigha01/ontai/seam-core/CLAUDE.md": {
+    "mtime": 1777121953.105695,
+    "hash": "ed65a047f0b444e6157a59ee553a024a"
+  },
+  "/home/saigha01/ontai/seam-core/README.md": {
+    "mtime": 1776540904.5926573,
+    "hash": "e47cb620ba439012ceaa22391ee03140"
+  },
+  "/home/saigha01/ontai/seam-core/docs/seam-core-schema.md": {
+    "mtime": 1777630240.7591155,
+    "hash": "a9f661fed715c9427fdbe00ef602d573"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_infrastructurerunnerconfigs.yaml": {
+    "mtime": 1777673967.1828856,
+    "hash": "68c6d9053f3366cb31bacf3e2e2a7b72"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_driftsignals.yaml": {
+    "mtime": 1777673967.1658857,
+    "hash": "b808efbb49ace1829aff6bcc007912f1"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_infrastructurepackbuilds.yaml": {
+    "mtime": 1777673967.1738856,
+    "hash": "37784e320b00e415a42c8591f8667acb"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_infrastructurepackexecutions.yaml": {
+    "mtime": 1777673967.1748855,
+    "hash": "d1dd068378aef7d1d4be3c66b4bf3883"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_infrastructuretalosclusters.yaml": {
+    "mtime": 1777673967.1868856,
+    "hash": "45b93430e06f411eea39dcfb8d3460d2"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_infrastructurelineageindices.yaml": {
+    "mtime": 1777673967.1718855,
+    "hash": "4a51de28c92e0b9ffe45ca417e357dc7"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_packoperationresults.yaml": {
+    "mtime": 1777673967.1888855,
+    "hash": "1ea69fb5307529e0e3fa33126520e417"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_infrastructurepackreceipts.yaml": {
+    "mtime": 1777673967.1788855,
+    "hash": "25b52b1df6822722b57492ade80f604c"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_infrastructuretalosclusteroperationresults.yaml": {
+    "mtime": 1777673967.1882198,
+    "hash": "391ec81f2905781605b03f63ca8bdaba"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_seammemberships.yaml": {
+    "mtime": 1777673967.1898856,
+    "hash": "d973ccf971478a25ebe0b3a654ab7fd7"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_infrastructureclusterpacks.yaml": {
+    "mtime": 1777673967.1688857,
+    "hash": "977cb883bb3fd1d39ab1a600a6aa7767"
+  },
+  "/home/saigha01/ontai/seam-core/config/crd/infrastructure.ontai.dev_infrastructurepackinstances.yaml": {
+    "mtime": 1777673967.1768856,
+    "hash": "880412cf5694adc883ad6ba8a93b454f"
+  },
+  "/home/saigha01/ontai/platform/CONTRIBUTING.md": {
+    "mtime": 1776520045.4374743,
+    "hash": "1b97a5b91f32c14cefd604b8839a7dae"
+  },
+  "/home/saigha01/ontai/platform/AGENTS.md": {
+    "mtime": 1776538244.4004254,
+    "hash": "b493919498c8208b37cdf9c4c72ec7ea"
+  },
+  "/home/saigha01/ontai/platform/platform-design.md": {
+    "mtime": 1776538242.3804913,
+    "hash": "20193249c1c120f46b31d36d55e2ec4c"
+  },
+  "/home/saigha01/ontai/platform/CLAUDE.md": {
+    "mtime": 1777971953.9263208,
+    "hash": "f54d736ebb1f60550afb359d5591f6d7"
+  },
+  "/home/saigha01/ontai/platform/README.md": {
+    "mtime": 1776538922.36618,
+    "hash": "409016aeddb52c8401c81a1acbd6a3dc"
+  },
+  "/home/saigha01/ontai/platform/docs/platform-schema.md": {
+    "mtime": 1777719131.8295982,
+    "hash": "fac7346bfb9f7a7810813c5bd53518a1"
+  },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_clustermaintenances.yaml": {
+    "mtime": 1777107677.465806,
+    "hash": "1071cbf42c24f6be0f63906752cee805"
+  },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_maintenancebundles.yaml": {
+    "mtime": 1777107677.492806,
+    "hash": "365941182a7c17415093e01c5850fcd2"
+  },
+  "/home/saigha01/ontai/platform/config/crd/infrastructure.cluster.x-k8s.io_seaminfrastructureclusters.yaml": {
+    "mtime": 1777107677.497806,
+    "hash": "a2144e47f85062ab3369470a8f324ae2"
+  },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_etcdmaintenances.yaml": {
+    "mtime": 1777710237.6158893,
+    "hash": "a8860c19419072607cfde98db80fc2e6"
+  },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_nodeoperations.yaml": {
+    "mtime": 1777107677.495806,
+    "hash": "7df9dabaacdf2c61229fd2751a978512"
+  },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_nodemaintenances.yaml": {
+    "mtime": 1777107677.494806,
+    "hash": "0fc9dc6e2771718280fd03d28bd9347d"
+  },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_upgradepolicies.yaml": {
+    "mtime": 1777107677.504806,
+    "hash": "8e0a8c09b5efe79e7d14bcd622afc35b"
+  },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_clusterresets.yaml": {
+    "mtime": 1777107677.466806,
+    "hash": "ec114c0f5296bb5ac9957581d0996d43"
+  },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_pkirotations.yaml": {
+    "mtime": 1777107677.496806,
+    "hash": "e8d887e64a50f1fca4df555ac6d75068"
+  },
+  "/home/saigha01/ontai/platform/config/crd/infrastructure.cluster.x-k8s.io_seaminfrastructuremachines.yaml": {
+    "mtime": 1777107677.500806,
+    "hash": "e9631c2b7760209931706d011f4c5df3"
+  },
+  "/home/saigha01/ontai/platform/config/crd/infrastructure.cluster.x-k8s.io_seaminfrastructuremachinetemplates.yaml": {
+    "mtime": 1777107677.502806,
+    "hash": "cf4cf5ca5f7508667babe6ad2f9760a7"
+  },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_hardeningprofiles.yaml": {
+    "mtime": 1777710237.616069,
+    "hash": "3b630d5a3070694a613daec4c9e621e5"
+  },
+  "/home/saigha01/ontai/branding/naming-conventions.md": {
+    "mtime": 1775222291.742723,
+    "hash": "4994aedb4be78c10193695f5b4be54fd"
+  },
+  "/home/saigha01/ontai/branding/crd-registry.md": {
+    "mtime": 1775222291.7457268,
+    "hash": "ac3c2cc41ec101844207b77641d7dc78"
+  },
+  "/home/saigha01/ontai/branding/operator-registry.md": {
+    "mtime": 1775222317.1347928,
+    "hash": "a7b39226797a4ad7680d12c521f794e7"
+  },
+  "/home/saigha01/ontai/branding/philosophy.md": {
+    "mtime": 1775222291.7519155,
+    "hash": "59995308edf0bb7880629c81e9e0a792"
+  },
+  "/home/saigha01/ontai/docs/assets/ont-architecture.pdf": {
+    "mtime": 1776523902.3831768,
+    "hash": "4673182aada8d6df9c8141d78db7352c"
+  }
+}

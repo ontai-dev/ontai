@@ -13,7 +13,7 @@ CODEBASE.md files have been removed from all repos. The graphify knowledge graph
 ### Production graph (no test files)
 
 **Graph location:** `~/ontai/graphify-out/graph.json`
-**Last built:** May 5, 2026 (session/22) -- 2,755 nodes, 4,248 links, 266 communities
+**Last built:** May 6, 2026 (session/24b) -- 2,785 nodes, 4,382 links, 261 communities
 **Source files:** production Go code only; test files excluded via `.graphifyignore`
 **Report:** `~/ontai/graphify-out/GRAPH_REPORT.md`
 
@@ -22,7 +22,7 @@ Use this graph for all production codebase queries: reconciler logic, CRD types,
 ### Test graph (test files only)
 
 **Graph location:** `~/ontai/graphify-tests-out/graph.json`
-**Last built:** May 5, 2026 (session/23) -- 2,247 nodes, 4,914 links, 165 communities
+**Last built:** May 6, 2026 (session/24b) -- 2,274 nodes, 4,950 links
 **Source files:** `*_test.go` and `test/` directories across all repos
 **Builder script:** `~/ontai/graphify-tests.py` (run with `python graphify-tests.py` from ontai root)
 

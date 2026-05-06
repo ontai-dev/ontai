@@ -54,6 +54,53 @@
 
 ---
 
+## Session/24 (2026-05-06) -- Bootstrap cleanup implemented
+
+Three platform defects fixed and one machineconfig framing corrected. All unit + integration tests green. Both graphify graphs rebuilt.
+
+**`PLATFORM-BL-TALOSCONFIG-ONTYSYSTEM-REMOVE` (closed)**
+`ensureExecutorTalosconfig` now copies talosconfig only to `seam-tenant-{cluster}`. Removed the `ont-system` destination: day-2 executor Jobs run in `seam-tenant-{cluster}` and mount from that namespace (`operational_job_base.go:L64`). The conductor agent Deployment reads `TALOSCONFIG_PATH` from the enable bundle -- not from this copy.
+
+**`PLATFORM-BL-KUBECONFIG-CANONICAL` (closed)**
+Canonical kubeconfig is now `seam-mc-{cluster}-kubeconfig` everywhere:
+- Deleted `tenantKubeconfigSecretName` constant and `ensureTenantKubeconfigCopy` from `taloscluster_import_helpers.go`
+- Added `ensureCAPIKubeconfig` helper in `taloscluster_helpers.go`
+- `EnsureRemoteConductorBootstrap` reads `kubeconfigSecretName(tc.Name)` for both import and CAPI paths (no mode bifurcation)
+- `platform_security.go` PKI rotation writes only `seam-mc-{cluster}-kubeconfig`
+- e2e test `pkirotation_e2e_test.go` checks canonical name
+
+**`PLATFORM-BL-CAPI-TENANT-ONBOARDING` (closed)**
+Added step 8.5 in `reconcileCAPIPath` (`taloscluster_controller.go`) after CAPI Running confirmed:
+1. `ensureCAPITalosconfig`: copies `{cluster}-talosconfig` (TALM output) → `seam-mc-{cluster}-talosconfig`
+2. `ensureCAPIKubeconfig`: copies `{cluster}-kubeconfig` (CAPI output) → `seam-mc-{cluster}-kubeconfig`
+3. `ensureTenantOnboarding`: registers RBACPolicy, 4 RBACProfiles, LocalQueue, platform-executor SA/RBAC, wrapper-runner SA/RBAC
+
+**Machineconfig reframe (`PLATFORM-BL-MACHINECONFIG-BACKUP`)**
+`hardeningApplyHandler` and `kubeUpgradeHandler` confirmed to use live Talos API (`GetMachineConfig` + `ApplyConfiguration`) -- no stored machineconfig secrets are read by any day-2 op. The `PLATFORM-BL-MACHINECONFIG-IMPORT-CAPTURE` framing was wrong. Replaced with `PLATFORM-BL-MACHINECONFIG-BACKUP`: new conductor capability + `TalosMachineConfigBackup` CRD storing `{bucket}/{cluster}/machineconfigs/{TIMESTAMP}/{hostname}.yaml`, mirroring the etcd backup structure.
+
+**`PLATFORM-BL-MACHINECONFIG-BACKUP` (closed)**
+`machineconfig-backup` Conductor capability added in `platform_machineconfig.go`. Reads each node's running config via `GetMachineConfig` (per-node `NodeContext` + `EndpointsFromTalosconfig` for production, single-node fallback for tests), uploads to S3 at `{cluster}/machineconfigs/{TIMESTAMP}/{hostname}.yaml`. Hostname extracted from config YAML; falls back to sanitized node IP when absent. `TalosMachineConfigBackup` CRD added to platform API (`machineconfigbackup_types.go`), DeepCopy methods added to `zz_generated.deepcopy.go`. `MachineConfigBackupReconciler` mirrors `EtcdMaintenanceReconciler`: RunnerConfig gate, S3 credential projection via new generic `ensureS3EnvSecretFor`/`resolveS3BackupSecretRef` helpers in `s3_env_secret.go`. Reconciler registered in `main.go`. 5 unit tests pass. `machineconfig-restore` deferred.
+
+**Graph stats:** Production 2,785 nodes / 4,382 links; Test 2,274 nodes / 4,950 links.
+
+---
+
+## Session/23b (2026-05-05) -- Bootstrap gap analysis
+
+Queried graphify and read source to map the CAPI tenant cluster bootstrap gap against the working import path.
+
+**Finding:** `reconcileCAPIPath` creates the `seam-tenant-{cluster}` namespace and deploys conductor but never calls `ensureTenantOnboarding`. Three concrete missing steps identified and captured as `PLATFORM-BL-CAPI-TENANT-ONBOARDING` (high priority):
+
+1. **Talosconfig name translation** -- `{cluster}-talosconfig` (TalosControlPlane output) must be copied to `seam-mc-{cluster}-talosconfig` before `ensureExecutorTalosconfig` is called; otherwise it silently no-ops and day-2 Jobs that need talosconfig fail.
+2. **Kubeconfig canonical name** -- `{cluster}-kubeconfig` (CAPI output) must be copied to `target-cluster-kubeconfig` in `seam-tenant-{cluster}`; conductor-execute Jobs mount this fixed name (`platform_security.go:L183`).
+3. **Full tenant onboarding** -- `ensureTenantOnboarding` is never called: RBACPolicy, 4 RBACProfiles, LocalQueue, platform-executor SA/Role/RoleBinding, wrapper-runner SA/Role/RoleBinding all absent, blocking pack delivery and all day-2 ops.
+
+**Management cluster bootstrap (`reconcileDirectBootstrap`, mode=bootstrap):** Confirmed complete. Namespace, talosconfig, kubeconfig, RBAC, and Ready transition all handled correctly via `ensureManagementOnboarding`.
+
+**Machineconfig capture** (`PLATFORM-BL-MACHINECONFIG-IMPORT-CAPTURE`) updated to cover both import and CAPI paths; gates on `PLATFORM-BL-CAPI-TENANT-ONBOARDING` closing first.
+
+---
+
 ## Session/23 (2026-05-05)
 
 Two tasks:
