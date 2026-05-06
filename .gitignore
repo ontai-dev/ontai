@@ -41,4 +41,7 @@ Thumbs.db
 # Graphify knowledge graph — source of truth for all agents
 !graphify-out/
 !graphify-out/**
+
+# Graphify test graph — generated output, not committed
+graphify-tests-out/
 guardian-db-credentials.yaml
