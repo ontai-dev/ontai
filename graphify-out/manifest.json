@@ -712,8 +712,8 @@
     "hash": "8085f28ca9fe2d921fc04ddd0e5ce9a1"
   },
   "/home/saigha01/ontai/seam-core/pkg/conditions/conditions.go": {
-    "mtime": 1777707314.5274522,
-    "hash": "5a0e18b5dcf2f539bcfc16b06ebee520"
+    "mtime": 1778072987.6039186,
+    "hash": "6988683c0cf83e50a70f8a0baac13f0c"
   },
   "/home/saigha01/ontai/seam-core/config/crd/embed.go": {
     "mtime": 1776540904.593596,
@@ -748,8 +748,8 @@
     "hash": "31548d0b0faa03cce2ce1b0ff5fb1011"
   },
   "/home/saigha01/ontai/seam-core/api/v1alpha1/zz_generated.deepcopy.go": {
-    "mtime": 1777755911.69643,
-    "hash": "f56f790c7c75ac2f8e236f3b38c6e42b"
+    "mtime": 1778072962.8553188,
+    "hash": "29e0214d344bbd794ba841b0ffed6dfa"
   },
   "/home/saigha01/ontai/seam-core/api/v1alpha1/runnerconfig_types.go": {
     "mtime": 1777106546.23396,
@@ -768,8 +768,8 @@
     "hash": "1227b6d4b2bd9297fdf2a0cd12d94d09"
   },
   "/home/saigha01/ontai/seam-core/api/v1alpha1/taloscluster_types.go": {
-    "mtime": 1777755911.695616,
-    "hash": "cacf0af1b5c90e0a2bbe4cfa5582cb88"
+    "mtime": 1778072955.0956771,
+    "hash": "902b4ea27ac6ce033fac4f814b71b4d4"
   },
   "/home/saigha01/ontai/seam-core/api/v1alpha1/driftsignal_types.go": {
     "mtime": 1777042204.634467,
@@ -788,8 +788,8 @@
     "hash": "cd7c4de47904358c421841b7ccb92139"
   },
   "/home/saigha01/ontai/platform/internal/controller/taloscluster_helpers.go": {
-    "mtime": 1778060562.3178065,
-    "hash": "ed56b0a10c938994b08ed4ac65f8b3c4"
+    "mtime": 1778073010.6930902,
+    "hash": "5b3c59dc3fc81b9a66aa9df7fac7fd88"
   },
   "/home/saigha01/ontai/platform/internal/controller/upgradepolicy_reconciler.go": {
     "mtime": 1777710237.6268718,
@@ -820,8 +820,8 @@
     "hash": "3fb58f668fe0c76e6752818ae7035739"
   },
   "/home/saigha01/ontai/platform/internal/controller/taloscluster_controller.go": {
-    "mtime": 1778060597.785081,
-    "hash": "1bf980a1c59990d799bb6c5a513f2122"
+    "mtime": 1778073030.1022346,
+    "hash": "9af4f7660df3d4bb6da37518fcebddc7"
   },
   "/home/saigha01/ontai/platform/internal/controller/driftsignal_reconciler.go": {
     "mtime": 1777905533.1771145,
@@ -854,6 +854,10 @@
   "/home/saigha01/ontai/platform/internal/controller/tcor_graphquery_stub.go": {
     "mtime": 1777710237.6262116,
     "hash": "deafb7b1773f34043ac057bd1a3e769d"
+  },
+  "/home/saigha01/ontai/platform/internal/controller/taloscluster_bootstrap_hardening.go": {
+    "mtime": 1778073049.4383786,
+    "hash": "e959f30f77d904d73f85d3a3236c0c8e"
   },
   "/home/saigha01/ontai/platform/internal/controller/pki_cert_helpers.go": {
     "mtime": 1777718860.1274009,
@@ -932,8 +936,8 @@
     "hash": "b4f408db2df5c978cfe814155918213d"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/taloscluster_types.go": {
-    "mtime": 1777710237.6147661,
-    "hash": "4f6880fc416e1a72c0588759521403f7"
+    "mtime": 1778072995.9349804,
+    "hash": "ee81e8ba688cb3caa8138250e4d5269f"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/machineconfigbackup_types.go": {
     "mtime": 1778063938.8380678,
@@ -972,8 +976,8 @@
     "hash": "35330013026915d2bfcc8393df702af3"
   },
   "/home/saigha01/ontai/CONTEXT.md": {
-    "mtime": 1778060757.078355,
-    "hash": "97d5d062188aa9a8e8548ec0631a8e81"
+    "mtime": 1778064368.8869727,
+    "hash": "fa62102e7dfcfa849991c7fd0edcd632"
   },
   "/home/saigha01/ontai/AGENTS.md": {
     "mtime": 1775337858.8821528,
@@ -988,16 +992,16 @@
     "hash": "e710d787a76442e26cbbf697f760275e"
   },
   "/home/saigha01/ontai/PROGRESS.md": {
-    "mtime": 1778060745.1422575,
-    "hash": "c6b1ed5aa9a54bfba8b656752a21d624"
+    "mtime": 1778064360.4050975,
+    "hash": "847fdf575bdb714b02fa929f7ca8587d"
   },
   "/home/saigha01/ontai/CLAUDE.md": {
     "mtime": 1777905331.3958004,
     "hash": "a5aa2bf461d4f623265019b048dacf5c"
   },
   "/home/saigha01/ontai/BACKLOG.md": {
-    "mtime": 1778060721.8270679,
-    "hash": "903d59f587a27ccb5aa0f6438450b6f4"
+    "mtime": 1778064348.4082756,
+    "hash": "bf0c9d9c3d56142a3133a60e950b2479"
   },
   "/home/saigha01/ontai/README.md": {
     "mtime": 1776545219.3090088,

@@ -1,11 +1,11 @@
 # ONT Platform Progress
 
-**Last updated:** 2026-05-05 (session/23)
+**Last updated:** 2026-05-06 (session/24b)
 **Full session archive:** PROGRESS-archive-2026-04-20.md
 
 > Understand the codebase through graphify, not this file:
-> - Production graph: `~/ontai/graphify-out/graph.json` -- 2,755 nodes, 4,248 links, 266 communities
-> - Test graph: `~/ontai/graphify-tests-out/graph.json` -- 2,247 nodes, 4,914 links, 165 communities
+> - Production graph: `~/ontai/graphify-out/graph.json` -- 2,787 nodes, 4,383 links, 266 communities
+> - Test graph: `~/ontai/graphify-tests-out/graph.json` -- 2,282 nodes, 4,968 links
 > - Build test graph: `python graphify-tests.py` from ontai root
 > - Update production graph: `/graphify --update` from ontai root after any code change
 
@@ -51,6 +51,24 @@
 | ccs-mgmt | Partially degraded -- cp3 NotReady, Talos API down | Conductor pod CrashLoopBackOff; blocks MGMT-HP-NODE e2e |
 | ccs-dev (10.20.0.20) | Unreachable | Blocks all TENANT day-2 e2e: HP-CLUSTER, HP-NODE, PKI-CLUSTER-REACH |
 | drift-k8s-version-ccs-dev | DriftSignal queued | Corrective UpgradePolicy exists targeting k8s 1.32.3; Job not yet run. Confirm or update spec. |
+
+---
+
+## Session/24b (2026-05-06) -- HardeningProfile bootstrap support
+
+`PLATFORM-BL-HARDENINGPROFILE-MERGE` implemented end to end. All unit + integration tests green. Both graphs rebuilt.
+
+**ontai-schema:** `hardeningProfileRef` (optional LocalObjectRef) added to `InfrastructureTalosCluster.json`. `HardeningApplied` added to status conditions list.
+
+**seam-core:** `HardeningProfileRef *InfrastructureLocalObjectRef` field added to `InfrastructureTalosClusterSpec` in `taloscluster_types.go`. `DeepCopyInto` updated. `ConditionTypeHardeningApplied`, `ReasonHardeningApplied`, `ReasonHardeningPending`, `ReasonHardeningProfileNotValid` added to `seam-core/pkg/conditions/conditions.go`.
+
+**platform CAPI path:** `ensureTalosConfigTemplate` now reads `HardeningProfile` when `hardeningProfileRef` is set: merges `SysctlParams` into the CP-INV-009 base sysctl map, parses and appends `MachineConfigPatches` as JSON patch objects. `reconcileCAPIPath` sets `HardeningApplied=True` after the template step when profile is referenced.
+
+**platform ONT-native path:** `ensureBootstrapHardening` in `taloscluster_bootstrap_hardening.go`. Called from main reconcile loop (Step G) after route result, for non-CAPI Ready clusters with `hardeningProfileRef` set. Creates `NodeMaintenance` (operation=hardening-apply, label `ontai.dev/hardening-trigger=bootstrap`) in `seam-tenant-{cluster}`. Sets `HardeningApplied=False/HardeningPending` while pending; `HardeningApplied=True` when `NodeMaintenance.Ready=True`. Validates `HardeningProfile.Valid=True` before creation. Returns `RequeueAfter: 30s` while pending.
+
+**4 unit tests:** NilRef, CreatesNodeMaintenance, NoDuplicate, SetsAppliedWhenReady -- all pass.
+
+**Graph stats:** Production 2,787 nodes / 4,383 links; Test 2,282 nodes / 4,968 links.
 
 ---
 

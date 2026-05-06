@@ -1,6 +1,6 @@
 # ONT Platform: Backlog
 
-**Last updated:** 2026-05-06 (session/24 -- bootstrap cleanup: talosconfig ont-system remove, kubeconfig canonical rename, machineconfig reframe)
+**Last updated:** 2026-05-06 (session/24b -- HardeningProfile bootstrap support: ontai-schema, seam-core type, conditions, CAPI template merge, ONT-native NodeMaintenance flow)
 
 > Before acting on any item here, query the production knowledge graph:
 > `/graphify query "<item description>" --graph ~/ontai/graphify-out/graph.json`
@@ -22,7 +22,6 @@
 |----|-----------|-------------|----------------|
 | DAY2-OPS-TENANT | conductor, platform | Remaining live day-2 validation gaps. Blocked on infrastructure: ccs-dev (10.20.0.20) unreachable, ccs-mgmt cp3 NotReady. Once infra recovers: TENANT-HP-CLUSTER, TENANT-HP-NODE, TENANT-PKI-CLUSTER-REACH re-run required. MGMT-HP-NODE blocked on MGMT-HP-NODE-DESIGN decision below. Passed in session/17: MGMT-HP-CLUSTER, MGMT-HP-PROFILE, TENANT-HP-PROFILE, TENANT-PKI-ROTATE. | `query "hardeningApplyHandler TalosCluster e2e"` |
 | MGMT-HP-NODE-DESIGN | conductor, platform | `mgmtWorkerNode = "ccs-mgmt-w2"` hardcoded in `platform/test/e2e/day2/hardeningprofile_e2e_test.go` does not exist on ccs-mgmt. Decision required: either update the test to an existing node name, or implement per-target-node filtering in `hardeningApplyHandler` so `TargetNodes` in `NodeMaintenanceSpec` drives which endpoints receive `ApplyConfiguration`. Session/22 fixed the VIP destruction bug (ClusterEndpoint filtering + waitForNodeStable) but did not add per-node selection. | `query "hardeningApplyHandler TargetNodes NodeMaintenanceSpec"` |
-| PLATFORM-BL-HARDENINGPROFILE-MERGE | platform | `HardeningProfileRef` field is absent from `InfrastructureTalosClusterSpec`. `TalosConfigTemplate` cannot merge `HardeningProfile` patches at cluster bootstrap time. Decision 11: schema PR to ontai-schema required before any implementation. Governor session required to draft the field and approve the schema PR. | `query "HardeningProfileRef TalosClusterSpec bootstrap machineconfig"` |
 | K8S-DRIFT-CONFIRM | platform, conductor | `drift-k8s-version-ccs-dev` DriftSignal was queued in session/18 (nodes were at v1.32.4 after out-of-band upgrade). Corrective `UpgradePolicy` `drift-k8s-version-ccs-dev` exists in `seam-tenant-ccs-dev` targeting kubernetesVersion=1.32.3. UpgradePolicyReconciler must submit a kube-upgrade Job. If keeping 1.32.4 is intentional, update `spec.kubernetesVersion` in TalosCluster and delete the DriftSignal. Either close or confirm. | `query "drift-k8s-version UpgradePolicy kube-upgrade DriftSignalReconciler"` |
 
 ---
@@ -75,6 +74,7 @@
 
 | ID | Component | Closed | Resolution |
 |----|-----------|--------|------------|
+| PLATFORM-BL-HARDENINGPROFILE-MERGE | platform, seam-core | 2026-05-06 | `hardeningProfileRef` added to `InfrastructureTalosClusterSpec` (schema + seam-core type). CAPI path: `ensureTalosConfigTemplate` merges `MachineConfigPatches` + `SysctlParams` into `TalosConfigTemplate` at provisioning; sets `HardeningApplied=True`. ONT-native path: `ensureBootstrapHardening` creates `NodeMaintenance` (operation=hardening-apply, label `ontai.dev/hardening-trigger=bootstrap`) in `seam-tenant-{cluster}` post-Ready; sets `HardeningApplied=True` when `NodeMaintenance` reaches `Ready=True`. `ConditionTypeHardeningApplied` added to seam-core/pkg/conditions. 4 unit tests pass. |
 | PLATFORM-BL-MACHINECONFIG-BACKUP | platform, conductor | 2026-05-06 | `machineconfig-backup` conductor capability implemented. Iterates nodes via `EndpointsFromTalosconfig` + `NodeContext`, calls `GetMachineConfig` per node, uploads to S3 at `{cluster}/machineconfigs/{TIMESTAMP}/{hostname}.yaml`. `TalosMachineConfigBackup` CRD added to platform API. `MachineConfigBackupReconciler` registered. 5 unit tests pass. `machineconfig-restore` deferred to next session (restore capability + `TalosMachineConfigRestore` CRD). |
 | PLATFORM-BL-TALOSCONFIG-ONTYSYSTEM-REMOVE | platform | 2026-05-06 | Removed `ont-system` from `ensureExecutorTalosconfig` loop (`taloscluster_helpers.go`). Day-2 Jobs run in `seam-tenant-{cluster}` and mount from that namespace. ont-system copy was unused. |
 | PLATFORM-BL-KUBECONFIG-CANONICAL | platform, conductor | 2026-05-06 | Removed `tenantKubeconfigSecretName` constant and `ensureTenantKubeconfigCopy` from `taloscluster_import_helpers.go`. Added `ensureCAPIKubeconfig` and `ensureCAPITalosconfig` helpers. `EnsureRemoteConductorBootstrap` now always reads `seam-mc-{cluster}-kubeconfig`. `platform_security.go` no longer writes `target-cluster-kubeconfig`. e2e test updated. |

@@ -1,16 +1,16 @@
 # Graph Report - ontai  (2026-05-06)
 
 ## Corpus Check
-- 242 files · ~408,055 words
+- 243 files · ~408,891 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2785 nodes · 4382 edges · 235 communities detected
+- 2787 nodes · 4383 edges · 239 communities detected
 - Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 427 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4fd93167`
+- Built from commit: `4d5ea4c6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -200,14 +200,14 @@
 - [[_COMMUNITY_Community 182|Community 182]]
 - [[_COMMUNITY_Community 183|Community 183]]
 - [[_COMMUNITY_Community 184|Community 184]]
+- [[_COMMUNITY_Community 185|Community 185]]
 - [[_COMMUNITY_Community 186|Community 186]]
 - [[_COMMUNITY_Community 187|Community 187]]
-- [[_COMMUNITY_Community 188|Community 188]]
 - [[_COMMUNITY_Community 189|Community 189]]
+- [[_COMMUNITY_Community 190|Community 190]]
 - [[_COMMUNITY_Community 191|Community 191]]
 - [[_COMMUNITY_Community 192|Community 192]]
 - [[_COMMUNITY_Community 193|Community 193]]
-- [[_COMMUNITY_Community 194|Community 194]]
 - [[_COMMUNITY_Community 195|Community 195]]
 - [[_COMMUNITY_Community 196|Community 196]]
 - [[_COMMUNITY_Community 197|Community 197]]
@@ -215,12 +215,11 @@
 - [[_COMMUNITY_Community 199|Community 199]]
 - [[_COMMUNITY_Community 200|Community 200]]
 - [[_COMMUNITY_Community 201|Community 201]]
-- [[_COMMUNITY_Community 206|Community 206]]
-- [[_COMMUNITY_Community 227|Community 227]]
-- [[_COMMUNITY_Community 228|Community 228]]
-- [[_COMMUNITY_Community 229|Community 229]]
-- [[_COMMUNITY_Community 230|Community 230]]
-- [[_COMMUNITY_Community 231|Community 231]]
+- [[_COMMUNITY_Community 202|Community 202]]
+- [[_COMMUNITY_Community 203|Community 203]]
+- [[_COMMUNITY_Community 204|Community 204]]
+- [[_COMMUNITY_Community 205|Community 205]]
+- [[_COMMUNITY_Community 210|Community 210]]
 - [[_COMMUNITY_Community 232|Community 232]]
 - [[_COMMUNITY_Community 233|Community 233]]
 - [[_COMMUNITY_Community 234|Community 234]]
@@ -250,9 +249,14 @@
 - [[_COMMUNITY_Community 258|Community 258]]
 - [[_COMMUNITY_Community 259|Community 259]]
 - [[_COMMUNITY_Community 260|Community 260]]
+- [[_COMMUNITY_Community 261|Community 261]]
+- [[_COMMUNITY_Community 262|Community 262]]
+- [[_COMMUNITY_Community 263|Community 263]]
+- [[_COMMUNITY_Community 264|Community 264]]
+- [[_COMMUNITY_Community 265|Community 265]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `TalosClusterReconciler` - 40 edges
+1. `TalosClusterReconciler` - 41 edges
 2. `RunAgent()` - 31 edges
 3. `conductor CODEBASE.md` - 25 edges
 4. `compileBootstrap()` - 23 edges
@@ -275,7 +279,7 @@
 - `Decision 10: kro and Cedar Positioning` --semantically_similar_to--> `app-core and kro Complementary Layers`  [INFERRED] [semantically similar]
   CLAUDE.md → app-core/README.md
 
-## Communities (261 total, 89 thin omitted)
+## Communities (266 total, 90 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.05
@@ -286,12 +290,12 @@ Cohesion: 0.05
 Nodes (56): EndpointsFromTalosconfig(), NodeContext(), bootstrapHandler, clusterResetHandler, credentialRotateHandler, etcdBackupHandler, etcdMaintenanceHandler, etcdRestoreHandler (+48 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.07
-Nodes (65): allOperators(), boolPtr(), buildOperatorDeployment(), buildOperatorRBACProfile(), buildSeamMembership(), buildTargetClusters(), compileEnableBundle(), conductorOp() (+57 more)
-
-### Community 3 - "Community 3"
 Cohesion: 0.05
 Nodes (21): detectClusterPKIExpiry(), ensureAnnotationRotationPKI(), ensureAutoRotationPKI(), ParseKubeconfigCertExpiry(), ParsePEMCertExpiry(), ParseTalosConfigCertExpiry(), readSecretAndParseExpiry(), syncPKIExpiry() (+13 more)
+
+### Community 3 - "Community 3"
+Cohesion: 0.07
+Nodes (65): allOperators(), boolPtr(), buildOperatorDeployment(), buildOperatorRBACProfile(), buildSeamMembership(), buildTargetClusters(), compileEnableBundle(), conductorOp() (+57 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.05
@@ -307,111 +311,111 @@ Nodes (15): NewFederationClient(), clusterStatus, ForceCodecOption(), Federation
 
 ### Community 7 - "Community 7"
 Cohesion: 0.06
-Nodes (20): RBACProfileBackfillRunnable, AdmissionWebhookServer, IntakeRequest, IntakeResponse, EvaluateOperatorAuthorship(), isSeamOperatorServiceAccount(), OperatorCRGuardDecision, OperatorCRGuardHandler (+12 more)
-
-### Community 8 - "Community 8"
-Cohesion: 0.06
 Nodes (44): AppProfile app-core schema (aggregate root, 8-phase gates), CAPI adoption rationale (battle-tested cluster lifecycle), CAPI RBAC intake protocol via Guardian, Cilium CNI integration (CNI=none + PackExecution bridge), ClusterMaintenance CRD YAML (platform.ontai.dev), ClusterPack rbacDigest/workloadDigest amendment (session/13), Decision H deletion cascade (finalizerDecisionHCascade), DriftSignalReconciler (+36 more)
 
-### Community 9 - "Community 9"
-Cohesion: 0.06
-Nodes (24): AdmissionDecision, AdmissionOperation, AdmissionRequest, EvaluateAuthorshipGate(), AuthorshipGateDecision, AuthorshipGateHandler, AuthorshipGateRequest, BootstrapWindow (+16 more)
-
-### Community 10 - "Community 10"
-Cohesion: 0.11
-Nodes (31): BootstrapNode, BootstrapSection, BootstrapSequence, BootstrapSequenceStep, CAPICiliumPackRefInput, CAPIControlPlaneInput, CAPIInput, CAPIWorkerInput (+23 more)
-
-### Community 11 - "Community 11"
+### Community 8 - "Community 8"
 Cohesion: 0.37
 Nodes (31): arrow(), bg(), blank(), callout_box(), conn(), logo_big(), logo_corner(), main() (+23 more)
 
-### Community 12 - "Community 12"
+### Community 9 - "Community 9"
 Cohesion: 0.08
 Nodes (12): NewConfigMapZoneWriter(), ConfigMapZoneWriter, DSNSState, Record, RecordType, NewSinkRegistry(), SinkRegistry, NewDSNSState() (+4 more)
 
-### Community 13 - "Community 13"
+### Community 10 - "Community 10"
+Cohesion: 0.11
+Nodes (28): BootstrapNode, BootstrapSection, BootstrapSequence, BootstrapSequenceStep, CAPICiliumPackRefInput, CAPIControlPlaneInput, CAPIInput, CAPIWorkerInput (+20 more)
+
+### Community 11 - "Community 11"
 Cohesion: 0.12
 Nodes (18): CheckPermissionRequest, CheckPermissionResponse, EffectiveRuleDTO, ExplainDecisionRequest, ExplainDecisionResponse, ListPermissionsRequest, ListPermissionsResponse, LocalService (+10 more)
 
-### Community 14 - "Community 14"
-Cohesion: 0.13
-Nodes (9): ClusterMaintenanceStatus, ClusterResetStatus, EtcdMaintenanceStatus, HardeningProfileStatus, MaintenanceBundleStatus, NodeMaintenanceStatus, NodeOperationStatus, PKIRotationStatus (+1 more)
-
-### Community 15 - "Community 15"
-Cohesion: 0.07
-Nodes (9): PackOperationArtifact, PackOperationDeployedResource, PackOperationFailureReason, PackOperationResult, PackOperationResultList, PackOperationResultSpec, PackOperationResultStatus, PackOperationStepResult (+1 more)
-
-### Community 16 - "Community 16"
+### Community 12 - "Community 12"
 Cohesion: 0.07
 Nodes (11): InfrastructureCAPICiliumPackRef, InfrastructureCAPIControlPlaneConfig, InfrastructureCAPIWorkerPool, InfrastructureLocalObjectRef, InfrastructureProvider, InfrastructureTalosCluster, InfrastructureTalosClusterList, InfrastructureTalosClusterMode (+3 more)
 
-### Community 17 - "Community 17"
+### Community 13 - "Community 13"
 Cohesion: 0.12
 Nodes (28): ClusterReset CRD, HardeningProfile CRD, NodeMaintenance CRD, NodeOperation CRD, PKIRotation CRD, SeamInfrastructureMachine CRD, SeamInfrastructureMachineTemplate CRD, UpgradePolicy CRD (+20 more)
 
-### Community 18 - "Community 18"
+### Community 14 - "Community 14"
 Cohesion: 0.1
-Nodes (9): InfrastructureCAPIConfig, InfrastructureClusterPackSpec, InfrastructureLineageIndexSpec, InfrastructureLineageIndexStatus, InfrastructurePackExecutionStatus, InfrastructureRunnerConfigStatus, InfrastructureTalosClusterSpec, OutcomeEntry (+1 more)
+Nodes (9): InfrastructureCAPIConfig, InfrastructureClusterPackSpec, InfrastructureClusterPackStatus, InfrastructureLineageIndexStatus, InfrastructurePackBuildStatus, InfrastructureRunnerConfigStatus, InfrastructureTalosClusterSpec, OutcomeEntry (+1 more)
 
-### Community 19 - "Community 19"
+### Community 15 - "Community 15"
 Cohesion: 0.13
 Nodes (26): Agent bootstrap exception: first pack applied directly via kube goclient without PackExecution flow; still requires signature verification, ClusterPack spec immutability after creation, Compile-time/runtime boundary: compilation is workstation/CI only, never a cluster operation, Decision G: seam-core is sole schema authority for all cross-operator CRDs under infrastructure.ontai.dev; wrapper has no own CRD type definitions, DriftSignal three-state acknowledgement chain: pending, delivered, queued, confirmed, PackBuild is a local spec file and provenance record, never a cluster CRD trigger, PackExecution six-gate delivery pipeline enforcing signature, revocation, PermissionSnapshot, RBACProfile, ConductorReady, WrapperRunnerRBAC, PackReceipt signatureVerified field: Ed25519 verification gate; false triggers SecurityViolation blocking all further pack operations (+18 more)
 
-### Community 20 - "Community 20"
+### Community 16 - "Community 16"
+Cohesion: 0.15
+Nodes (8): ClusterMaintenanceStatus, ClusterResetStatus, EtcdMaintenanceStatus, HardeningProfileStatus, MaintenanceBundleStatus, NodeMaintenanceStatus, NodeOperationStatus, PKIRotationStatus
+
+### Community 17 - "Community 17"
 Cohesion: 0.18
 Nodes (21): addDSNSFinalizer(), categoryForKind(), clusterContextForNamespace(), clusterEndpointIP(), clusterFromNamespace(), conditionLastTransitionTime(), containsDSNSFinalizer(), deletionEvent() (+13 more)
 
-### Community 21 - "Community 21"
+### Community 18 - "Community 18"
 Cohesion: 0.08
 Nodes (8): InfrastructureRunnerConfig, InfrastructureRunnerConfigList, InfrastructureRunnerConfigSpec, RunnerCapabilityEntry, RunnerConfigStep, RunnerConfigStepResult, RunnerPhaseConfig, RunnerStepResultPhase
 
-### Community 22 - "Community 22"
+### Community 19 - "Community 19"
 Cohesion: 0.08
-Nodes (8): InfrastructurePackBuild, InfrastructurePackBuildCategory, InfrastructurePackBuildList, InfrastructurePackBuildSpec, InfrastructurePackBuildStatus, InfrastructurePackHelmSource, InfrastructurePackKustomizeSource, InfrastructurePackRawSource
+Nodes (8): DescendantEntry, InfrastructureLineageIndex, InfrastructureLineageIndexList, InfrastructureLineageIndexRootBinding, InfrastructureLineageIndexSpec, InfrastructurePolicyBindingStatus, LineageRetentionPolicy, OutcomeType
 
-### Community 23 - "Community 23"
+### Community 20 - "Community 20"
+Cohesion: 0.08
+Nodes (8): PackOperationArtifact, PackOperationDeployedResource, PackOperationFailureReason, PackOperationResult, PackOperationResultList, PackOperationResultSpec, PackOperationResultStatus, PackUpgradeDirection
+
+### Community 21 - "Community 21"
 Cohesion: 0.09
 Nodes (8): AllowedOperation, PermissionEntry, PermissionSnapshot, PermissionSnapshotList, PermissionSnapshotSpec, PermissionSnapshotStatus, SubjectEntry, SubjectKind
 
-### Community 24 - "Community 24"
-Cohesion: 0.08
-Nodes (7): InfrastructureClusterPack, InfrastructureClusterPackList, InfrastructureClusterPackStatus, InfrastructureLifecyclePolicy, InfrastructurePackExecutionStage, InfrastructurePackProvenance, InfrastructurePackRegistryRef
+### Community 22 - "Community 22"
+Cohesion: 0.09
+Nodes (8): InfrastructureTalosClusterOperationResult, InfrastructureTalosClusterOperationResultList, InfrastructureTalosClusterOperationResultSpec, InfrastructureTalosClusterOperationResultStatus, PackOperationStepResult, TalosClusterOperationFailureReason, TalosClusterOperationRecord, TalosClusterResultStatus
 
-### Community 25 - "Community 25"
+### Community 23 - "Community 23"
+Cohesion: 0.15
+Nodes (18): compilePackBuild(), buildNamespaceYAML(), computeChecksum(), detectNamespace(), fetchURL(), helmCompilePackBuild(), helmSDKVersion(), helmVersionOrDefault() (+10 more)
+
+### Community 24 - "Community 24"
 Cohesion: 0.08
 Nodes (8): CertificateConfig, IdentityBinding, IdentityBindingList, IdentityBindingSpec, IdentityType, OIDCConfig, ServiceAccountConfig, TrustMethod
 
-### Community 26 - "Community 26"
+### Community 25 - "Community 25"
 Cohesion: 0.09
 Nodes (7): InfrastructureDependencyPolicy, InfrastructureDeployedResourceRef, InfrastructureDriftPolicy, InfrastructurePackInstance, InfrastructurePackInstanceList, InfrastructurePackInstanceSpec, InfrastructurePackInstanceStatus
 
-### Community 27 - "Community 27"
+### Community 26 - "Community 26"
 Cohesion: 0.09
-Nodes (7): DescendantEntry, InfrastructureLineageIndex, InfrastructureLineageIndexList, InfrastructureLineageIndexRootBinding, InfrastructurePolicyBindingStatus, LineageRetentionPolicy, OutcomeType
+Nodes (7): InfrastructurePackBuild, InfrastructurePackBuildCategory, InfrastructurePackBuildList, InfrastructurePackBuildSpec, InfrastructurePackHelmSource, InfrastructurePackKustomizeSource, InfrastructurePackRawSource
+
+### Community 27 - "Community 27"
+Cohesion: 0.12
+Nodes (7): DomainEventStatus, DomainIdentityStatus, DomainLineageIndexStatus, DomainOwnershipStatus, DomainPolicyStatus, DomainRelationshipStatus, DomainTransactionStatus
 
 ### Community 28 - "Community 28"
-Cohesion: 0.15
-Nodes (16): buildNamespaceYAML(), computeChecksum(), detectNamespace(), fetchURL(), helmCompilePackBuild(), helmSDKVersion(), helmVersionOrDefault(), serializeManifests() (+8 more)
+Cohesion: 0.09
+Nodes (6): InfrastructureClusterPack, InfrastructureClusterPackList, InfrastructureLifecyclePolicy, InfrastructurePackExecutionStage, InfrastructurePackProvenance, InfrastructurePackRegistryRef
 
 ### Community 29 - "Community 29"
-Cohesion: 0.1
-Nodes (7): InfrastructureTalosClusterOperationResult, InfrastructureTalosClusterOperationResultList, InfrastructureTalosClusterOperationResultSpec, InfrastructureTalosClusterOperationResultStatus, TalosClusterOperationFailureReason, TalosClusterOperationRecord, TalosClusterResultStatus
-
-### Community 30 - "Community 30"
 Cohesion: 0.16
 Nodes (10): boolPtr(), comparePackVersion(), findLatestPOR(), int32Ptr(), packDeployJobName(), packUpgradeDirection(), parsePackVer(), platformKubeconfigSecretName() (+2 more)
 
-### Community 31 - "Community 31"
+### Community 30 - "Community 30"
 Cohesion: 0.15
 Nodes (14): allowAdmission(), extractAnnotations(), isExemptNamespace(), NewTenantRBACOwnershipWebhook(), writeAdmissionError(), allow(), deny(), extractLineage() (+6 more)
 
-### Community 32 - "Community 32"
+### Community 31 - "Community 31"
 Cohesion: 0.1
 Nodes (6): DriftAffectedCRRef, DriftSignal, DriftSignalList, DriftSignalSpec, DriftSignalState, DriftSignalStatus
 
+### Community 32 - "Community 32"
+Cohesion: 0.18
+Nodes (20): conductor CODEBASE.md, CapabilityPublisher (management: publishes 17 named capabilities to RunnerConfig status), Conductor agent mode (long-running Deployment in ont-system), etcdBackupHandler (Talos EtcdSnapshot + seekable bytes.NewReader for MinIO upload), hardeningApplyHandler (HardeningProfile machineConfigPatches via unstructuredList per patch), INV-026: Private key on management conductor only; tenants verify but never sign, kubeUpgradeHandler (GetMachineConfig + mergeYAMLPatch + ApplyConfiguration no-reboot), KubernetesVersionDriftLoop (tenant: reads kubeletVersion, compares to spec.kubernetesVersion, emits DriftSignal) (+12 more)
+
 ### Community 33 - "Community 33"
-Cohesion: 0.14
-Nodes (6): DomainEventStatus, DomainIdentityStatus, DomainPolicyStatus, DomainRelationshipStatus, DomainResourceStatus, DomainTransactionStatus
+Cohesion: 0.11
+Nodes (5): DomainLineageIndex, DomainLineageIndexList, DomainLineageIndexSpec, PolicyBindingStatus, RootBinding
 
 ### Community 34 - "Community 34"
 Cohesion: 0.11
@@ -419,7 +423,7 @@ Nodes (6): collect_test_files(), main(), Return all *_test.go files and Go files
 
 ### Community 35 - "Community 35"
 Cohesion: 0.14
-Nodes (6): IdentityBindingStatus, IdentityProviderStatus, PermissionSetSpec, PermissionSetStatus, PrincipalPermissionEntry, RBACProfileSpec
+Nodes (6): IdentityBindingStatus, PermissionSetSpec, PermissionSetStatus, PrincipalPermissionEntry, RBACPolicyStatus, RBACProfileSpec
 
 ### Community 36 - "Community 36"
 Cohesion: 0.11
@@ -427,31 +431,31 @@ Nodes (5): InfrastructurePackReceipt, InfrastructurePackReceiptList, Infrastruct
 
 ### Community 37 - "Community 37"
 Cohesion: 0.11
-Nodes (5): DomainLineageIndexList, DomainLineageIndexSpec, DomainLineageIndexStatus, PolicyBindingStatus, RootBinding
+Nodes (5): InfrastructureClusterPackRef, InfrastructurePackExecution, InfrastructurePackExecutionList, InfrastructurePackExecutionSpec, InfrastructurePackExecutionStatus
 
 ### Community 38 - "Community 38"
 Cohesion: 0.2
 Nodes (16): All(), AvailableNames(), DescriptorScaffold(), Lookup(), ComponentDescriptor, RenderParams, buildDiscoveryReport(), parseClusters() (+8 more)
 
 ### Community 39 - "Community 39"
-Cohesion: 0.12
-Nodes (9): S3StorageClientAdapter, CatalogEntry, buildRegistryMirrorsPatch(), writeBootstrapSequence(), multiStringFlag, classifyTerminalOutcome(), OutcomeReconciler, Role (+1 more)
+Cohesion: 0.16
+Nodes (12): BuildManifest(), NewCapabilityPublisher(), LeaderCallbacks, RunLeaderElection(), SetTalosClusterReady(), onLeaderStart(), PermissionServiceEnabled(), RunAgent() (+4 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.16
-Nodes (9): ComplianceCheckResult, ProfileValidationResult, CheckProfilePolicyCompliance(), buildClusterRole(), buildClusterRoleBinding(), buildServiceAccount(), parsePrincipalRef(), ValidateRBACProfileSpec() (+1 more)
-
-### Community 41 - "Community 41"
-Cohesion: 0.11
-Nodes (6): EnforcementMode, RBACPolicy, RBACPolicyList, RBACPolicySpec, RBACPolicyStatus, SubjectScope
-
-### Community 42 - "Community 42"
 Cohesion: 0.15
 Nodes (12): NewGuardianIntakeClientAdapter(), NewOCIRegistryClientAdapter(), NewS3StorageClientAdapter(), NewTalosClientAdapter(), WaitForRBACProfileProvisioned(), GuardianIntakeClientAdapter, ociManifest, ociRef (+4 more)
 
+### Community 41 - "Community 41"
+Cohesion: 0.12
+Nodes (5): Guardian, GuardianList, GuardianSpec, GuardianStatus, WebhookMode
+
+### Community 42 - "Community 42"
+Cohesion: 0.12
+Nodes (5): PermissionDeclaration, PermissionScope, RBACProfile, RBACProfileList, RBACProfileStatus
+
 ### Community 43 - "Community 43"
-Cohesion: 0.16
-Nodes (12): BuildManifest(), NewCapabilityPublisher(), LeaderCallbacks, RunLeaderElection(), SetTalosClusterReady(), onLeaderStart(), PermissionServiceEnabled(), RunAgent() (+4 more)
+Cohesion: 0.12
+Nodes (5): IdentityProvider, IdentityProviderList, IdentityProviderSpec, IdentityProviderStatus, IdentityProviderType
 
 ### Community 44 - "Community 44"
 Cohesion: 0.12
@@ -459,422 +463,434 @@ Nodes (5): PermissionSnapshotReceipt, PermissionSnapshotReceiptList, PermissionS
 
 ### Community 45 - "Community 45"
 Cohesion: 0.12
-Nodes (5): PermissionDeclaration, PermissionScope, RBACProfile, RBACProfileList, RBACProfileStatus
+Nodes (5): EtcdMaintenance, EtcdMaintenanceList, EtcdMaintenanceOperation, EtcdMaintenanceSpec, S3Ref
 
 ### Community 46 - "Community 46"
 Cohesion: 0.12
-Nodes (5): Guardian, GuardianList, GuardianSpec, GuardianStatus, WebhookMode
+Nodes (4): SeamMembership, SeamMembershipList, SeamMembershipSpec, SeamMembershipStatus
 
 ### Community 47 - "Community 47"
 Cohesion: 0.12
-Nodes (5): EtcdMaintenance, EtcdMaintenanceList, EtcdMaintenanceOperation, EtcdMaintenanceSpec, S3Ref
+Nodes (4): ClusterMaintenance, ClusterMaintenanceList, ClusterMaintenanceSpec, MaintenanceWindow
 
 ### Community 48 - "Community 48"
 Cohesion: 0.12
-Nodes (4): InfrastructureClusterPackRef, InfrastructurePackExecution, InfrastructurePackExecutionList, InfrastructurePackExecutionSpec
+Nodes (6): RollingStrategy, UpgradePolicy, UpgradePolicyList, UpgradePolicySpec, UpgradePolicyStatus, UpgradeType
 
 ### Community 49 - "Community 49"
-Cohesion: 0.12
-Nodes (4): SeamMembership, SeamMembershipList, SeamMembershipSpec, SeamMembershipStatus
-
-### Community 50 - "Community 50"
-Cohesion: 0.12
-Nodes (4): ClusterMaintenance, ClusterMaintenanceList, ClusterMaintenanceSpec, MaintenanceWindow
-
-### Community 51 - "Community 51"
 Cohesion: 0.16
 Nodes (16): CreationRationale controlled vocabulary (ClusterProvision, SecurityEnforcement, etc.), Guardian Admission Webhook, IdentityProvider CEL ValidationRules, IdentityProvider.type (oidc/pki/token), ontai.dev marketing/landing page, Five-layer Living Documentation Architecture, ONT: Operator Native Thinking principle, ONT Schema Standard (schema.ontai.dev, 36 schemas, 4 layers) (+8 more)
 
-### Community 53 - "Community 53"
+### Community 51 - "Community 51"
 Cohesion: 0.25
 Nodes (7): groupFromAPIVersion(), gvrFromAPIVersionKind(), newCorrelationID(), NewPackReceiptDriftLoop(), pluralizeKind(), unstructuredFromRaw(), PackReceiptDriftLoop
 
+### Community 52 - "Community 52"
+Cohesion: 0.19
+Nodes (3): EPGReconciler, permissionSnapshotStaleFilter, BuildPermissionSnapshot()
+
+### Community 53 - "Community 53"
+Cohesion: 0.13
+Nodes (5): EnforcementMode, RBACPolicy, RBACPolicyList, RBACPolicySpec, SubjectScope
+
 ### Community 54 - "Community 54"
+Cohesion: 0.15
+Nodes (9): EvaluateDomainRefValidation(), DomainRefValidationDecision, DomainRefValidationHandler, DomainRefValidationRequest, extractDomainRef(), extractRootBinding(), RootBindingImmutabilityHandler, specDomainRefExtract (+1 more)
+
+### Community 55 - "Community 55"
 Cohesion: 0.15
 Nodes (4): TalosMachineConfigBackup, TalosMachineConfigBackupList, TalosMachineConfigBackupSpec, TalosMachineConfigBackupStatus
 
-### Community 55 - "Community 55"
+### Community 56 - "Community 56"
 Cohesion: 0.13
 Nodes (15): Governor Role, Schema Engineer Role, Test Engineer Role, Codebase Understanding Protocol (Governor Directive), Decision 11: Schema-First Development Contract, Decision 9: Living Documentation Reframing Canonical, e2e CI Contract and Skip-Reason Standard, INV-002: Operators Are Thin Reconcilers (+7 more)
 
-### Community 56 - "Community 56"
+### Community 57 - "Community 57"
 Cohesion: 0.13
 Nodes (15): Human-at-Boundary Principle, One Role Per Session Principle, AI Accelerates Only Upstream of Human Approval, Cluster Boundary Is Strongest Isolation Boundary, All Infrastructure Operations Declarative, Versioned, Auditable, Humans Remain In Loop at Production Boundary, Seam Naming Conventions and Identity Hierarchy, ODC (Ontai Domain Contract) (+7 more)
 
-### Community 57 - "Community 57"
-Cohesion: 0.17
-Nodes (14): conductor CLAUDE.md, Management Cluster Bootstrap Sequence (compiler bootstrap/launch/enable, three steps, Platform not involved), Federation Channel Contract (bidirectional gRPC between management and tenant Conductors), Import-mode tenant onboarding gRPC handshake sequence (tenant dials MGMT_ENDPOINT, management pushes PermissionSnapshot), Named Capabilities (Conductor execute vocabulary), ONTAR (Operator Native Task Application Runtime) - architectural thesis, OperationResult Protocol (ConfigMap, TTL, structured JSON output per execute Job), OperatorManifest CRD (declares one operator for enable phase installation) (+6 more)
-
 ### Community 58 - "Community 58"
+Cohesion: 0.19
+Nodes (14): conductor CLAUDE.md, Management Cluster Bootstrap Sequence (compiler bootstrap/launch/enable, three steps, Platform not involved), Conductor execute mode (Kueue Jobs on management cluster), Named Capabilities (Conductor execute vocabulary), OperationResult Protocol (ConfigMap, TTL, structured JSON output per execute Job), OperatorManifest CRD (declares one operator for enable phase installation), Pack-deploy execution flow (PackExecution -> Kueue Job -> executeSplitPath), Temporary PVC Protocol for inter-Job state transfer (+6 more)
+
+### Community 59 - "Community 59"
+Cohesion: 0.14
+Nodes (4): DomainComplianceList, DomainComplianceStatus, DomainOwnershipList, DomainRelationship
+
+### Community 60 - "Community 60"
+Cohesion: 0.15
+Nodes (8): S3StorageClientAdapter, CatalogEntry, buildRegistryMirrorsPatch(), writeBootstrapSequence(), writeTalosconfigSecret(), multiStringFlag, Role, ParseRole()
+
+### Community 61 - "Community 61"
 Cohesion: 0.24
 Nodes (7): packDeliveryMetadata, buildReceiptSpecPayload(), deployedResourceKey(), extractPackMetadataFromArtifact(), NewPackInstancePullLoop(), stringField(), PackInstancePullLoop
 
-### Community 59 - "Community 59"
+### Community 62 - "Community 62"
 Cohesion: 0.24
 Nodes (9): jsonCodec, PermissionServiceServer, _checkPermissionHandler(), _explainDecisionHandler(), init(), ListenAndServe(), _listPermissionsHandler(), NewGRPCServer() (+1 more)
 
-### Community 60 - "Community 60"
+### Community 63 - "Community 63"
 Cohesion: 0.29
 Nodes (12): ComputeEPG(), deduplicateAndSort(), ceilingMatchesAPIGroup(), ceilingMatchesResource(), coreGroupIfEmpty(), deduplicateRules(), IntersectWithCeiling(), resourceNameIntersection() (+4 more)
 
-### Community 61 - "Community 61"
-Cohesion: 0.14
-Nodes (4): IdentityProvider, IdentityProviderList, IdentityProviderSpec, IdentityProviderType
+### Community 64 - "Community 64"
+Cohesion: 0.2
+Nodes (7): auditSeq(), lineageRef(), writeAudit(), ComplianceCheckResult, RBACPolicyReconciler, rbacPolicyStartupRunnable, CheckProfilePolicyCompliance()
 
-### Community 62 - "Community 62"
+### Community 65 - "Community 65"
 Cohesion: 0.14
 Nodes (4): PermissionRule, PermissionSet, PermissionSetList, Verb
 
-### Community 63 - "Community 63"
-Cohesion: 0.14
-Nodes (4): NodeMaintenance, NodeMaintenanceList, NodeMaintenanceOperation, NodeMaintenanceSpec
-
-### Community 64 - "Community 64"
+### Community 66 - "Community 66"
 Cohesion: 0.14
 Nodes (4): NodeOperation, NodeOperationList, NodeOperationSpec, NodeOperationType
 
-### Community 65 - "Community 65"
-Cohesion: 0.15
-Nodes (5): RollingStrategy, UpgradePolicy, UpgradePolicySpec, UpgradePolicyStatus, UpgradeType
-
-### Community 66 - "Community 66"
-Cohesion: 0.21
-Nodes (14): AppResourceProfile CRD, Decision 5: Creation Rationale Vocabulary Is Seam Core Enum, Decision G: seam-core Owns All Cross-Operator CRD Schemas, InfrastructureClusterPack CRD, Kueue Integration (pack-deploy Jobs), InfrastructurePackInstance CRD, Platform Operator, InfrastructureRunnerConfig CRD (+6 more)
-
 ### Community 67 - "Community 67"
+Cohesion: 0.15
+Nodes (3): HardeningProfile, HardeningProfileList, HardeningProfileSpec
+
+### Community 68 - "Community 68"
+Cohesion: 0.14
+Nodes (4): NodeMaintenance, NodeMaintenanceList, NodeMaintenanceOperation, NodeMaintenanceSpec
+
+### Community 69 - "Community 69"
 Cohesion: 0.16
 Nodes (14): Conductor Engineer Role, Controller Engineer Role, INV-001: No Shell Scripts, Go Only, conductor/pkg/runnerlib Shared Library, Conductor Agent Control Loops, conductor AGENTS.md Role Contract, Conductor Capability Addition Protocol, Conductor Capability Engine (+6 more)
 
-### Community 68 - "Community 68"
+### Community 70 - "Community 70"
 Cohesion: 0.15
-Nodes (9): DomainComplianceSpec, DomainEventSpec, DomainIdentitySpec, DomainOwnershipSpec, DomainOwnershipStatus, DomainPolicySpec, DomainRelationshipSpec, DomainResourceSpec (+1 more)
+Nodes (9): DomainComplianceSpec, DomainEventSpec, DomainIdentitySpec, DomainOwnershipSpec, DomainPolicySpec, DomainRelationshipSpec, DomainResourceSpec, DomainResourceStatus (+1 more)
 
-### Community 69 - "Community 69"
+### Community 71 - "Community 71"
 Cohesion: 0.19
 Nodes (4): WAL, OpenWAL(), walDir(), WALEntry
 
-### Community 70 - "Community 70"
-Cohesion: 0.18
-Nodes (7): lineageRef(), writeAudit(), PolicyValidationResult, ValidateRBACPolicySpec(), RBACPolicyReconciler, rbacPolicyStartupRunnable, ValidationCheckName
-
-### Community 71 - "Community 71"
-Cohesion: 0.23
-Nodes (9): KnownConditionTypes(), sortedKeys(), ValidateCondition(), ValidReasonsFor(), ConditionPoller, extractConditions(), formatConditions(), NewConditionPoller() (+1 more)
-
 ### Community 72 - "Community 72"
-Cohesion: 0.15
-Nodes (3): PKIRotation, PKIRotationList, PKIRotationSpec
-
-### Community 73 - "Community 73"
-Cohesion: 0.15
-Nodes (3): MaintenanceBundle, MaintenanceBundleList, MaintenanceBundleSpec
+Cohesion: 0.18
+Nodes (9): capabilityStepExecutor, buildStepParameters(), main(), printUsage(), runAgent(), BuildAgentContext(), BuildExecuteContext(), ExecutionContext (+1 more)
 
 ### Community 74 - "Community 74"
-Cohesion: 0.15
-Nodes (3): HardeningProfile, HardeningProfileList, HardeningProfileSpec
+Cohesion: 0.23
+Nodes (9): KnownConditionTypes(), sortedKeys(), ValidateCondition(), ValidReasonsFor(), ConditionPoller, extractConditions(), formatConditions(), NewConditionPoller() (+1 more)
 
 ### Community 75 - "Community 75"
 Cohesion: 0.15
 Nodes (3): ClusterReset, ClusterResetList, ClusterResetSpec
 
 ### Community 76 - "Community 76"
+Cohesion: 0.15
+Nodes (3): PKIRotation, PKIRotationList, PKIRotationSpec
+
+### Community 77 - "Community 77"
+Cohesion: 0.15
+Nodes (3): MaintenanceBundle, MaintenanceBundleList, MaintenanceBundleSpec
+
+### Community 78 - "Community 78"
+Cohesion: 0.22
+Nodes (13): AppResourceProfile CRD, Decision 5: Creation Rationale Vocabulary Is Seam Core Enum, Decision G: seam-core Owns All Cross-Operator CRD Schemas, InfrastructureClusterPack CRD, Kueue Integration (pack-deploy Jobs), InfrastructurePackInstance CRD, InfrastructureRunnerConfig CRD, seam-core Repository (+5 more)
+
+### Community 79 - "Community 79"
 Cohesion: 0.19
 Nodes (13): AppProfile: composition root CRD, single unit of registration for any service entering ONT Web, ContinuousBinding: living contract assertion with dynamic candidate set re-evaluation, ONT Operator Schema Design Document: four-layer application framework architecture, Layer 1: Domain Core CRDs (DomainIdentity, DomainBoundary, DomainPolicy, DomainRelationship, DomainEvent, DomainWorkflow, DomainResource, DomainAudit, DomainSemanticNameService), Layer 2: Application Domain Core CRDs (AppBoundary, AppIdentity, AppPolicy, AppTopology, AppEventSchema, AppWorkflow, AppResourceProfile, AppAuditPolicy, AppProfile), AppProfile lifecycle: 8-phase strict reconciliation order from AppBoundary to Profile Completion, RelationshipAdmissionRequest: Guardian-admitted emergent cross-domain relationship requiring human approval (Tier 4), RelationshipClass: seven-condition bounded admission for deferred dependency binding (+5 more)
 
-### Community 77 - "Community 77"
+### Community 80 - "Community 80"
 Cohesion: 0.17
 Nodes (13): Four adoption stages: Discovery, Schema Authorship, Operator Authorship, Reconciliation Validation, ONT Founding Document: Operator Native Thinking (ontai.dev April 2026), Lineage: chain connecting every governed object to the authority that placed it there; not a log, Three memory layers: Capture (built), Retrieval (partial), Intelligence (named, not built), ONT: four-element language (Domain, Operators, CRDs as contracts, Lineage) completing Kubernetes why-what-how separation, ONTAR: pod-level governance extension of Guardian PermissionSnapshot; not yet implemented, Six Seam operators: Guardian, Platform, Wrapper, Conductor, seam-core, Screen, Two-layer configuration split: Layer One governance (CRD spec) vs Layer Two runtime (ConfigMap/secrets) (+5 more)
 
-### Community 78 - "Community 78"
+### Community 81 - "Community 81"
 Cohesion: 0.18
 Nodes (8): AuditDatabase, AuditEvent, Open(), ConnConfig, DB, LineageIndexRef, migration, SQLAuditStore
 
-### Community 79 - "Community 79"
+### Community 82 - "Community 82"
+Cohesion: 0.21
+Nodes (6): RBACProfileBackfillRunnable, PackIntakeRequest, PackIntakeResponse, EnsurePackRBACProfileCRs(), NewRBACPackIntakeHandler(), RBACPackIntakeHandler
+
+### Community 83 - "Community 83"
+Cohesion: 0.18
+Nodes (7): IntakeRequest, IntakeResponse, partialObject, webhookAuditWrite(), NewRBACIntakeHandler(), RBACAdmissionHandler, RBACIntakeHandler
+
+### Community 84 - "Community 84"
 Cohesion: 0.26
 Nodes (5): MachineConfigApplier, ExtractClusterName(), Port50000Backoff(), SeamInfrastructureMachineReconciler, TalosMachineConfigApplier
 
-### Community 80 - "Community 80"
+### Community 85 - "Community 85"
+Cohesion: 0.17
+Nodes (12): InfrastructureRunnerConfig CRD, RunnerCapabilityEntry: self-declared capability manifest (CR-INV-005), InfrastructureRunnerConfigSpec: clusterRef, runnerImage, steps, phases, operationalHistory, InfrastructureRunnerConfigStatus: agentLeader, capabilities, stepResults, phase, failedStep, RunnerConfigStep: capability, name, dependsOn, haltOnFailure, parameters, DomainRelationship: typed directional association between two domain objects; authority for AppTopology wiring, domain-core README: Layer 0 abstract contract and pattern layer, instantiation contract, DomainRelationship guardian-signs-conductor: Guardian signs PermissionSnapshot, Conductor verifies ed25519 signature before receipt acknowledgement (+4 more)
+
+### Community 86 - "Community 86"
 Cohesion: 0.18
 Nodes (12): ONT Brownfield Adoption Playbook: four-stage path from existing infrastructure to ONT governance, Governance Debt Register: incremental capture of implicit governance facts not yet in CRD spec, Property Two: Behavior Coverage - test suite covering every named behavior including partial failure, recovery, concurrency, ONT Operator Validation Framework: three verification properties for production-ready operators, Property Three: Domain Verification - senior engineer confirms spec and test suite represent domain correctly, Property One: Specification Completeness - written spec before code, senior engineer verifiable, Retrieval authorization model: three layers (identity verification, domain authorization, result filtering) via Guardian PermissionSnapshot, Conductor Resolution Handoff: current topology snapshot, proposed change impact assessment, governance sequence recommendation (+4 more)
 
-### Community 81 - "Community 81"
+### Community 87 - "Community 87"
 Cohesion: 0.27
 Nodes (3): containsString(), removeString(), ClusterPackReconciler
 
-### Community 82 - "Community 82"
-Cohesion: 0.31
-Nodes (10): hexDigest(), ociPushLayer(), packYAMLAsTarGz(), parseCompilerOCIRef(), pushBlob(), pushManifest(), resolveDockerAuth(), compilerOCIRef (+2 more)
-
-### Community 83 - "Community 83"
+### Community 88 - "Community 88"
 Cohesion: 0.33
 Nodes (10): buildK8sClient(), compileMaintenance(), compileMaintenanceCore(), resolveKubeconfigPath(), resolveLeaderNodeFromCluster(), resolveS3SecretForCompile(), runMaintenanceSubcommand(), validateMaintenanceOperation() (+2 more)
 
-### Community 84 - "Community 84"
+### Community 89 - "Community 89"
+Cohesion: 0.31
+Nodes (10): hexDigest(), ociPushLayer(), packYAMLAsTarGz(), parseCompilerOCIRef(), pushBlob(), pushManifest(), resolveDockerAuth(), compilerOCIRef (+2 more)
+
+### Community 90 - "Community 90"
 Cohesion: 0.18
 Nodes (10): AuditEvent, AuditEventAck, AuditEventBatch, Envelope, HeartBeat, MessageType, RevocationPush, RevocationTarget (+2 more)
 
-### Community 85 - "Community 85"
+### Community 91 - "Community 91"
 Cohesion: 0.29
 Nodes (6): NewPackInstancePullLoopWithKey(), NewReceiptReconciler(), NewReceiptReconcilerWithKey(), parseEd25519PublicKey(), unstructuredNestedMap(), ReceiptReconciler
 
-### Community 86 - "Community 86"
+### Community 92 - "Community 92"
 Cohesion: 0.29
 Nodes (3): NewSigningLoop(), parseEd25519PrivateKey(), SigningLoop
 
-### Community 87 - "Community 87"
-Cohesion: 0.18
-Nodes (4): NewNamespaceEnforcementRegistry(), NewWebhookModeGate(), NamespaceEnforcementRegistry, WebhookModeGate
-
-### Community 88 - "Community 88"
+### Community 93 - "Community 93"
 Cohesion: 0.2
 Nodes (6): bootstrapLabelRunnable, CheckBootstrapLabels(), KubeNamespaceModeResolver, NamespaceMode, NamespaceModeResolver, StaticNamespaceModeResolver
 
-### Community 89 - "Community 89"
+### Community 94 - "Community 94"
+Cohesion: 0.18
+Nodes (4): NewNamespaceEnforcementRegistry(), NewWebhookModeGate(), NamespaceEnforcementRegistry, WebhookModeGate
+
+### Community 95 - "Community 95"
 Cohesion: 0.22
 Nodes (7): extractSpecLineage(), EvaluateLineageImmutability(), lineageRawEqual(), LineageImmutabilityDecision, LineageImmutabilityHandler, LineageImmutabilityRequest, specLineageExtract
 
-### Community 91 - "Community 91"
-Cohesion: 0.29
-Nodes (3): auditSeq(), EPGReconciler, BuildPermissionSnapshot()
-
-### Community 93 - "Community 93"
+### Community 96 - "Community 96"
 Cohesion: 0.2
 Nodes (6): requiredProviderType(), ResolveIdentityProviderTrust(), ValidateIdentityBindingSpec(), IdentityBindingReconciler, IdentityBindingValidationResult, TrustResolutionResult
 
-### Community 94 - "Community 94"
+### Community 97 - "Community 97"
 Cohesion: 0.29
 Nodes (6): CollectThirdPartyGroups(), ExplicitGroupsInPermissionSet(), IsSystemGroup(), sortedKeys(), stringSliceEqual(), APIGroupSweepController
 
-### Community 95 - "Community 95"
+### Community 99 - "Community 99"
+Cohesion: 0.27
+Nodes (5): buildClusterRole(), buildClusterRoleBinding(), buildServiceAccount(), parsePrincipalRef(), RBACProfileReconciler
+
+### Community 100 - "Community 100"
 Cohesion: 0.25
 Nodes (3): ociDescriptor, ociManifest, RegistryClient
 
-### Community 96 - "Community 96"
+### Community 101 - "Community 101"
+Cohesion: 0.2
+Nodes (11): SCREEN Roadmap Item, Seam CRD Registry, Screen Operator (virt.ontai.dev) - Declared Not Implemented, Vortex Operator (portal.ontai.dev) - Declared Not Implemented, EPG Reconciler, Guardian Operator, Management Cluster (ccs-mgmt), PermissionSnapshot CRD (+3 more)
+
+### Community 102 - "Community 102"
 Cohesion: 0.22
 Nodes (11): CAPI Core Operator Manifests (cluster-api v1.9.4), Talos CAPI Bootstrap Provider Manifests (CABPT v0.6.8), Talos CAPI Control Plane Provider Manifests (CACPPT v0.5.8), Seam Infrastructure Provider CRDs (SeamInfrastructureCluster, SeamInfrastructureMachine), Cluster CRD (cluster.x-k8s.io, CAPI core v1.9.4), Six-phase enable bundle (00-infrastructure-dependencies through 05-post-bootstrap), Sealed lineage field on SeamInfrastructureCluster and SeamInfrastructureMachine specs (Decision 1), SeamInfrastructureCluster CRD (infrastructure.cluster.x-k8s.io, CAPI provider) (+3 more)
 
-### Community 97 - "Community 97"
+### Community 103 - "Community 103"
+Cohesion: 0.18
+Nodes (11): domain-core CODEBASE.md: purpose, key abstractions, invariants for Layer 0, domain-core CONTRIBUTING.md: PR checklist and constitutional constraints for Layer 0, pkg/lineage.IndexName(): returns lineage-{rootKind}-{rootName}; enforces one-per-root-declaration invariant, DomainLineageIndex: abstract sealed causal chain index; one instance per root declaration, DomainLineageIndex.spec.descendantRegistry: append-only array of derived object entries with creationRationale, domain-core-schema.md: DomainLineageIndex abstract CRD definition, instantiation contract, Layer 0 standards, Layer 0 boundary: core.ontai.dev is contract/pattern layer only; permanent exclusions include reconciliation logic and downstream domain references, DomainLineageIndex.spec.outcomeRegistry: append-only terminal outcome records (Succeeded, Failed, Drifted, Superseded) (+3 more)
+
+### Community 104 - "Community 104"
 Cohesion: 0.33
 Nodes (3): lowercasePlural(), piIsVowel(), PackInstanceReconciler
 
-### Community 98 - "Community 98"
-Cohesion: 0.2
-Nodes (3): DomainComplianceStatus, DomainRelationshipList, DomainResourceList
-
-### Community 99 - "Community 99"
-Cohesion: 0.24
-Nodes (6): kubeOperationResultWriter, NoopOperationResultWriter, buildPackOperationResultSpec(), NewKubeOperationResultWriter(), OperationResultWriter, PackResultStatus
-
-### Community 100 - "Community 100"
+### Community 105 - "Community 105"
 Cohesion: 0.36
 Nodes (8): collectYAMLFiles(), compileLaunchBundle(), runLaunchSubcommand(), main(), printUsage(), printUsageTo(), runBootstrapSubcommand(), runSubcommand()
 
-### Community 101 - "Community 101"
+### Community 106 - "Community 106"
 Cohesion: 0.31
 Nodes (4): NewSnapshotPullLoop(), NewSnapshotPullLoopWithKey(), parseSubjectsField(), SnapshotPullLoop
 
-### Community 102 - "Community 102"
+### Community 107 - "Community 107"
 Cohesion: 0.33
 Nodes (3): NewTalosVersionDriftLoop(), ParseTalosVersionFromOSImage(), TalosVersionDriftLoop
 
-### Community 103 - "Community 103"
-Cohesion: 0.31
-Nodes (7): NewSQLAuditStore(), cnpgStartupRunnable, main(), setupManagementControllers(), setupRoleControllers(), setupSharedControllers(), setupTenantControllers()
+### Community 108 - "Community 108"
+Cohesion: 0.24
+Nodes (6): kubeOperationResultWriter, NoopOperationResultWriter, buildPackOperationResultSpec(), NewKubeOperationResultWriter(), OperationResultWriter, PackResultStatus
 
-### Community 104 - "Community 104"
+### Community 109 - "Community 109"
 Cohesion: 0.2
 Nodes (5): NewLazyAuditWriter(), AuditWriter, LazyAuditWriter, NoopAuditWriter, SQLAuditWriter
 
-### Community 105 - "Community 105"
-Cohesion: 0.27
-Nodes (3): isThirdPartySystemNamespace(), TenantProfileRunnable, thirdPartyComponent
+### Community 110 - "Community 110"
+Cohesion: 0.31
+Nodes (7): NewSQLAuditStore(), cnpgStartupRunnable, main(), setupManagementControllers(), setupRoleControllers(), setupSharedControllers(), setupTenantControllers()
 
-### Community 106 - "Community 106"
+### Community 111 - "Community 111"
 Cohesion: 0.24
 Nodes (4): HTTPDoer, ValidateIdentityProviderSpec(), IdentityProviderReconciler, IdentityProviderValidationResult
 
-### Community 108 - "Community 108"
-Cohesion: 0.2
-Nodes (10): SCREEN Roadmap Item, Seam CRD Registry, Screen Operator (virt.ontai.dev) - Declared Not Implemented, Vortex Operator (portal.ontai.dev) - Declared Not Implemented, EPG Reconciler, Guardian Operator, Management Cluster (ccs-mgmt), PermissionSnapshot CRD (+2 more)
-
-### Community 109 - "Community 109"
+### Community 112 - "Community 112"
 Cohesion: 0.27
-Nodes (10): CapabilityPublisher (management: publishes 17 named capabilities to RunnerConfig status), Conductor agent mode (long-running Deployment in ont-system), KubernetesVersionDriftLoop (tenant: reads kubeletVersion, compares to spec.kubernetesVersion, emits DriftSignal), RBACPolicyPullLoop (tenant: pulls cluster-policy RBACPolicy from management cluster, SSA-patches into ont-system), RBACProfilePullLoop (tenant: pulls conductor-tenant RBACProfile from management cluster, SSA-patches into ont-system), InfrastructureRunnerConfig CRD (infrastructure.ontai.dev/v1alpha1), pkg/runnerlib shared library (CapabilityManifest, JobSpecBuilder, OperationResultSpec, generators), TalosVersionDriftLoop (tenant: reads osImage, compares to spec.talosVersion, emits DriftSignal) (+2 more)
+Nodes (3): isThirdPartySystemNamespace(), TenantProfileRunnable, thirdPartyComponent
 
-### Community 110 - "Community 110"
-Cohesion: 0.4
-Nodes (10): conductor CODEBASE.md, Conductor execute mode (Kueue Jobs on management cluster), etcdBackupHandler (Talos EtcdSnapshot + seekable bytes.NewReader for MinIO upload), hardeningApplyHandler (HardeningProfile machineConfigPatches via unstructuredList per patch), kubeUpgradeHandler (GetMachineConfig + mergeYAMLPatch + ApplyConfiguration no-reboot), Pack-deploy execution flow (PackExecution -> Kueue Job -> executeSplitPath), S3StorageClientAdapter (AWS SDK v2 wrapper, MinIO HTTP seekable-stream requirement), TalosClientAdapter (wraps Talos gRPC client; Nodes(), Health() methods) (+2 more)
-
-### Community 111 - "Community 111"
+### Community 116 - "Community 116"
 Cohesion: 0.28
 Nodes (6): kubeTalosClusterResultWriter, NoopTalosClusterResultWriter, TalosClusterResultWriter, buildOperationRecord(), NewKubeTalosClusterResultWriter(), tenantNamespaceFor()
 
-### Community 112 - "Community 112"
+### Community 117 - "Community 117"
 Cohesion: 0.22
 Nodes (4): ExecuteParams, Handler, Registry, NewRegistry()
 
-### Community 117 - "Community 117"
-Cohesion: 0.28
-Nodes (9): Seam Operator Registry, Decision 12: Three-Image Conductor Model, Compiler Binary, Conductor Agent Image (distroless), Conductor Execute Image (debian-slim), Conductor Operator, Tenant Cluster (ccs-dev), ont-system Namespace (+1 more)
-
-### Community 118 - "Community 118"
-Cohesion: 0.22
-Nodes (9): T-23 Platform DriftSignal Handling, T-24 TalosCluster Deletion Cascade, Decision 4: One LineageIndex Per Root Declaration, Decision H: Conductor Drift Detection and Cluster Deletion Invariants, DriftSignal CRD, InfrastructurePackExecution CRD, InfrastructureTalosCluster CRD, DomainTransaction Primitive (+1 more)
-
-### Community 119 - "Community 119"
-Cohesion: 0.25
-Nodes (9): app-core Codebase Reference, Decision 1: Sealed Causal Chain Is Spec Field, Decision 2: Two-Layer Lineage Schema, Decision 3: LineageIndex Controller-Authored Only, app-core Repository, domain-core Repository, InfrastructureLineageIndex CRD, Three-Layer Derivation Chain (domain-core -> app-core -> seam-core) (+1 more)
-
 ### Community 120 - "Community 120"
-Cohesion: 0.31
-Nodes (8): Import vs bootstrap deletion semantics (import=severance only, bootstrap=decommission), DriftSignalHandler (management-side: deletes PackExecution on pending DriftSignal), DriftSignal lifecycle states (pending -> queued -> confirmed), namespaceTerminating guard in PackReceiptDriftLoop (skips drift for resources in terminating namespaces), PackReceiptDriftLoop (tenant-side drift detection against deployedResources), Single-active-revision pattern for PackOperationResult (POR), TCOR (TalosClusterOperationResult) and POR (PackOperationResult) operational records, Tenant drift detection cycle (PackReceiptDriftLoop -> DriftSignal -> DriftSignalHandler -> PackExecution)
+Cohesion: 0.25
+Nodes (6): AdmissionDecision, AdmissionRequest, BootstrapWindow, EvaluateAdmission(), NewBootstrapWindow(), validateSeamOperatorPermissionSetRefs()
 
 ### Community 121 - "Community 121"
 Cohesion: 0.22
-Nodes (9): InfrastructureRunnerConfig CRD, RunnerCapabilityEntry: self-declared capability manifest (CR-INV-005), InfrastructureRunnerConfigSpec: clusterRef, runnerImage, steps, phases, operationalHistory, InfrastructureRunnerConfigStatus: agentLeader, capabilities, stepResults, phase, failedStep, RunnerConfigStep: capability, name, dependsOn, haltOnFailure, parameters, app-core repository: Application Operator Framework prerequisite for Vortex, ONT Platform Current State, Backlogs and Path to Vortex, Schema integrity chain: DomainRelationship -> DomainIdentityRef -> InfrastructureLineageIndex.domainRef -> SeamMembership (+1 more)
+Nodes (9): T-23 Platform DriftSignal Handling, T-24 TalosCluster Deletion Cascade, Decision 4: One LineageIndex Per Root Declaration, Decision H: Conductor Drift Detection and Cluster Deletion Invariants, DriftSignal CRD, InfrastructurePackExecution CRD, InfrastructureTalosCluster CRD, DomainTransaction Primitive (+1 more)
 
 ### Community 122 - "Community 122"
-Cohesion: 0.32
-Nodes (5): capabilityStepExecutor, buildStepParameters(), main(), printUsage(), runAgent()
+Cohesion: 0.25
+Nodes (9): app-core Codebase Reference, Decision 1: Sealed Causal Chain Is Spec Field, Decision 2: Two-Layer Lineage Schema, Decision 3: LineageIndex Controller-Authored Only, app-core Repository, domain-core Repository, InfrastructureLineageIndex CRD, Three-Layer Derivation Chain (domain-core -> app-core -> seam-core) (+1 more)
 
 ### Community 123 - "Community 123"
-Cohesion: 0.25
-Nodes (4): AllowedOperation, PrincipalPermissionEntry, SnapshotStore, NewSnapshotStore()
+Cohesion: 0.28
+Nodes (9): Seam Operator Registry, Decision 12: Three-Image Conductor Model, Compiler Binary, Conductor Agent Image (distroless), Conductor Execute Image (debian-slim), Conductor Operator, Tenant Cluster (ccs-dev), ont-system Namespace (+1 more)
 
 ### Community 124 - "Community 124"
+Cohesion: 0.31
+Nodes (8): Import vs bootstrap deletion semantics (import=severance only, bootstrap=decommission), DriftSignalHandler (management-side: deletes PackExecution on pending DriftSignal), DriftSignal lifecycle states (pending -> queued -> confirmed), namespaceTerminating guard in PackReceiptDriftLoop (skips drift for resources in terminating namespaces), PackReceiptDriftLoop (tenant-side drift detection against deployedResources), Single-active-revision pattern for PackOperationResult (POR), TCOR (TalosClusterOperationResult) and POR (PackOperationResult) operational records, Tenant drift detection cycle (PackReceiptDriftLoop -> DriftSignal -> DriftSignalHandler -> PackExecution)
+
+### Community 125 - "Community 125"
 Cohesion: 0.36
 Nodes (4): RunExecute(), NoopStepStatusWriter, StepExecutor, StepStatusWriter
 
 ### Community 126 - "Community 126"
 Cohesion: 0.25
+Nodes (4): AllowedOperation, PrincipalPermissionEntry, SnapshotStore, NewSnapshotStore()
+
+### Community 128 - "Community 128"
+Cohesion: 0.25
 Nodes (7): ArtifactRef, DeployedResource, FailureCategory, FailureReason, OperationResultSpec, ResultStatus, StepResult
 
-### Community 127 - "Community 127"
+### Community 129 - "Community 129"
 Cohesion: 0.25
 Nodes (5): HelmSource, KustomizeSource, PackBuildSpec, RawManifestSource, TalosClusterSpec
 
-### Community 130 - "Community 130"
+### Community 131 - "Community 131"
+Cohesion: 0.29
+Nodes (5): EvaluateOperatorAuthorship(), isSeamOperatorServiceAccount(), OperatorCRGuardDecision, OperatorCRGuardHandler, OperatorCRGuardRequest
+
+### Community 133 - "Community 133"
 Cohesion: 0.32
 Nodes (5): Compiler binary (cmd/compiler), helmCompilePackBuild (fetch chart, render, split RBAC/cluster-scoped/workload OCI layers), OCI Distribution Spec v2 push helpers (ociPushLayer, pushBlob, pushManifest, resolveDockerAuth), packbuild-helm.yaml (cert-manager-helm example), tenant-capi.yaml compiler test fixture (ccs-app CAPI tenant)
 
-### Community 131 - "Community 131"
+### Community 134 - "Community 134"
 Cohesion: 0.25
-Nodes (8): INV-026: Private key on management conductor only; tenants verify but never sign, ONTAR Five Intent Categories (Execution, Connectivity, Configuration, Lifecycle, Audit), ONTAR governance chain (Guardian -> Conductor -> ONTAR at pod boundary), ONTAR Six Invariants (nothing undeclared executes; hash-stable graphs; phase authority), PackInstancePullLoop (tenant: pulls signed Secrets, verifies Ed25519, upserts PackReceipt), SigningLoop (management: signs PackInstance and PermissionSnapshot with Ed25519), PackInstance and PermissionSnapshot Ed25519 signing and verification model, ONTAR Architecture Decision Record
+Nodes (8): Federation Channel Contract (bidirectional gRPC between management and tenant Conductors), Import-mode tenant onboarding gRPC handshake sequence (tenant dials MGMT_ENDPOINT, management pushes PermissionSnapshot), ONTAR (Operator Native Task Application Runtime) - architectural thesis, ONTAR Five Intent Categories (Execution, Connectivity, Configuration, Lifecycle, Audit), ONTAR governance chain (Guardian -> Conductor -> ONTAR at pod boundary), ONTAR Six Invariants (nothing undeclared executes; hash-stable graphs; phase authority), PackInstance and PermissionSnapshot Ed25519 signing and verification model, ONTAR Architecture Decision Record
 
-### Community 132 - "Community 132"
+### Community 135 - "Community 135"
 Cohesion: 0.29
 Nodes (3): ValidatePermissionSetSpec(), PermissionSetReconciler, PermissionSetValidationResult
 
-### Community 133 - "Community 133"
+### Community 136 - "Community 136"
 Cohesion: 0.29
 Nodes (3): ConfigMapWriter, kubeConfigMapWriter, NoopConfigMapWriter
 
-### Community 136 - "Community 136"
+### Community 138 - "Community 138"
 Cohesion: 0.29
-Nodes (7): domain-core CODEBASE.md: purpose, key abstractions, invariants for Layer 0, pkg/lineage.IndexName(): returns lineage-{rootKind}-{rootName}; enforces one-per-root-declaration invariant, DomainLineageIndex.spec.descendantRegistry: append-only array of derived object entries with creationRationale, domain-core-schema.md: DomainLineageIndex abstract CRD definition, instantiation contract, Layer 0 standards, Layer 0 boundary: core.ontai.dev is contract/pattern layer only; permanent exclusions include reconciliation logic and downstream domain references, DomainLineageIndex.spec.outcomeRegistry: append-only terminal outcome records (Succeeded, Failed, Drifted, Superseded), DomainLineageIndex.spec.rootBinding: immutable section sealed at admission (rootKind, rootName, rootNamespace, rootUID, declaringPrincipal)
+Nodes (4): EvaluateAuthorshipGate(), AuthorshipGateDecision, AuthorshipGateHandler, AuthorshipGateRequest
 
-### Community 137 - "Community 137"
-Cohesion: 0.29
-Nodes (7): domain-core CONTRIBUTING.md: PR checklist and constitutional constraints for Layer 0, DomainLineageIndex: abstract sealed causal chain index; one instance per root declaration, DomainRelationship: typed directional association between two domain objects; authority for AppTopology wiring, domain-core README: Layer 0 abstract contract and pattern layer, instantiation contract, DomainRelationship guardian-signs-conductor: Guardian signs PermissionSnapshot, Conductor verifies ed25519 signature before receipt acknowledgement, 2026-04-04 Schema Engineer session: DomainLineageIndex, InfrastructureLineageIndex, CreationRationale enum, SealedCausalChain, ONT Progress Log: session history from 2026-04-04 lineage scaffolding
-
-### Community 139 - "Community 139"
+### Community 141 - "Community 141"
 Cohesion: 0.47
 Nodes (3): buildAnnotationPatch(), jsonPatchEscapeKey(), DeclaringPrincipalHandler
 
-### Community 140 - "Community 140"
+### Community 142 - "Community 142"
 Cohesion: 0.33
 Nodes (5): ExecuteClients, GuardianIntakeClient, OCIRegistryClient, StorageClient, TalosNodeClient
 
-### Community 142 - "Community 142"
+### Community 143 - "Community 143"
 Cohesion: 0.33
 Nodes (3): EPGStore, InMemoryEPGStore, NewInMemoryEPGStore()
 
-### Community 144 - "Community 144"
+### Community 146 - "Community 146"
+Cohesion: 0.4
+Nodes (5): AdmissionOperation, EvaluateRootBindingImmutability(), rootBindingRawEqual(), RootBindingImmutabilityDecision, RootBindingImmutabilityRequest
+
+### Community 148 - "Community 148"
 Cohesion: 0.33
 Nodes (6): AppAuditPolicy CRD, AppBoundary CRD, AppIdentity CRD, AppProfile Aggregator CRD, app-core Schema Reference, DomainIdentity Primitive
 
-### Community 145 - "Community 145"
+### Community 149 - "Community 149"
 Cohesion: 0.33
 Nodes (6): cert-manager RBACProfile catalog entry, Cilium RBACProfile catalog entry, CloudNativePG RBACProfile catalog entry, Kueue RBACProfile catalog entry, local-path-provisioner RBACProfile catalog entry, compiler component subcommand (embedded catalog for third-party RBACProfiles)
 
-### Community 146 - "Community 146"
-Cohesion: 0.4
-Nodes (6): AI safety preconditions: semantic structure, causal memory, enforced approval boundary, The Cluster Is the Documentation: ONT's living documentation principle, ONT Platform Architecture PDF: Infrastructure has a Memory, PDF Section 2: Why AI is Not Yet Ready - five gaps (no causal memory, no accountability chain, no domain context, hallucination, no human approval gate), PDF Section 0: The Cluster Is the Documentation - five queryable cluster properties, PDF Section 1: Infrastructure Without Memory - three root causes (Maintenance Trap, Opaque Artifacts, Judgment Gap)
-
-### Community 147 - "Community 147"
+### Community 150 - "Community 150"
 Cohesion: 0.4
 Nodes (6): compiler bootstrap: reads ClusterInput YAML, emits InfrastructureTalosCluster CR and machine config Secrets, Compiler Usage Playbook: compiler bootstrap and packbuild commands, full bootstrap sequence, compiler packbuild: reads PackBuildInput YAML, emits InfrastructureClusterPack CR with OCI digests, ccs-mgmt ClusterInput fixture (management import), enable-ccs-mgmt.sh: six-phase management cluster enable script, ccs-dev ClusterInput fixture (tenant import)
 
-### Community 148 - "Community 148"
+### Community 151 - "Community 151"
 Cohesion: 0.4
-Nodes (4): BuildAgentContext(), BuildExecuteContext(), ExecutionContext, Mode
+Nodes (6): AI safety preconditions: semantic structure, causal memory, enforced approval boundary, The Cluster Is the Documentation: ONT's living documentation principle, ONT Platform Architecture PDF: Infrastructure has a Memory, PDF Section 2: Why AI is Not Yet Ready - five gaps (no causal memory, no accountability chain, no domain context, hallucination, no human approval gate), PDF Section 0: The Cluster Is the Documentation - five queryable cluster properties, PDF Section 1: Infrastructure Without Memory - three root causes (Maintenance Trap, Opaque Artifacts, Judgment Gap)
 
-### Community 150 - "Community 150"
+### Community 153 - "Community 153"
 Cohesion: 0.5
 Nodes (4): Manifest, ParseManifests(), SplitManifests(), SplitRBACAndWorkload()
 
-### Community 151 - "Community 151"
+### Community 154 - "Community 154"
 Cohesion: 0.5
 Nodes (4): DescendantRef, IndexName(), lower(), RootBindingRef
 
-### Community 155 - "Community 155"
+### Community 159 - "Community 159"
 Cohesion: 0.4
 Nodes (4): CapabilityEntry, CapabilityManifest, CapabilityMode, ParameterDef
 
-### Community 162 - "Community 162"
+### Community 166 - "Community 166"
 Cohesion: 0.6
 Nodes (5): Document Store: Neo4j/PostgreSQL for lineage graph traversal plus MongoDB for document blobs, DocumentSchema CRD: governance contract defining structure, source, and export mapping of auto-generated documentation, Lineage Sink: event-driven collector receiving deploy/update/delete events from LineageController; interface defined, not yet implemented, The Cluster Is the Documentation playbook: five-layer documentation architecture with LineageController, Lineage Sink, Document Store, Translation Layer, Translation Layer: bounded NLP filling only nlp-generated slots in DocumentSchema; no freeform generation
 
-### Community 178 - "Community 178"
-Cohesion: 0.83
-Nodes (3): Role, ParseRole(), ReadFromEnv()
-
-### Community 180 - "Community 180"
+### Community 181 - "Community 181"
 Cohesion: 0.67
 Nodes (3): NewMigrationRunner(), RunWithRetry(), setCNPGCondition()
 
-### Community 181 - "Community 181"
+### Community 182 - "Community 182"
+Cohesion: 0.83
+Nodes (3): Role, ParseRole(), ReadFromEnv()
+
+### Community 183 - "Community 183"
 Cohesion: 0.5
 Nodes (3): EffectiveRule, EPGComputationResult, PrincipalPermissions
 
-### Community 183 - "Community 183"
+### Community 185 - "Community 185"
+Cohesion: 0.5
+Nodes (3): PolicyValidationResult, ValidateRBACPolicySpec(), ValidationCheckName
+
+### Community 186 - "Community 186"
 Cohesion: 0.67
 Nodes (3): ComputeDrift(), ReconcileAllDrift(), DriftResult
 
-### Community 184 - "Community 184"
+### Community 187 - "Community 187"
 Cohesion: 0.5
 Nodes (3): DSNSEvent, NotificationSink, SourceRef
 
-### Community 191 - "Community 191"
+### Community 195 - "Community 195"
 Cohesion: 0.67
 Nodes (3): AppEventSchema CRD, InfrastructurePackReceipt CRD, DomainEvent Primitive
 
-### Community 192 - "Community 192"
+### Community 196 - "Community 196"
 Cohesion: 0.67
 Nodes (3): PackBuildInput struct (helm/raw/kustomize source dispatch), packbuild-kustomize.yaml (local-path-provisioner example), packbuild-raw.yaml (minio-raw example)
 
-### Community 193 - "Community 193"
+### Community 197 - "Community 197"
 Cohesion: 1.0
 Nodes (3): commit-msg hook (ontai root), Co-Authored-By rejection policy, commit-msg hook (seam-core)
 
-### Community 194 - "Community 194"
+### Community 198 - "Community 198"
 Cohesion: 0.67
 Nodes (3): TCOR revision epoch: one revision per talosVersion; operations archived to GraphQuery DB on upgrade, InfrastructureTalosClusterOperationResult (seam-core CRD), InfrastructureTalosClusterOperationResult (wrapper CRD copy)
 
 ## Knowledge Gaps
 - **351 isolated node(s):** `Return all *_test.go files and Go files under test/ directories.`, `RBACReadyChecker`, `RootBindingRef`, `DescendantRef`, `DomainIdentitySpec` (+346 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **89 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **90 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `buildPackOperationResultSpec()` connect `Community 99` to `Community 39`?**
-  _High betweenness centrality (0.145) - this node is a cross-community bridge._
-- **Why does `PackResultStatus` connect `Community 99` to `Community 15`?**
-  _High betweenness centrality (0.139) - this node is a cross-community bridge._
-- **Why does `main()` connect `Community 103` to `Community 39`, `Community 104`, `Community 9`, `Community 141`, `Community 142`, `Community 13`, `Community 178`, `Community 179`, `Community 87`?**
-  _High betweenness centrality (0.090) - this node is a cross-community bridge._
+- **Why does `buildPackOperationResultSpec()` connect `Community 108` to `Community 60`?**
+  _High betweenness centrality (0.148) - this node is a cross-community bridge._
+- **Why does `PackResultStatus` connect `Community 108` to `Community 20`?**
+  _High betweenness centrality (0.142) - this node is a cross-community bridge._
+- **Why does `main()` connect `Community 110` to `Community 11`, `Community 109`, `Community 143`, `Community 144`, `Community 180`, `Community 182`, `Community 120`, `Community 60`, `Community 94`?**
+  _High betweenness centrality (0.091) - this node is a cross-community bridge._
 - **Are the 27 inferred relationships involving `RunAgent()` (e.g. with `ExitInvariantViolation()` and `GuardNotCompileMode()`) actually correct?**
   _`RunAgent()` has 27 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 4 inferred relationships involving `compileBootstrap()` (e.g. with `runBootstrapSubcommand()` and `resolveKubeconfigPath()`) actually correct?**
