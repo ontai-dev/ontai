@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Last updated:** 2026-05-06 (session/24b)
+**Last updated:** 2026-05-06 (session/25)
 **Full session archive:** PROGRESS-archive-2026-04-20.md
 
 > Understand the codebase through graphify, not this file:
@@ -21,7 +21,7 @@
 |----------|------|--------|
 | guardian | guardian | Operational. RBACPolicy, RBACProfile, IdentityBinding, IdentityProvider, PermissionSet, PermissionSnapshot, APIGroupSweep all reconciling. Admission webhook live. |
 | platform | platform | Operational. TalosCluster lifecycle, CAPI provider, all day-2 job CRDs, DriftSignalReconciler for RunnerConfig/Talos/K8s drift, Decision H cascade. |
-| conductor | conductor | Operational. 17 capabilities registered. Execute + agent modes. Signing loop, pack receipt loop, snapshot loop, drift handler, K8s/Talos version drift loops, federation. |
+| conductor | conductor | Operational. 18 capabilities registered. Execute + agent modes. Signing loop, pack receipt loop, snapshot loop, drift handler, K8s/Talos version drift loops, federation. |
 | wrapper | wrapper | Operational. ClusterPack, PackExecution, PackInstance reconcilers. ConductorReady gate. Drift cascade delete. |
 | seam-core | seam-core | Operational. LineageController across all 9 GVKs. DriftSignal CRD. Conditions package. |
 | domain-core | domain-core | Operational. Layer 0 abstract types. DomainLineageIndex. No controllers. |
@@ -37,10 +37,8 @@
 
 | PR | Repo | Title | CI |
 |----|------|-------|----|
-| ontai #21 | ontai | feat: test graph (graphify-tests.py) + envtest-setup Makefile | No CI configured |
-| conductor #39 | conductor | docs(integration): point envtest setup to make envtest-setup | Passing |
-| platform #23 | platform | docs(integration): point envtest setup to make envtest-setup | Passing |
-| wrapper #19 | wrapper | docs(integration): point envtest setup to make envtest-setup | Passing |
+| conductor #41 | conductor | feat: machineconfig-restore capability + 5 unit tests (session/25) | Running |
+| platform #26 | platform | feat: machineconfig-restore CRD + reconciler + schedule reconcilers (session/25) | Running |
 
 ---
 
@@ -51,6 +49,25 @@
 | ccs-mgmt | Partially degraded -- cp3 NotReady, Talos API down | Conductor pod CrashLoopBackOff; blocks MGMT-HP-NODE e2e |
 | ccs-dev (10.20.0.20) | Unreachable | Blocks all TENANT day-2 e2e: HP-CLUSTER, HP-NODE, PKI-CLUSTER-REACH |
 | drift-k8s-version-ccs-dev | DriftSignal queued | Corrective UpgradePolicy exists targeting k8s 1.32.3; Job not yet run. Confirm or update spec. |
+
+---
+
+## Session/25 (2026-05-06) -- machineconfig-restore + backup schedule reconcilers
+
+All Task 1 deliverables complete. All unit and integration tests green.
+
+**`PLATFORM-BL-MACHINECONFIG-RESTORE` (closed)**
+`TalosMachineConfigRestore` CRD added to platform API. `MachineConfigRestoreReconciler` implements the operational Job pattern: gates on RunnerConfig/capability, resolves S3 secret, projects env secret, submits Conductor executor Job, polls OperationResult. One-shot CR (does not requeue on Succeeded). Conditions: `MachineConfigRestoreReady`, `MachineConfigRestoreRunning`, `MachineConfigRestoreDegraded`, `MachineConfigRestoreS3Absent`, `CapabilityUnavailable`.
+
+**`TalosMachineConfigBackupSchedule` + `TalosEtcdBackupSchedule` (new CRDs and reconcilers)**
+Interval-based scheduler pattern: `time.ParseDuration` + `RequeueAfter`. `MachineConfigBackupScheduleReconciler` creates `TalosMachineConfigBackup` CRs named `{cluster}-sched-{ts}`. `EtcdBackupScheduleReconciler` creates `EtcdMaintenance` CRs with `operation=backup`. No external cron dependency.
+
+**conductor: `machineconfig-restore` capability (closed)**
+`machineConfigRestoreHandler.Execute()`: reads `TalosMachineConfigRestore` CR, downloads per-node config from S3 at `{cluster}/machineconfigs/{ts}/{hostname}.yaml`, applies via `ApplyConfiguration`, waits for node stable. Non-fatal per node; returns `ExecutionFailure` only when all nodes fail. `CapabilityMachineConfigRestore` constant added to `pkg/runnerlib/constants.go`. 5 unit tests: nil clients, no CR, success, download failure, targetNodes filter -- all pass.
+
+**Registrations:** All 3 new reconcilers registered in `platform/cmd/platform/main.go`.
+
+**PRs:** conductor #41, platform #26 -- both open, CI running.
 
 ---
 
