@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Last updated:** 2026-05-06 (session/25)
+**Last updated:** 2026-05-06 (session/25b)
 **Full session archive:** PROGRESS-archive-2026-04-20.md
 
 > Understand the codebase through graphify, not this file:
@@ -35,10 +35,7 @@
 
 ## Open PRs (Pending Merge)
 
-| PR | Repo | Title | CI |
-|----|------|-------|----|
-| conductor #41 | conductor | feat: machineconfig-restore capability + 5 unit tests (session/25) | Running |
-| platform #26 | platform | feat: machineconfig-restore CRD + reconciler + schedule reconcilers (session/25) | Running |
+None.
 
 ---
 
@@ -48,7 +45,26 @@
 |---------|--------|--------|
 | ccs-mgmt | Partially degraded -- cp3 NotReady, Talos API down | Conductor pod CrashLoopBackOff; blocks MGMT-HP-NODE e2e |
 | ccs-dev (10.20.0.20) | Unreachable | Blocks all TENANT day-2 e2e: HP-CLUSTER, HP-NODE, PKI-CLUSTER-REACH |
-| drift-k8s-version-ccs-dev | DriftSignal queued | Corrective UpgradePolicy exists targeting k8s 1.32.3; Job not yet run. Confirm or update spec. |
+| drift-k8s-version-ccs-dev | Closed (session/25b) | Validated via synthetic injection. Both spec copies reverted to 1.32.3. DriftSignal and UpgradePolicy deleted. |
+
+---
+
+## Session/25b (2026-05-06) -- K8S-DRIFT-CONFIRM + live e2e validation
+
+**K8S-DRIFT-CONFIRM (closed)**
+Kubernetes version drift detection loop validated via synthetic injection on ccs-dev.
+- Deleted stale `drift-k8s-version-ccs-dev` DriftSignal and both UpgradePolicies from session/18.
+- Patched `spec.kubernetesVersion=1.32.2` on tenant-local `InfrastructureTalosCluster ccs-dev` (ont-system on ccs-dev cluster).
+- Conductor k8s version drift loop detected mismatch (spec=1.32.2 vs observed=1.32.3) within ~15s.
+- `drift-k8s-version-ccs-dev` DriftSignal created in `seam-tenant-ccs-dev` with correct driftReason.
+- `DriftSignalReconciler` processed signal, advanced to `queued`.
+- Root cause of no UpgradePolicy: `DriftSignalReconciler.handleTalosVersionDrift` parses Talos version format only; k8s drift reason format differs. Detection loop confirmed; automatic corrective UpgradePolicy for k8s drift is not yet implemented (future item).
+- Reverted both spec copies to 1.32.3 and deleted synthetic signal.
+
+**Live e2e (session/25 + 25b)**
+- machineconfig-backup triggered on ccs-mgmt and ccs-dev: S3 artifacts confirmed at `seam-backups/{cluster}/machineconfigs/{ts}/{hostname}.yaml`.
+- machineconfig-restore from backup timestamp on both clusters: all nodes remained Ready post-restore.
+- Both PRs (conductor #41, platform #26) merged.
 
 ---
 

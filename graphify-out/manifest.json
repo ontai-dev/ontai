@@ -1,6 +1,6 @@
 {
   "/home/saigha01/ontai/graphify-tests.py": {
-    "mtime": 1778090307.415849,
+    "mtime": 1778094219.855892,
     "hash": "e5fcad82756d3aa764e20f2f108268b3"
   },
   "/home/saigha01/ontai/build_pptx.py": {
@@ -76,7 +76,7 @@
     "hash": "93dc00b648ba2f34d9d003beaa24612c"
   },
   "/home/saigha01/ontai/conductor/cmd/compiler/compile_oci_push.go": {
-    "mtime": 1777828973.0873048,
+    "mtime": 1778094177.702165,
     "hash": "9edae0cfe0705ea462fa7f25cce14bef"
   },
   "/home/saigha01/ontai/conductor/cmd/compiler/compile_maintenance.go": {
@@ -92,7 +92,7 @@
     "hash": "2f5dfaec80ef6645c18b3a0f086487cb"
   },
   "/home/saigha01/ontai/conductor/cmd/compiler/compile.go": {
-    "mtime": 1777828601.4136558,
+    "mtime": 1778094177.6995635,
     "hash": "8155a21858eeac7fad8fbf119a1743ce"
   },
   "/home/saigha01/ontai/conductor/cmd/compiler/compile_launch.go": {
@@ -172,11 +172,11 @@
     "hash": "fbe5d3ec06c7ac602e41292e5bf20fb1"
   },
   "/home/saigha01/ontai/conductor/internal/capability/platform_machineconfig.go": {
-    "mtime": 1778093211.2253273,
+    "mtime": 1778094177.704653,
     "hash": "8e163455998cc24699e19de5a6549907"
   },
   "/home/saigha01/ontai/conductor/internal/capability/registry.go": {
-    "mtime": 1777972345.91602,
+    "mtime": 1778094177.7058873,
     "hash": "40e36ff87e0375f729b3a63d2f4c5f83"
   },
   "/home/saigha01/ontai/conductor/internal/capability/guardian.go": {
@@ -188,7 +188,7 @@
     "hash": "8f766d1f9dbd2b628f3bba5c066cc8ad"
   },
   "/home/saigha01/ontai/conductor/internal/capability/stubs.go": {
-    "mtime": 1778093219.2763896,
+    "mtime": 1778094177.706257,
     "hash": "2273a5ce84aecf1668c27afe73f52e67"
   },
   "/home/saigha01/ontai/conductor/internal/capability/platform_etcd.go": {
@@ -208,11 +208,11 @@
     "hash": "c5e24a5584b136f07e7ea8c41991adee"
   },
   "/home/saigha01/ontai/conductor/internal/capability/platform_security.go": {
-    "mtime": 1778060605.5441415,
+    "mtime": 1778094177.7053304,
     "hash": "85247c0da6bfb1cad9b0084af0977f29"
   },
   "/home/saigha01/ontai/conductor/internal/capability/adapters.go": {
-    "mtime": 1777971804.629208,
+    "mtime": 1778094177.7042599,
     "hash": "2d6d80dc96b7a5ba9b895610a52c0f83"
   },
   "/home/saigha01/ontai/conductor/internal/capability/wrapper.go": {
@@ -312,7 +312,7 @@
     "hash": "751f02dedfff9cc7c1001744ef8604f6"
   },
   "/home/saigha01/ontai/conductor/pkg/runnerlib/constants.go": {
-    "mtime": 1778093069.9302282,
+    "mtime": 1778094177.7065473,
     "hash": "330c4500574d9b58fcede845cc3ab01e"
   },
   "/home/saigha01/ontai/conductor/pkg/runnerlib/jobspec.go": {
@@ -780,7 +780,7 @@
     "hash": "32cda93944bd4b578032bdeed2b57ce3"
   },
   "/home/saigha01/ontai/platform/cmd/platform/main.go": {
-    "mtime": 1778093517.8966944,
+    "mtime": 1778094182.1124313,
     "hash": "a835dcc1f9bb79faa5ebdd1693df90a4"
   },
   "/home/saigha01/ontai/platform/internal/controller/nodeoperation_reconciler.go": {
@@ -788,7 +788,7 @@
     "hash": "cd7c4de47904358c421841b7ccb92139"
   },
   "/home/saigha01/ontai/platform/internal/controller/taloscluster_helpers.go": {
-    "mtime": 1778073010.6930902,
+    "mtime": 1778094182.1187027,
     "hash": "5b3c59dc3fc81b9a66aa9df7fac7fd88"
   },
   "/home/saigha01/ontai/platform/internal/controller/upgradepolicy_reconciler.go": {
@@ -800,7 +800,7 @@
     "hash": "a6b328ddb55d4c5274f6a01d0559ddb1"
   },
   "/home/saigha01/ontai/platform/internal/controller/machineconfigbackup_reconciler.go": {
-    "mtime": 1778064133.29589,
+    "mtime": 1778094182.1153965,
     "hash": "1783116a05a7072e2b41e75b08398b48"
   },
   "/home/saigha01/ontai/platform/internal/controller/clusterreset_reconciler.go": {
@@ -808,11 +808,11 @@
     "hash": "6ae71ac65190f480e71b27df3405525c"
   },
   "/home/saigha01/ontai/platform/internal/controller/taloscluster_import_helpers.go": {
-    "mtime": 1778060574.1128974,
+    "mtime": 1778094182.1193771,
     "hash": "ed36b6dd8cb74c928d3f1eebdbc24c4f"
   },
   "/home/saigha01/ontai/platform/internal/controller/etcdbackupschedule_reconciler.go": {
-    "mtime": 1778093497.417537,
+    "mtime": 1778094182.114578,
     "hash": "4010b1bcca04333bae53de52f890d6bc"
   },
   "/home/saigha01/ontai/platform/internal/controller/nodemaintenance_reconciler.go": {
@@ -824,11 +824,11 @@
     "hash": "3fb58f668fe0c76e6752818ae7035739"
   },
   "/home/saigha01/ontai/platform/internal/controller/taloscluster_controller.go": {
-    "mtime": 1778073030.1022346,
+    "mtime": 1778094182.117889,
     "hash": "9af4f7660df3d4bb6da37518fcebddc7"
   },
   "/home/saigha01/ontai/platform/internal/controller/driftsignal_reconciler.go": {
-    "mtime": 1777905533.1771145,
+    "mtime": 1778094182.1140394,
     "hash": "fed120f6ff145be85b201768ca004d9b"
   },
   "/home/saigha01/ontai/platform/internal/controller/hardeningprofile_reconciler.go": {
@@ -840,7 +840,7 @@
     "hash": "021936b85dafeb756467bc83b6f60c19"
   },
   "/home/saigha01/ontai/platform/internal/controller/etcdmaintenance_reconciler.go": {
-    "mtime": 1777716402.7456024,
+    "mtime": 1778094182.115048,
     "hash": "da29cbeec89308fc55133c9ae6b0e804"
   },
   "/home/saigha01/ontai/platform/internal/controller/taloscluster_version_upgrade.go": {
@@ -856,11 +856,11 @@
     "hash": "2c7bec56eaae9402953daa6ac385577d"
   },
   "/home/saigha01/ontai/platform/internal/controller/machineconfigbackupschedule_reconciler.go": {
-    "mtime": 1778093279.0078523,
+    "mtime": 1778094182.11562,
     "hash": "12b25057836f2520f788b2b10d1bf8a6"
   },
   "/home/saigha01/ontai/platform/internal/controller/machineconfigrestore_reconciler.go": {
-    "mtime": 1778093259.7917035,
+    "mtime": 1778094182.11588,
     "hash": "b0b0cff41b223de8c4d070f594e60144"
   },
   "/home/saigha01/ontai/platform/internal/controller/tcor_graphquery_stub.go": {
@@ -868,11 +868,11 @@
     "hash": "deafb7b1773f34043ac057bd1a3e769d"
   },
   "/home/saigha01/ontai/platform/internal/controller/taloscluster_bootstrap_hardening.go": {
-    "mtime": 1778073049.4383786,
+    "mtime": 1778094182.116969,
     "hash": "e959f30f77d904d73f85d3a3236c0c8e"
   },
   "/home/saigha01/ontai/platform/internal/controller/pki_cert_helpers.go": {
-    "mtime": 1777718860.1274009,
+    "mtime": 1778094182.1163592,
     "hash": "8e91d1616d87f50f54740042e8f3995e"
   },
   "/home/saigha01/ontai/platform/internal/controller/seaminfrastructurecluster_reconciler.go": {
@@ -888,7 +888,7 @@
     "hash": "512ee1088bba556e0c7255f9f6fa9a21"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/machineconfigbackupschedule_types.go": {
-    "mtime": 1778093104.4424973,
+    "mtime": 1778094182.1119227,
     "hash": "af9593128ca00039a41f930742647615"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/lineage_conditions.go": {
@@ -908,7 +908,7 @@
     "hash": "beb7ca1cf72bac7fc7c1ea6123cefa45"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/machineconfigrestore_types.go": {
-    "mtime": 1778093090.6383896,
+    "mtime": 1778094182.1119227,
     "hash": "54016e7c2262f40e828c09e55a0b46d4"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/maintenancebundle_types.go": {
@@ -936,7 +936,7 @@
     "hash": "fce155fc81421476618b38ceee91803d"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/zz_generated.deepcopy.go": {
-    "mtime": 1778093170.8840141,
+    "mtime": 1778094182.1124313,
     "hash": "776d394c1ae6a6aba74ff2f5a47e8ea0"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/nodeoperation_types.go": {
@@ -952,7 +952,7 @@
     "hash": "8e1ea4e06815aeda18c428a6c961ea20"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/etcdbackupschedule_types.go": {
-    "mtime": 1778093116.0045874,
+    "mtime": 1778094182.1116939,
     "hash": "b17aef5fce079d950dbac115ba3e3a92"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/capability_conditions.go": {
@@ -960,11 +960,11 @@
     "hash": "b4f408db2df5c978cfe814155918213d"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/taloscluster_types.go": {
-    "mtime": 1778072995.9349804,
+    "mtime": 1778094182.1119227,
     "hash": "ee81e8ba688cb3caa8138250e4d5269f"
   },
   "/home/saigha01/ontai/platform/api/v1alpha1/machineconfigbackup_types.go": {
-    "mtime": 1778063938.8380678,
+    "mtime": 1778094182.1118116,
     "hash": "be1b4f719fc8e48a8fc959e4a4dadceb"
   },
   "/home/saigha01/ontai/platform/api/infrastructure/v1alpha1/lineage_conditions.go": {
@@ -1000,7 +1000,7 @@
     "hash": "35330013026915d2bfcc8393df702af3"
   },
   "/home/saigha01/ontai/CONTEXT.md": {
-    "mtime": 1778090400.7487144,
+    "mtime": 1778094219.8434598,
     "hash": "fa62102e7dfcfa849991c7fd0edcd632"
   },
   "/home/saigha01/ontai/AGENTS.md": {
@@ -1008,24 +1008,24 @@
     "hash": "e733eca6982694f77e6046df6df29a5e"
   },
   "/home/saigha01/ontai/GIT_TRACKING.md": {
-    "mtime": 1778090411.7245638,
+    "mtime": 1778094219.8436599,
     "hash": "103a2b46878b45214fff7aa1e8963123"
   },
   "/home/saigha01/ontai/index.html": {
-    "mtime": 1777829246.0912347,
+    "mtime": 1778094219.8565047,
     "hash": "e710d787a76442e26cbbf697f760275e"
   },
   "/home/saigha01/ontai/PROGRESS.md": {
-    "mtime": 1778093727.2570362,
-    "hash": "fe1898914327ac767c4c09b25ff239e5"
+    "mtime": 1778096265.4959424,
+    "hash": "a1f3030e68af301ef2fcb6e14eb53daf"
   },
   "/home/saigha01/ontai/CLAUDE.md": {
-    "mtime": 1777905331.3958004,
+    "mtime": 1778094219.8431563,
     "hash": "a5aa2bf461d4f623265019b048dacf5c"
   },
   "/home/saigha01/ontai/BACKLOG.md": {
-    "mtime": 1778093740.3204012,
-    "hash": "cd58a4afa905117d18c33b87344b30cf"
+    "mtime": 1778096232.1605086,
+    "hash": "680b24cb97768150716c9a8949f71f9d"
   },
   "/home/saigha01/ontai/README.md": {
     "mtime": 1776545219.3090088,
@@ -1220,7 +1220,7 @@
     "hash": "248cf6b952bd0067704b8f403c0298af"
   },
   "/home/saigha01/ontai/conductor/docs/onboarding-runbook.md": {
-    "mtime": 1777830283.5832946,
+    "mtime": 1778094177.7036536,
     "hash": "85091e8d5b6e5376bb0c1b264501793c"
   },
   "/home/saigha01/ontai/conductor/docs/decisions/ontar.md": {
@@ -1244,7 +1244,7 @@
     "hash": "27daaaded87ad5cf1759383159f47a2d"
   },
   "/home/saigha01/ontai/conductor/docs/configs/cluster-input-tenant.yaml": {
-    "mtime": 1777828904.5971375,
+    "mtime": 1778094177.7026908,
     "hash": "f7cf9673e286cb4ff27f59af1bb41d90"
   },
   "/home/saigha01/ontai/conductor/internal/catalog/entries/cert-manager.yaml": {
@@ -1448,7 +1448,7 @@
     "hash": "20193249c1c120f46b31d36d55e2ec4c"
   },
   "/home/saigha01/ontai/platform/CLAUDE.md": {
-    "mtime": 1777971953.9263208,
+    "mtime": 1778094182.1115031,
     "hash": "f54d736ebb1f60550afb359d5591f6d7"
   },
   "/home/saigha01/ontai/platform/README.md": {
@@ -1456,55 +1456,71 @@
     "hash": "409016aeddb52c8401c81a1acbd6a3dc"
   },
   "/home/saigha01/ontai/platform/docs/platform-schema.md": {
-    "mtime": 1777719131.8295982,
+    "mtime": 1778094182.1134117,
     "hash": "fac7346bfb9f7a7810813c5bd53518a1"
   },
   "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_clustermaintenances.yaml": {
-    "mtime": 1777107677.465806,
+    "mtime": 1778094722.9382677,
     "hash": "1071cbf42c24f6be0f63906752cee805"
   },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_talosetcdbackupschedules.yaml": {
+    "mtime": 1778094722.9782684,
+    "hash": "75f6fd68fdbb360832970bdbdd231566"
+  },
   "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_maintenancebundles.yaml": {
-    "mtime": 1777107677.492806,
+    "mtime": 1778094722.966268,
     "hash": "365941182a7c17415093e01c5850fcd2"
   },
   "/home/saigha01/ontai/platform/config/crd/infrastructure.cluster.x-k8s.io_seaminfrastructureclusters.yaml": {
-    "mtime": 1777107677.497806,
+    "mtime": 1778094722.9732683,
     "hash": "a2144e47f85062ab3369470a8f324ae2"
   },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_talosmachineconfigrestores.yaml": {
+    "mtime": 1778094722.9832685,
+    "hash": "4b6eb7786decf15f1aa774147a195781"
+  },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_talosmachineconfigbackups.yaml": {
+    "mtime": 1778094722.9792683,
+    "hash": "1d89f239916e40c5c16ca6d0d39e7c5e"
+  },
   "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_etcdmaintenances.yaml": {
-    "mtime": 1777710237.6158893,
+    "mtime": 1778094722.963268,
     "hash": "a8860c19419072607cfde98db80fc2e6"
   },
   "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_nodeoperations.yaml": {
-    "mtime": 1777107677.495806,
+    "mtime": 1778094722.9702682,
     "hash": "7df9dabaacdf2c61229fd2751a978512"
   },
   "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_nodemaintenances.yaml": {
-    "mtime": 1777107677.494806,
+    "mtime": 1778094722.9682682,
     "hash": "0fc9dc6e2771718280fd03d28bd9347d"
   },
+  "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_talosmachineconfigbackupschedules.yaml": {
+    "mtime": 1778094722.9812684,
+    "hash": "e590daf9d241c66a438c2affd6330c15"
+  },
   "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_upgradepolicies.yaml": {
-    "mtime": 1777107677.504806,
+    "mtime": 1778094722.9842684,
     "hash": "8e0a8c09b5efe79e7d14bcd622afc35b"
   },
   "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_clusterresets.yaml": {
-    "mtime": 1777107677.466806,
+    "mtime": 1778094722.9392676,
     "hash": "ec114c0f5296bb5ac9957581d0996d43"
   },
   "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_pkirotations.yaml": {
-    "mtime": 1777107677.496806,
+    "mtime": 1778094722.9712682,
     "hash": "e8d887e64a50f1fca4df555ac6d75068"
   },
   "/home/saigha01/ontai/platform/config/crd/infrastructure.cluster.x-k8s.io_seaminfrastructuremachines.yaml": {
-    "mtime": 1777107677.500806,
+    "mtime": 1778094722.9752684,
     "hash": "e9631c2b7760209931706d011f4c5df3"
   },
   "/home/saigha01/ontai/platform/config/crd/infrastructure.cluster.x-k8s.io_seaminfrastructuremachinetemplates.yaml": {
-    "mtime": 1777107677.502806,
+    "mtime": 1778094722.9762683,
     "hash": "cf4cf5ca5f7508667babe6ad2f9760a7"
   },
   "/home/saigha01/ontai/platform/config/crd/platform.ontai.dev_hardeningprofiles.yaml": {
-    "mtime": 1777710237.616069,
+    "mtime": 1778094722.9642682,
     "hash": "3b630d5a3070694a613daec4c9e621e5"
   },
   "/home/saigha01/ontai/branding/naming-conventions.md": {
