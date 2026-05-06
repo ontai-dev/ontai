@@ -1,158 +1,189 @@
 # ONT Platform Progress
 
-**Last updated:** May 4, 2026 (session/21 close)
+**Last updated:** 2026-05-06 (session/24b)
+**Full session archive:** PROGRESS-archive-2026-04-20.md
 
-**Current state:** graphify knowledge graph replaces CODEBASE.md as source of truth across all repos (session/21 -- 8 PRs merged). Graph at graphify-out/graph.json: 5,268 nodes, 10,450 edges, 767 source files, 421 communities, 256x token reduction. CLAUDE.md Codebase Understanding Protocol replaced with Graphify Source of Truth Protocol. Prior: Alpha release v1.9.3-alpha.1 cut. Compiler fixes merged (conductor PR #34). LineageController confirmed across all 9 GVKs.
-
-**Full history:** PROGRESS-archive-2026-04-20.md
-
----
-
-## Open Work
-
-### Blocking Alpha
-
-No blocking alpha items currently open. All previously tracked items have been resolved.
-
-### Infrastructure (blocks e2e)
-
-| ID | Description |
-|----|-------------|
-| ccs-dev unreachable (10.20.0.20) | Blocks TENANT-HP-CLUSTER, TENANT-PKI-CLUSTER-REACH, TENANT-HP-NODE |
-| ccs-mgmt cp3 NotReady | Talos API down, causing conductor pod CrashLoopBackOff; blocks MGMT-HP-NODE |
+> Understand the codebase through graphify, not this file:
+> - Production graph: `~/ontai/graphify-out/graph.json` -- 2,787 nodes, 4,383 links, 266 communities
+> - Test graph: `~/ontai/graphify-tests-out/graph.json` -- 2,282 nodes, 4,968 links
+> - Build test graph: `python graphify-tests.py` from ontai root
+> - Update production graph: `/graphify --update` from ontai root after any code change
 
 ---
 
-## Session/21 Work (2026-05-04) -- MERGED
+## Current Platform State
 
-### Governor Directive: graphify replaces CODEBASE.md
+**Alpha release:** v1.9.3-alpha.1 (conductor repo tag, shipped session/19)
 
-| PR | Repo | Summary |
-|----|------|---------|
-| ontai #17 | ontai | CLAUDE.md Graphify Protocol, CONTEXT.md graphify section, root CODEBASE.md removed, graphify-out/ committed |
-| conductor #36 | conductor | Remove CODEBASE.md |
-| guardian #20 | guardian | Remove CODEBASE.md |
-| platform #21 | platform | Remove CODEBASE.md |
-| seam-core #17 | seam-core | Remove CODEBASE.md |
-| wrapper #17 | wrapper | Remove CODEBASE.md |
-| domain-core #4 | domain-core | Remove CODEBASE.md |
-| app-core #1 | app-core | Remove CODEBASE.md |
+**All six operators ship and reconcile:**
 
-### Graphify Graph (initial build)
+| Operator | Repo | Status |
+|----------|------|--------|
+| guardian | guardian | Operational. RBACPolicy, RBACProfile, IdentityBinding, IdentityProvider, PermissionSet, PermissionSnapshot, APIGroupSweep all reconciling. Admission webhook live. |
+| platform | platform | Operational. TalosCluster lifecycle, CAPI provider, all day-2 job CRDs, DriftSignalReconciler for RunnerConfig/Talos/K8s drift, Decision H cascade. |
+| conductor | conductor | Operational. 17 capabilities registered. Execute + agent modes. Signing loop, pack receipt loop, snapshot loop, drift handler, K8s/Talos version drift loops, federation. |
+| wrapper | wrapper | Operational. ClusterPack, PackExecution, PackInstance reconcilers. ConductorReady gate. Drift cascade delete. |
+| seam-core | seam-core | Operational. LineageController across all 9 GVKs. DriftSignal CRD. Conditions package. |
+| domain-core | domain-core | Operational. Layer 0 abstract types. DomainLineageIndex. No controllers. |
 
-- Nodes: 5,268 | Edges: 10,450 | Communities: 421 | Source files: 767
-- Token reduction: 256x vs naive full-corpus reads
-- God nodes: `buildDay2Scheme()` (97), `newScheme()` (78), `NewRegistry()` (77)
-- Graph at: `~/ontai/graphify-out/graph.json`
-- Agents must run `/graphify --update` after every codebase change
+**Test infrastructure:**
+- Unit tests: all repos green
+- Integration tests (envtest): all repos green. Run with `KUBEBUILDER_ASSETS=$(make -s envtest-path)` from any repo. Setup: `make envtest-setup` from ontai root (K8s 1.32.x, matches ccs-mgmt).
+- e2e: Cluster-dependent; gates on `MGMT_KUBECONFIG` env var. Most specs are live-promoted stubs.
 
 ---
 
-## Session/20 Work (2026-05-03) -- MERGED
+## Open PRs (Pending Merge)
 
-### PRs Merged (session/20)
-
-| PR | Repo | Branch | Summary |
-|----|------|--------|---------|
-| conductor #34 | conductor | session/19-compiler-fixes | Management bootstrap guard, OCI push auth (docker config.json + snap fallback), cluster-input-tenant.yaml machineConfigPaths fix, BACKLOG COMPILER-BL-TALOSCLUSTER-VIP-REMOVAL |
-| ontai #15 | ontai | session/19-site-schema-update | ontai.dev: schema stats 36 schemas, seam-core 12 types, LineageController badge Alpha: Partial |
-
-### LineageController Confirmed
-
-LineageController working for all 9 GVKs: 4 infrastructure.ontai.dev types (InfrastructureTalosCluster, InfrastructureClusterPack, InfrastructurePackExecution, InfrastructurePackInstance) and 5 security.ontai.dev types (RBACPolicy, RBACProfile, IdentityBinding, IdentityProvider, PermissionSet). Initial concern about security.ontai.dev types was transient; all synced correctly.
+| PR | Repo | Title | CI |
+|----|------|-------|----|
+| ontai #21 | ontai | feat: test graph (graphify-tests.py) + envtest-setup Makefile | No CI configured |
+| conductor #39 | conductor | docs(integration): point envtest setup to make envtest-setup | Passing |
+| platform #23 | platform | docs(integration): point envtest setup to make envtest-setup | Passing |
+| wrapper #19 | wrapper | docs(integration): point envtest setup to make envtest-setup | Passing |
 
 ---
 
-## Session/19 Work (2026-05-03) -- MERGED
+## Infrastructure Status
 
-### PRs Merged (session/19)
-
-| PR | Repo | Branch | Summary |
-|----|------|--------|---------|
-| conductor #31 | conductor | session/18-kube-upgrade-fix | kube-upgrade v-prefix fix, GetMachineConfig+merge pattern, 2 new unit tests |
-| conductor #32 | conductor | session/18-k8s-drift-to-main | Cherry-pick KubernetesVersionDriftLoop to main (PR #30 had landed on session/17 branch) |
-| conductor #33 | conductor | session/19-onboarding-runbook | Onboarding runbook and 5 config files in conductor/docs/configs/ |
-| ontai-schema #9 | ontai-schema | session/19-schema-index-update | schema index: seam-core 3->12 schemas, v1.9.3-alpha.1, Decision G migration |
-| ontai #14 | ontai | session/19-site-alpha-release | ontai.dev: hero stat v1.9.3-alpha.1, operator cards updated, submodule bump |
-
-### Alpha Release
-
-- Tag: v1.9.3-alpha.1 on conductor repo
-- GitHub release created
-
-### ccs-dev Node Recovery
-
-- Nodes had kubelet:1.32.3 (no v) in machine config after first corrective Job run
-- Applied talosctl machine config patch (no-reboot mode) to all 3 nodes replacing 1.32.3 with v1.32.3
-- All nodes returned to Ready at v1.32.3
-- DriftSignal drift-k8s-version-ccs-dev confirmed
+| Cluster | Status | Impact |
+|---------|--------|--------|
+| ccs-mgmt | Partially degraded -- cp3 NotReady, Talos API down | Conductor pod CrashLoopBackOff; blocks MGMT-HP-NODE e2e |
+| ccs-dev (10.20.0.20) | Unreachable | Blocks all TENANT day-2 e2e: HP-CLUSTER, HP-NODE, PKI-CLUSTER-REACH |
+| drift-k8s-version-ccs-dev | DriftSignal queued | Corrective UpgradePolicy exists targeting k8s 1.32.3; Job not yet run. Confirm or update spec. |
 
 ---
 
-## Session/17+18 Work (2026-05-02) -- MERGED
+## Session/24b (2026-05-06) -- HardeningProfile bootstrap support
 
-### PRs Merged (this session)
+`PLATFORM-BL-HARDENINGPROFILE-MERGE` implemented end to end. All unit + integration tests green. Both graphs rebuilt.
 
-| PR | Repo | Branch | Summary |
-|----|------|--------|---------|
-| seam-core #16 | seam-core | session/17-pki-rotation-automation | PkiRotationThresholdDays + PkiExpiryDate fields; lint fix |
-| conductor #29 | conductor | session/17-hardening-profile-tests | PKI rotation, TalosVersionDriftLoop, hardeningApply, K8s drift loop, lint fixes |
-| conductor #30 | conductor | session/18-k8s-version-drift | KubernetesVersionDriftLoop implementation + unit tests |
-| platform #19 | platform | session/17-hardening-profile-tests | DriftSignalReconciler InfrastructureTalosCluster handler, PKI automation |
-| platform #20 | platform | session/18-k8s-version-drift | DriftSignalReconciler K8s version drift handler, ensureCorrectiveKubeUpgradePolicy |
+**ontai-schema:** `hardeningProfileRef` (optional LocalObjectRef) added to `InfrastructureTalosCluster.json`. `HardeningApplied` added to status conditions list.
 
-### Three Bugs Fixed
+**seam-core:** `HardeningProfileRef *InfrastructureLocalObjectRef` field added to `InfrastructureTalosClusterSpec` in `taloscluster_types.go`. `DeepCopyInto` updated. `ConditionTypeHardeningApplied`, `ReasonHardeningApplied`, `ReasonHardeningPending`, `ReasonHardeningProfileNotValid` added to `seam-core/pkg/conditions/conditions.go`.
 
-| Bug | File | Fix |
-|-----|------|-----|
-| DriftSignal escalation on terminating namespaces | `conductor/internal/agent/pack_receipt_drift_loop.go` | `namespaceTerminating()` guard skips drift increment when namespace has DeletionTimestamp |
-| packDeployHandler alphabetical-first-match | `conductor/internal/capability/wrapper.go` | Uses `params.OperationResultCM` for direct `Get` instead of `List + break` |
-| Wrapper RunnerConfig EventSource uses pre-Phase-2B GVK | `wrapper/internal/controller/packexecution_reconciler.go` | Updated to `infrastructure.ontai.dev/v1alpha1/InfrastructureRunnerConfig` |
+**platform CAPI path:** `ensureTalosConfigTemplate` now reads `HardeningProfile` when `hardeningProfileRef` is set: merges `SysctlParams` into the CP-INV-009 base sysctl map, parses and appends `MachineConfigPatches` as JSON patch objects. `reconcileCAPIPath` sets `HardeningApplied=True` after the template step when profile is referenced.
 
-### PE ownerRef gap closed
+**platform ONT-native path:** `ensureBootstrapHardening` in `taloscluster_bootstrap_hardening.go`. Called from main reconcile loop (Step G) after route result, for non-CAPI Ready clusters with `hardeningProfileRef` set. Creates `NodeMaintenance` (operation=hardening-apply, label `ontai.dev/hardening-trigger=bootstrap`) in `seam-tenant-{cluster}`. Sets `HardeningApplied=False/HardeningPending` while pending; `HardeningApplied=True` when `NodeMaintenance.Ready=True`. Validates `HardeningProfile.Valid=True` before creation. Returns `RequeueAfter: 30s` while pending.
 
-Added `MapPackExecutionToClusterPack` and PE delete-only watch to `ClusterPackReconciler.SetupWithManager`. When a PE is externally deleted (e.g. by `DriftSignalHandler`), the mapper deletes the PackInstance (clearing the version guard) and triggers ClusterPack reconcile, which creates a fresh PE. Unit test: `TestClusterPackReconciler_PackExecutionDeletedRecreatesPE`.
+**4 unit tests:** NilRef, CreatesNodeMaintenance, NoDuplicate, SetsAppliedWhenReady -- all pass.
 
-### Commits
-
-| Repo | Branch | Hash | Message |
-|------|--------|------|---------|
-| conductor | session/17-hardening-profile-tests | cd63b00 | fix three drift/pack-deploy alphabetical-first-match bugs |
-| wrapper | main | ee36691 | fix stale runner.ontai.dev RunnerConfig watch GVK |
-| wrapper | main | d586993 | PE-watching EventSource on ClusterPackReconciler to retrigger delivery on external PE deletion |
-
-### Live E2E (ccs-dev) -- DriftSignal cycle validated
-
-| # | Step | Result |
-|---|------|--------|
-| 1 | ingress-nginx Deployment deleted | PASS |
-| 2 | DriftSignal emitted | PASS |
-| 3 | PE deleted by handler, new PE created | PASS |
-| 4 | pack-deploy Job deploys nginx (not cert-manager) | PASS |
-| 5 | drift-nginx-ccs-dev confirmed | PASS |
-| 6 | cert-manager DriftSignal confirmed after redeploy | PASS |
-
-### K8s Version Drift -- Live E2E (ccs-dev)
-
-| # | Step | Result |
-|---|------|--------|
-| 1 | `talosctl upgrade-k8s` to v1.32.4 (out-of-band) | PASS |
-| 2 | KubernetesVersionDriftLoop emitted drift-k8s-version-ccs-dev | PASS |
-| 3 | DriftSignalReconciler created corrective UpgradePolicy drift-k8s-version-ccs-dev | PASS |
-| 4 | Signal in queued state | PASS |
-| 5 | Confirm (nodes revert to 1.32.3 via UpgradePolicy Job) | PENDING -- UpgradePolicy Job not yet run |
-
-### Open Item
-
-drift-k8s-version-ccs-dev signal queued; corrective UpgradePolicy `drift-k8s-version-ccs-dev` exists in seam-tenant-ccs-dev targeting kubernetesVersion=1.32.3. UpgradePolicyReconciler must submit kube-upgrade Job to revert nodes from 1.32.4 -> 1.32.3. Until then signal stays queued. If keeping 1.32.4 is intentional, update TalosCluster spec.kubernetesVersion to 1.32.4.
+**Graph stats:** Production 2,787 nodes / 4,383 links; Test 2,282 nodes / 4,968 links.
 
 ---
 
-## Next Session Candidates
+## Session/24 (2026-05-06) -- Bootstrap cleanup implemented
 
-1. Cluster recovery -- cp3 NotReady, ccs-dev unreachable; blocks all TENANT e2e and MGMT-HP-NODE.
-2. K8s drift signal confirm -- drift-k8s-version-ccs-dev is queued; nodes are at v1.32.3 and should be confirmed once platform UpgradePolicyReconciler verifies convergence.
-3. MGMT-HP-NODE test fix -- `ccs-mgmt-w2` hardcoded node does not exist; decide whether single-node targeting should be implemented.
-4. Phase 6 (T-20, T-21) -- day2 scheduling with node awareness; design session required.
-5. COMPILER-BL-TALOSCLUSTER-VIP-REMOVAL -- remove mutable clusterEndpoint VIP field from InfrastructureTalosCluster CR and compiler emit paths; schema PR to ontai-schema first (Decision 11); deferred post-alpha.
-6. LineageSink, IdentityProvider, IdentityBinding -- future scope; deferred past alpha.
+Three platform defects fixed and one machineconfig framing corrected. All unit + integration tests green. Both graphify graphs rebuilt.
+
+**`PLATFORM-BL-TALOSCONFIG-ONTYSYSTEM-REMOVE` (closed)**
+`ensureExecutorTalosconfig` now copies talosconfig only to `seam-tenant-{cluster}`. Removed the `ont-system` destination: day-2 executor Jobs run in `seam-tenant-{cluster}` and mount from that namespace (`operational_job_base.go:L64`). The conductor agent Deployment reads `TALOSCONFIG_PATH` from the enable bundle -- not from this copy.
+
+**`PLATFORM-BL-KUBECONFIG-CANONICAL` (closed)**
+Canonical kubeconfig is now `seam-mc-{cluster}-kubeconfig` everywhere:
+- Deleted `tenantKubeconfigSecretName` constant and `ensureTenantKubeconfigCopy` from `taloscluster_import_helpers.go`
+- Added `ensureCAPIKubeconfig` helper in `taloscluster_helpers.go`
+- `EnsureRemoteConductorBootstrap` reads `kubeconfigSecretName(tc.Name)` for both import and CAPI paths (no mode bifurcation)
+- `platform_security.go` PKI rotation writes only `seam-mc-{cluster}-kubeconfig`
+- e2e test `pkirotation_e2e_test.go` checks canonical name
+
+**`PLATFORM-BL-CAPI-TENANT-ONBOARDING` (closed)**
+Added step 8.5 in `reconcileCAPIPath` (`taloscluster_controller.go`) after CAPI Running confirmed:
+1. `ensureCAPITalosconfig`: copies `{cluster}-talosconfig` (TALM output) → `seam-mc-{cluster}-talosconfig`
+2. `ensureCAPIKubeconfig`: copies `{cluster}-kubeconfig` (CAPI output) → `seam-mc-{cluster}-kubeconfig`
+3. `ensureTenantOnboarding`: registers RBACPolicy, 4 RBACProfiles, LocalQueue, platform-executor SA/RBAC, wrapper-runner SA/RBAC
+
+**Machineconfig reframe (`PLATFORM-BL-MACHINECONFIG-BACKUP`)**
+`hardeningApplyHandler` and `kubeUpgradeHandler` confirmed to use live Talos API (`GetMachineConfig` + `ApplyConfiguration`) -- no stored machineconfig secrets are read by any day-2 op. The `PLATFORM-BL-MACHINECONFIG-IMPORT-CAPTURE` framing was wrong. Replaced with `PLATFORM-BL-MACHINECONFIG-BACKUP`: new conductor capability + `TalosMachineConfigBackup` CRD storing `{bucket}/{cluster}/machineconfigs/{TIMESTAMP}/{hostname}.yaml`, mirroring the etcd backup structure.
+
+**`PLATFORM-BL-MACHINECONFIG-BACKUP` (closed)**
+`machineconfig-backup` Conductor capability added in `platform_machineconfig.go`. Reads each node's running config via `GetMachineConfig` (per-node `NodeContext` + `EndpointsFromTalosconfig` for production, single-node fallback for tests), uploads to S3 at `{cluster}/machineconfigs/{TIMESTAMP}/{hostname}.yaml`. Hostname extracted from config YAML; falls back to sanitized node IP when absent. `TalosMachineConfigBackup` CRD added to platform API (`machineconfigbackup_types.go`), DeepCopy methods added to `zz_generated.deepcopy.go`. `MachineConfigBackupReconciler` mirrors `EtcdMaintenanceReconciler`: RunnerConfig gate, S3 credential projection via new generic `ensureS3EnvSecretFor`/`resolveS3BackupSecretRef` helpers in `s3_env_secret.go`. Reconciler registered in `main.go`. 5 unit tests pass. `machineconfig-restore` deferred.
+
+**Graph stats:** Production 2,785 nodes / 4,382 links; Test 2,274 nodes / 4,950 links.
+
+---
+
+## Session/23b (2026-05-05) -- Bootstrap gap analysis
+
+Queried graphify and read source to map the CAPI tenant cluster bootstrap gap against the working import path.
+
+**Finding:** `reconcileCAPIPath` creates the `seam-tenant-{cluster}` namespace and deploys conductor but never calls `ensureTenantOnboarding`. Three concrete missing steps identified and captured as `PLATFORM-BL-CAPI-TENANT-ONBOARDING` (high priority):
+
+1. **Talosconfig name translation** -- `{cluster}-talosconfig` (TalosControlPlane output) must be copied to `seam-mc-{cluster}-talosconfig` before `ensureExecutorTalosconfig` is called; otherwise it silently no-ops and day-2 Jobs that need talosconfig fail.
+2. **Kubeconfig canonical name** -- `{cluster}-kubeconfig` (CAPI output) must be copied to `target-cluster-kubeconfig` in `seam-tenant-{cluster}`; conductor-execute Jobs mount this fixed name (`platform_security.go:L183`).
+3. **Full tenant onboarding** -- `ensureTenantOnboarding` is never called: RBACPolicy, 4 RBACProfiles, LocalQueue, platform-executor SA/Role/RoleBinding, wrapper-runner SA/Role/RoleBinding all absent, blocking pack delivery and all day-2 ops.
+
+**Management cluster bootstrap (`reconcileDirectBootstrap`, mode=bootstrap):** Confirmed complete. Namespace, talosconfig, kubeconfig, RBAC, and Ready transition all handled correctly via `ensureManagementOnboarding`.
+
+**Machineconfig capture** (`PLATFORM-BL-MACHINECONFIG-IMPORT-CAPTURE`) updated to cover both import and CAPI paths; gates on `PLATFORM-BL-CAPI-TENANT-ONBOARDING` closing first.
+
+---
+
+## Session/23 (2026-05-05)
+
+Two tasks:
+
+**Task 1 -- Test-only graphify graph**
+- `graphify-tests.py` at ontai root collects all `*_test.go` + `test/` Go files from every repo
+- First run: 227 files, 2,247 nodes, 4,914 links, 165 communities (per-operator suites, scheme builders, fake clients, integration/e2e structure)
+- `graphify-tests-out/` added to `.gitignore` -- generated output, never committed
+- CONTEXT.md updated with two-graph model
+
+**Task 2 -- Envtest local setup**
+- `make envtest-setup` in root Makefile: installs etcd + kube-apiserver for K8s 1.32.x to `~/.local/share/kubebuilder-envtest`. Pinned to ccs-mgmt version (talosVersion v1.9.3 -> k8s 1.32.3).
+- `make envtest-path` prints `KUBEBUILDER_ASSETS` for shell eval.
+- All integration suites confirmed green: guardian (4), conductor (3), platform (2), wrapper (1), seam-core (1).
+- `suite_test.go` comments updated in conductor, platform, wrapper.
+
+**BACKLOG cleanup (this session):**
+- Closed T-23 (DriftSignalReconciler implemented), T-24 (Decision H cascade implemented), GUARDIAN-AUTO-RBAC (APIGroupSweepController implemented)
+- Added graphify query refs to every open backlog item
+
+---
+
+## Session/22 (2026-05-05)
+
+Six cleanup items, all merged:
+
+| PR | Summary |
+|----|---------|
+| wrapper via ontai #18 | Delete wrapper TCOR CRD YAML (Decision G violation) |
+| ontai #19 | Remove ont-lab/ directory and root .gitignore entry |
+| conductor #37 | hardeningApply VIP fix: ClusterEndpoint filter + waitForNodeStable + 3 unit tests |
+| platform #22 | Drop PlatformTenant forward reference from CLAUDE.md Step 4b |
+| ontai #20 | `.graphifyignore` + graph rebuild: 5,268 -> 2,755 nodes (test/lab ghost nodes pruned) |
+| conductor #38 | NewRegistry dual-mode usage comment |
+
+---
+
+## Session/21 (2026-05-04)
+
+Graphify replaces CODEBASE.md as source of truth across all repos. 8 PRs merged (one per repo). Graph initial build: 5,268 nodes, 10,450 edges, 421 communities, 767 source files.
+
+---
+
+## Session/20 (2026-05-03)
+
+- conductor PR #34: management bootstrap guard, OCI push auth, tenant config fix
+- LineageController confirmed across all 9 GVKs
+- ontai.dev site: schema stats updated
+
+---
+
+## Session/19 (2026-05-03)
+
+- Alpha release v1.9.3-alpha.1 cut and tagged
+- Onboarding runbook merged (conductor #33)
+- ccs-dev node recovery: kubelet v-prefix applied, nodes back to Ready at v1.32.3
+- K8s version drift: DriftSignal queued, corrective UpgradePolicy exists
+
+---
+
+## Session/17+18 (2026-05-02)
+
+- PKI rotation automation (seam-core #16, conductor #29)
+- KubernetesVersionDriftLoop (conductor #30)
+- DriftSignal live e2e (ccs-dev): 6-step cycle validated
+- K8s version drift live e2e: out-of-band upgrade detected; corrective policy created, Job pending
+- Three bugs fixed: DriftSignal on terminating namespaces, packDeployHandler alphabetical-first-match, wrapper RunnerConfig GVK
+- PE ownerRef gap closed: ClusterPackReconciler re-creates PE on external deletion

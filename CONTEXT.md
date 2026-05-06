@@ -1,6 +1,6 @@
 # ONT Platform: Session Context
 
-**Last updated:** May 4, 2026 (session/21 -- graphify replaces CODEBASE.md)
+**Last updated:** May 5, 2026 (session/23 -- test graph, envtest setup)
 **Branch:** main
 **Author:** Krishna (ontave / ontave@ontave.dev)
 
@@ -10,16 +10,31 @@
 
 CODEBASE.md files have been removed from all repos. The graphify knowledge graph is the authoritative source of codebase understanding for all agents and contributors.
 
+### Production graph (no test files)
+
 **Graph location:** `~/ontai/graphify-out/graph.json`
-**Last built:** May 4, 2026 -- 5,268 nodes, 10,450 edges, 767 source files, 421 communities
+**Last built:** May 6, 2026 (session/24b) -- 2,785 nodes, 4,382 links, 261 communities
+**Source files:** production Go code only; test files excluded via `.graphifyignore`
 **Report:** `~/ontai/graphify-out/GRAPH_REPORT.md`
+
+Use this graph for all production codebase queries: reconciler logic, CRD types, capability implementations, shared library structure.
+
+### Test graph (test files only)
+
+**Graph location:** `~/ontai/graphify-tests-out/graph.json`
+**Last built:** May 6, 2026 (session/24b) -- 2,274 nodes, 4,950 links
+**Source files:** `*_test.go` and `test/` directories across all repos
+**Builder script:** `~/ontai/graphify-tests.py` (run with `python graphify-tests.py` from ontai root)
+
+Use this graph when investigating test infrastructure: shared scheme builders, fake clients, helper utilities, test suite structure, e2e skip conditions. Do not query this graph for production code questions.
 
 ### How agents must use the graph
 
-Before any implementation or investigation work, query the graph:
+Before any implementation or investigation work, query the appropriate graph:
 
 ```
-/graphify query "<your question about the subsystem>"
+/graphify query "<question>" --graph graphify-out/graph.json        # production code
+/graphify query "<question>" --graph graphify-tests-out/graph.json  # test code
 /graphify explain "<CRD or function name>"
 /graphify path "<SourceConcept>" "<TargetConcept>"
 ```
