@@ -1,6 +1,6 @@
 # ONT Platform: Backlog
 
-**Last updated:** 2026-05-06 (session/25 -- machineconfig-restore capability + CRD + reconciler + etcd/mcb schedule reconcilers)
+**Last updated:** 2026-05-07 (session/25c -- k8s version drift corrective UpgradePolicy in DriftSignalReconciler)
 
 > Before acting on any item here, query the production knowledge graph:
 > `/graphify query "<item description>" --graph ~/ontai/graphify-out/graph.json`

@@ -1,6 +1,6 @@
 # ONT Platform Progress
 
-**Last updated:** 2026-05-06 (session/25b)
+**Last updated:** 2026-05-07 (session/25c)
 **Full session archive:** PROGRESS-archive-2026-04-20.md
 
 > Understand the codebase through graphify, not this file:
@@ -35,7 +35,9 @@
 
 ## Open PRs (Pending Merge)
 
-None.
+| PR | Repo | Title | CI |
+|----|------|-------|----|
+| platform #27 | platform | feat: k8s version drift corrective UpgradePolicy in DriftSignalReconciler (session/25c) | Running |
 
 ---
 
@@ -46,6 +48,12 @@ None.
 | ccs-mgmt | Partially degraded -- cp3 NotReady, Talos API down | Conductor pod CrashLoopBackOff; blocks MGMT-HP-NODE e2e |
 | ccs-dev (10.20.0.20) | Unreachable | Blocks all TENANT day-2 e2e: HP-CLUSTER, HP-NODE, PKI-CLUSTER-REACH |
 | drift-k8s-version-ccs-dev | Closed (session/25b) | Validated via synthetic injection. Both spec copies reverted to 1.32.3. DriftSignal and UpgradePolicy deleted. |
+
+---
+
+## Session/25c (2026-05-07) -- k8s version drift remediation
+
+`handleKubernetesVersionDrift` added to `DriftSignalReconciler`. When a `drift-k8s-version-{cluster}` DriftSignal arrives (emitted by `KubernetesVersionDriftLoop` on the tenant conductor), creates a corrective `UpgradePolicy` (type=kubernetes, `targetKubernetesVersion=spec.kubernetesVersion`) in `seam-tenant-{cluster}`. `UpgradePolicyReconciler` submits a `kube-upgrade` executor Job. Routing in `Reconcile` now dispatches `InfrastructureTalosCluster` signals by name prefix: `drift-k8s-version-*` → `handleKubernetesVersionDrift`, others → `handleTalosVersionDrift`. `ensureCorrectiveKubeUpgradePolicy` mirrors the existing Talos corrective pattern. 1 unit test: `TestDriftSignalReconciler_K8sVersionDrift_CreatesUpgradePolicy`. All 7 DriftSignal tests pass. Platform PR #27 open.
 
 ---
 
